@@ -1,8 +1,19 @@
-# L.U.N.A. - Large Unified Nexus Mind AI
+<div align="center">
+  <img src="docs-site/public/images/logo.svg" width="72" height="72" alt="L.U.N.A." />
+  <h1>L.U.N.A.</h1>
+  <p><strong>Large Unified Nexus Mind AI</strong></p>
+  <p>Local-first AI companion · Voice · Memory · Vision · Automation</p>
+  <p>
+    <a href="https://github.com/Sehastrajit/Luna">GitHub</a> ·
+    <a href="https://www.linkedin.com/in/sehastrajit-s/">LinkedIn</a>
+  </p>
+</div>
 
-L.U.N.A. is a local-first desktop and web AI companion built with Electron, React, FastAPI, and pluggable LLM providers. Core chat, memory, voice, vision, widgets, and automation can run on your machine through Ollama, or chat generation can use any OpenAI-compatible cloud or local model API. Cloud APIs are optional and only used for configured features such as model inference, live news, market data, Spotify, and map tiles.
+---
 
-See the architecture diagrams:
+L.U.N.A. is a local-first desktop and web AI companion built with Electron, React, FastAPI, and pluggable LLM providers. Core chat, memory, voice, vision, widgets, and automation run on your machine through Ollama. Cloud APIs are optional and only used for configured features such as live news, market data, Spotify, and map tiles.
+
+**Architecture diagrams:**
 
 - [System architecture](architecture.svg)
 - [AI inference and tool flow](architecture_ai.svg)
