@@ -1,0 +1,30 @@
+{
+  "name": "luna-workspace",
+  "private": false,
+  "license": "MIT",
+  "author": "L.U.N.A. contributors",
+  "bin": {
+    "luna": "./cli/luna.mjs"
+  },
+  "workspaces": [
+    "frontend",
+    "electron"
+  ],
+  "scripts": {
+    "luna":        "node ./cli/luna.mjs",
+    "install:all": "npm install --workspace=frontend --workspace=electron",
+    "start":       "npm start --workspace=electron",
+    "dev":         "concurrently -n vite,electron -c cyan,magenta \"npm run dev --workspace=frontend\" \"npm start --workspace=electron\"",
+    "dev:lan":     "concurrently -n vite,electron -c cyan,magenta \"npm run dev --workspace=frontend -- --host 0.0.0.0\" \"npm start --workspace=electron\"",
+    "tunnel":      "npx --yes cloudflared tunnel --url http://localhost:5173",
+    "tunnel:lt":   "npx --yes localtunnel --port 5173",
+    "build":       "npm run build --workspace=frontend",
+    "dist":        "npm run build --workspace=frontend && npm run build:win --workspace=electron",
+    "docs":        "npm --prefix docs-site run dev",
+    "docs:build":  "npm --prefix docs-site run build",
+    "docs:start":  "npm --prefix docs-site run start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

@@ -1,0 +1,445 @@
+'use strict'
+
+const {
+  app, BrowserWindow, ipcMain, screen, clipboard,
+  Notification, Tray, Menu, nativeImage, shell, globalShortcut, session,
+} = require('electron')
+const { spawn } = require('child_process')
+const path    = require('path')
+const http    = require('http')
+const fs      = require('fs')
+
+const isDev = !app.isPackaged
+const ROOT  = isDev ? path.join(__dirname, '..') : process.resourcesPath
+const startHidden = process.argv.includes('--hidden')
+
+let mainWindow     = null
+let tray           = null
+let backendProcess = null
+let isQuitting     = false
+let awayWindows    = []
+let _backendRestarts = 0
+let _healthTimer     = null
+
+// ── Single instance ────────────────────────────────────────────────────────────
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+  process.exit(0)
+}
+app.on('second-instance', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
+  }
+})
+
+// ── Backend process manager ────────────────────────────────────────────────────
+const BACKEND_URL   = 'http://127.0.0.1:8899'
+const PID_FILE      = path.join(ROOT, 'data', 'backend.pid')
+const MAX_RESTARTS  = 5
+const RESTART_DELAY = [1000, 2000, 4000, 8000, 16000]  // exponential backoff
+const HEALTH_INTERVAL = 10_000  // check every 10 s
+
+function healthCheck() {
+  return new Promise(resolve => {
+    const req = http.get(`${BACKEND_URL}/api/system/health`, res => {
+      res.resume()
+      resolve(res.statusCode < 500)
+    })
+    req.setTimeout(1500, () => { req.destroy(); resolve(false) })
+    req.on('error', () => resolve(false))
+    req.end()
+  })
+}
+
+function waitForBackend(maxMs = 30_000) {
+  return new Promise(resolve => {
+    const start = Date.now()
+    const ping = () => {
+      const req = http.get(`${BACKEND_URL}/api/system/health`, res => {
+        res.resume()
+        if (res.statusCode < 500) { resolve(true); return }
+        retry()
+      })
+      req.on('error', retry)
+      req.end()
+    }
+    const retry = () => {
+      if (Date.now() - start >= maxMs) { resolve(false); return }
+      setTimeout(ping, 400)
+    }
+    ping()
+  })
+}
+
+function _execAsync(cmd) {
+  const { exec } = require('child_process')
+  return new Promise(resolve => exec(cmd, () => resolve()))
+}
+
+function _isPidAlive(pid) {
+  const { execSync } = require('child_process')
+  try {
+    if (process.platform === 'win32') {
+      const out = execSync(`tasklist /FI "PID eq ${pid}" /NH 2>nul`, { encoding: 'utf8' })
+      return out.includes(String(pid))
+    } else {
+      execSync(`kill -0 ${pid}`)
+      return true
+    }
+  } catch {
+    return false
+  }
+}
+
+async function killStaleBackend() {
+  // 1. PID file (most targeted — kills exactly our previous process)
+  if (fs.existsSync(PID_FILE)) {
+    const raw = fs.readFileSync(PID_FILE, 'utf8').trim()
+    const pid = parseInt(raw, 10)
+    if (pid > 0 && _isPidAlive(pid)) {
+      console.log(`[Luna] Stopping stale backend (PID ${pid})`)
+      if (process.platform === 'win32') {
+        await _execAsync(`taskkill /F /PID ${pid}`)
+      } else {
+        try { process.kill(pid, 'SIGTERM') } catch {}
+        await new Promise(r => setTimeout(r, 2000))
+        if (_isPidAlive(pid)) { try { process.kill(pid, 'SIGKILL') } catch {} }
+      }
+    }
+    try { fs.unlinkSync(PID_FILE) } catch {}
+    await new Promise(r => setTimeout(r, 300))
+  }
+
+  // 2. Port scan fallback — catches crashes where PID file wasn't written
+  if (process.platform === 'win32') {
+    const { exec } = require('child_process')
+    await new Promise(resolve => {
+      exec('netstat -ano | findstr :8899', (err, stdout) => {
+        if (err || !stdout) { resolve(); return }
+        const pids = new Set()
+        for (const line of stdout.trim().split('\n')) {
+          const parts = line.trim().split(/\s+/)
+          const pid = parts[parts.length - 1]
+          if (/^\d+$/.test(pid) && pid !== '0') pids.add(pid)
+        }
+        if (!pids.size) { resolve(); return }
+        let done = 0
+        for (const pid of pids) {
+          exec(`taskkill /F /PID ${pid}`, () => { if (++done === pids.size) setTimeout(resolve, 300) })
+        }
+      })
+    })
+  }
+}
+
+function spawnBackend() {
+  const script = path.join(ROOT, 'backend', 'server.py')
+  const python = process.platform === 'win32' ? 'python' : 'python3'
+
+  const proc = spawn(python, [script], {
+    cwd: ROOT,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' },
+    windowsHide: true,
+  })
+
+  proc.stdout.on('data', d => process.stdout.write('[api] ' + d))
+  proc.stderr.on('data', d => process.stderr.write('[api] ' + d))
+
+  proc.on('exit', (code, signal) => {
+    if (isQuitting) return
+    const delay = RESTART_DELAY[Math.min(_backendRestarts, RESTART_DELAY.length - 1)]
+    _backendRestarts++
+    if (_backendRestarts > MAX_RESTARTS) {
+      console.error(`[Luna] Backend crashed ${_backendRestarts} times — giving up`)
+      return
+    }
+    console.warn(`[Luna] Backend exited (code=${code} signal=${signal}) — restarting in ${delay}ms (attempt ${_backendRestarts}/${MAX_RESTARTS})`)
+    setTimeout(() => {
+      backendProcess = spawnBackend()
+    }, delay)
+  })
+
+  return proc
+}
+
+async function startBackend() {
+  await killStaleBackend()
+  _backendRestarts = 0
+  backendProcess = spawnBackend()
+}
+
+function startHealthMonitor() {
+  if (_healthTimer) clearInterval(_healthTimer)
+  _healthTimer = setInterval(async () => {
+    if (isQuitting || !backendProcess) return
+    const ok = await healthCheck()
+    if (!ok) {
+      console.warn('[Luna] Health check failed — backend may be unresponsive')
+      // The exit handler on spawnBackend will auto-restart on crash.
+      // If the process is hung (not exited), nudge it.
+      if (backendProcess && !backendProcess.killed) {
+        if (process.platform === 'win32') {
+          _execAsync(`taskkill /F /PID ${backendProcess.pid}`)
+        } else {
+          try { backendProcess.kill('SIGKILL') } catch {}
+        }
+      }
+    }
+  }, HEALTH_INTERVAL)
+}
+
+// ── Window ─────────────────────────────────────────────────────────────────────
+async function createWindow() {
+  const iconPath = path.join(__dirname, 'assets', 'icon.png')
+
+  mainWindow = new BrowserWindow({
+    width: 1100,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    backgroundColor: '#09090f',
+    frame: false,
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+      webSecurity: false,      // allow YouTube iframes + cross-origin requests
+      allowRunningInsecureContent: false,
+    },
+  })
+
+  mainWindow.on('maximize',   () => mainWindow.webContents.send('window:maximized', true))
+  mainWindow.on('unmaximize', () => mainWindow.webContents.send('window:maximized', false))
+
+  console.log('[Luna] Waiting for backend...')
+  const ready = await waitForBackend()
+  if (!ready) {
+    console.error('[Luna] Backend failed to start within 30s')
+    app.quit()
+    return
+  }
+  console.log('[Luna] Backend ready.')
+  startHealthMonitor()
+
+  if (isDev) {
+    await mainWindow.loadURL('http://localhost:5173')
+  } else {
+    await mainWindow.loadFile(path.join(ROOT, 'frontend', 'dist', 'index.html'))
+  }
+
+  if (!startHidden) {
+    mainWindow.show()
+  }
+
+  mainWindow.on('close', e => {
+    if (!isQuitting) {
+      e.preventDefault()
+      mainWindow.hide()
+    }
+  })
+}
+
+// ── Tray ───────────────────────────────────────────────────────────────────────
+function createTray() {
+  const trayIconPath = path.join(__dirname, 'assets', 'tray.png')
+  const trayIcon = fs.existsSync(trayIconPath)
+    ? nativeImage.createFromPath(trayIconPath).resize({ width: 16, height: 16 })
+    : nativeImage.createEmpty()
+
+  tray = new Tray(trayIcon)
+  tray.setToolTip('Luna')
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: 'Open Luna',  click: () => { mainWindow?.show(); mainWindow?.focus() } },
+    { type: 'separator' },
+    { label: 'Quit Luna',  click: () => { isQuitting = true; app.quit() } },
+  ]))
+  tray.on('click', () => { mainWindow?.show(); mainWindow?.focus() })
+}
+
+function showMainWindow() {
+  if (!mainWindow) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+}
+
+// ── IPC ────────────────────────────────────────────────────────────────────────
+function registerIPC() {
+  ipcMain.handle('window:minimize',     () => mainWindow?.minimize())
+  ipcMain.handle('window:maximize',     () => {
+    mainWindow?.isMaximized() ? mainWindow.unmaximize() : mainWindow?.maximize()
+  })
+  ipcMain.handle('window:fullscreen',   () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    const next = !mainWindow.isFullScreen()
+    mainWindow.setFullScreen(next)
+    mainWindow.webContents.send('window:fullscreen-changed', next)
+  })
+  ipcMain.handle('window:is-fullscreen', () => mainWindow?.isFullScreen() ?? false)
+  ipcMain.handle('window:close',        () => { if (!isQuitting) mainWindow?.hide() })
+  ipcMain.handle('app:quit',            () => { isQuitting = true; app.quit() })
+  ipcMain.handle('window:is-maximized', () => mainWindow?.isMaximized() ?? false)
+  ipcMain.handle('clipboard:write', (_, text) => { clipboard.writeText(String(text)) })
+
+  ipcMain.handle('away:enter', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    // F11-style fullscreen on main window
+    mainWindow.setFullScreen(true)
+    mainWindow.webContents.send('window:fullscreen-changed', true)
+
+    // Create a dark clock overlay on every other display
+    const displays = screen.getAllDisplays()
+    const mainBounds = mainWindow.getBounds()
+    for (const display of displays) {
+      const { x, y, width, height } = display.bounds
+      // Skip the display the main window is on
+      if (x === mainBounds.x || (x <= mainBounds.x && x + width > mainBounds.x)) continue
+      const overlayHtml = `<!DOCTYPE html><html><head><style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#02020a;display:flex;flex-direction:column;align-items:center;
+          justify-content:center;height:100vh;font-family:monospace;color:rgba(255,255,255,0.78)}
+        #clock{font-size:12vw;font-weight:100;letter-spacing:-0.03em;line-height:1}
+        #sec{font-size:0.42em;color:rgba(255,255,255,0.3)}
+        #date{font-size:11px;letter-spacing:0.22em;text-transform:uppercase;
+          color:rgba(255,255,255,0.22);margin-top:20px}
+      </style></head><body>
+        <div id="clock"><span id="hm">--:--</span><span id="sec">:--</span></div>
+        <div id="date"></div>
+        <script>
+          function tick(){
+            const n=new Date()
+            const pad=v=>String(v).padStart(2,'0')
+            document.getElementById('hm').textContent=pad(n.getHours())+':'+pad(n.getMinutes())
+            document.getElementById('sec').textContent=':'+pad(n.getSeconds())
+            document.getElementById('date').textContent=n.toLocaleDateString('en-US',
+              {weekday:'long',month:'long',day:'numeric'})
+          }
+          tick(); setInterval(tick,1000)
+        </script>
+      </body></html>`
+      const win = new BrowserWindow({
+        x, y, width, height,
+        frame: false, transparent: false, alwaysOnTop: true,
+        skipTaskbar: true, focusable: false,
+        webPreferences: { nodeIntegration: false, contextIsolation: true },
+      })
+      win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(overlayHtml)}`)
+      win.setFullScreen(true)
+      awayWindows.push(win)
+    }
+  })
+
+  ipcMain.handle('away:exit', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    mainWindow.setFullScreen(false)
+    mainWindow.webContents.send('window:fullscreen-changed', false)
+    for (const win of awayWindows) {
+      if (!win.isDestroyed()) win.close()
+    }
+    awayWindows = []
+  })
+
+  ipcMain.handle('notify', (_, { title, body }) => {
+    if (Notification.isSupported()) new Notification({ title, body }).show()
+  })
+
+  ipcMain.handle('open-url', (_, url) => {
+    if (/^https?:\/\//.test(url)) shell.openExternal(url)
+  })
+
+  ipcMain.handle('location:get', () => {
+    return fetch('https://ipapi.co/json/')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        const lat = Number(data?.latitude)
+        const lon = Number(data?.longitude)
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+          return { lat: null, lon: null, accuracy: null }
+        }
+        return { lat, lon, accuracy: null }
+      })
+      .catch(() => ({ lat: null, lon: null, accuracy: null }))
+  })
+
+  // Spotify OAuth — opens a popup, intercepts the redirect, forwards code to backend
+  ipcMain.handle('spotify:open-auth', async (_, authUrl) => {
+    return new Promise(resolve => {
+      const win = new BrowserWindow({
+        width: 480, height: 680,
+        title: 'Connect Spotify',
+        parent: mainWindow,
+        webPreferences: { nodeIntegration: false, contextIsolation: true },
+      })
+      win.setMenuBarVisibility(false)
+      win.loadURL(authUrl)
+
+      const intercept = (event, url) => {
+        if (!url.includes('/api/spotify/callback')) return
+        event.preventDefault()
+        try {
+          const code = new URL(url).searchParams.get('code')
+          if (code) {
+            http.get(
+              `http://127.0.0.1:8899/api/spotify/callback?code=${encodeURIComponent(code)}`,
+              res => { res.resume(); mainWindow?.webContents.send('spotify:connected') }
+            ).on('error', err => console.error('[Luna] Spotify callback error:', err))
+          }
+        } catch (e) { console.error('[Luna] Spotify intercept error:', e) }
+        win.close()
+        resolve(null)
+      }
+
+      win.webContents.on('will-redirect', intercept)
+      win.webContents.on('will-navigate', intercept)
+      win.on('closed', () => resolve(null))
+    })
+  })
+}
+
+// ── Lifecycle ──────────────────────────────────────────────────────────────────
+app.whenReady().then(async () => {
+  const _ALLOWED_PERMISSIONS = new Set(['geolocation', 'media'])
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    callback(_ALLOWED_PERMISSIONS.has(permission))
+  })
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    return _ALLOWED_PERMISSIONS.has(permission)
+  })
+
+  if (!isDev) {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      path: process.execPath,
+      args: ['--hidden'],
+    })
+  }
+  registerIPC()
+  await startBackend()
+  createWindow()
+  createTray()
+  globalShortcut.register('Control+Alt+L', showMainWindow)
+})
+
+app.on('activate', () => { mainWindow?.show(); mainWindow?.focus() })
+app.on('window-all-closed', () => { /* stay alive in tray */ })
+
+app.on('before-quit', () => {
+  isQuitting = true
+  globalShortcut.unregisterAll()
+  if (_healthTimer) { clearInterval(_healthTimer); _healthTimer = null }
+  if (backendProcess && !backendProcess.killed) {
+    if (process.platform === 'win32') {
+      _execAsync(`taskkill /F /PID ${backendProcess.pid}`)
+    } else {
+      backendProcess.kill('SIGTERM')
+    }
+    backendProcess = null
+  }
+  try { if (fs.existsSync(PID_FILE)) fs.unlinkSync(PID_FILE) } catch {}
+})

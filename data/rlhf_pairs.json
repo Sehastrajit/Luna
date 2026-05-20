@@ -1,0 +1,9 @@
+[
+  {
+    "message": "I'm good.",
+    "chosen": "Cool.\n\nNeed anything?",
+    "mode": "response",
+    "luna_tone": "concerned",
+    "auto_generated": true
+  }
+]

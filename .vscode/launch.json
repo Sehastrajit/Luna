@@ -1,0 +1,43 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "LUNA: Backend",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/server.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONIOENCODING": "utf-8"
+      }
+    },
+    {
+      "name": "LUNA: CLI Processes",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/cli/luna.mjs",
+      "args": ["processes"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "LUNA: CLI Doctor",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/cli/luna.mjs",
+      "args": ["doctor"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "LUNA: Backend + Frontend",
+      "configurations": ["LUNA: Backend"],
+      "preLaunchTask": "LUNA: Frontend"
+    }
+  ]
+}

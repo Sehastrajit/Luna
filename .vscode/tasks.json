@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "LUNA: Dev",
+      "type": "shell",
+      "command": "npm run luna -- dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Dev LAN",
+      "type": "shell",
+      "command": "npm run luna -- dev:lan",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Backend",
+      "type": "shell",
+      "command": "npm run luna -- backend",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Frontend",
+      "type": "shell",
+      "command": "npm run luna -- frontend",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Electron",
+      "type": "shell",
+      "command": "npm run luna -- electron",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Check",
+      "type": "shell",
+      "command": "npm run luna -- check",
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Processes",
+      "type": "shell",
+      "command": "npm run luna -- processes",
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Build",
+      "type": "shell",
+      "command": "npm run luna -- build",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1060" width="1400" height="1060" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#06101f"/>
+      <stop offset="100%" stop-color="#0a1020"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#22d3ee"/>
+    </marker>
+    <style>
+      .title { fill: #f8fafc; font-size: 34px; font-weight: 700; }
+      .subtitle { fill: #94a3b8; font-size: 15px; }
+      .box { fill: rgba(15,23,42,.9); stroke: #334155; stroke-width: 1.5; rx: 18; }
+      .box2 { fill: rgba(17,24,39,.92); stroke: #475569; stroke-width: 1.5; rx: 14; }
+      .head { fill: #e2e8f0; font-size: 20px; font-weight: 700; }
+      .label { fill: #cbd5e1; font-size: 14px; }
+      .small { fill: #94a3b8; font-size: 12px; }
+      .accent { fill: #67e8f9; font-size: 13px; font-weight: 700; }
+      .purple { fill: #c4b5fd; font-size: 13px; font-weight: 700; }
+      .line { stroke: #22d3ee; stroke-width: 2; fill: none; marker-end: url(#arrow); opacity: .85; }
+      .line2 { stroke: #a78bfa; stroke-width: 2; fill: none; marker-end: url(#arrow); opacity: .75; }
+      .dash { stroke: #64748b; stroke-width: 1.7; fill: none; stroke-dasharray: 7 7; marker-end: url(#arrow); opacity: .75; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="1060" fill="url(#bg)"/>
+  <text x="60" y="58" class="title">Luna AI Inference and Tool Flow</text>
+  <text x="60" y="86" class="subtitle">Streaming chat, context assembly, local inference, command parsing, tool execution, and background learning</text>
+
+  <rect x="60" y="130" width="260" height="130" class="box"/>
+  <text x="88" y="167" class="head">User Input</text>
+  <text x="88" y="200" class="label">Text chat</text>
+  <text x="88" y="225" class="label">Wake word voice</text>
+  <text x="88" y="250" class="label">Push-to-talk audio</text>
+
+  <rect x="380" y="120" width="300" height="150" class="box"/>
+  <text x="410" y="157" class="head">FastAPI Stream Route</text>
+  <text x="410" y="190" class="label">POST /api/chat/stream</text>
+  <text x="410" y="215" class="label">Auth and request normalization</text>
+  <text x="410" y="240" class="label">Fast-path intent checks</text>
+
+  <rect x="740" y="105" width="600" height="265" class="box"/>
+  <text x="770" y="142" class="head">Context Assembly</text>
+  <rect x="770" y="165" width="170" height="75" class="box2"/>
+  <text x="790" y="193" class="accent">Memory</text>
+  <text x="790" y="218" class="small">working, semantic, episodic</text>
+  <rect x="960" y="165" width="170" height="75" class="box2"/>
+  <text x="980" y="193" class="accent">Personality</text>
+  <text x="980" y="218" class="small">mood, style, user facts</text>
+  <rect x="1150" y="165" width="160" height="75" class="box2"/>
+  <text x="1170" y="193" class="accent">Activity</text>
+  <text x="1170" y="218" class="small">media, app, system state</text>
+  <rect x="770" y="260" width="170" height="75" class="box2"/>
+  <text x="790" y="288" class="accent">Vision</text>
+  <text x="790" y="313" class="small">observations, summary</text>
+  <rect x="960" y="260" width="170" height="75" class="box2"/>
+  <text x="980" y="288" class="accent">Live Data</text>
+  <text x="980" y="313" class="small">Luna feeds and cache</text>
+  <rect x="1150" y="260" width="160" height="75" class="box2"/>
+  <text x="1170" y="288" class="accent">Time</text>
+  <text x="1170" y="313" class="small">calendar, tasks, schedule</text>
+
+  <rect x="115" y="420" width="390" height="190" class="box"/>
+  <text x="145" y="457" class="head">Ollama LLM Call</text>
+  <text x="145" y="490" class="label">Local chat model receives assembled prompt</text>
+  <text x="145" y="515" class="label">Streams tokens back to FastAPI</text>
+  <text x="145" y="550" class="purple">Options</text>
+  <text x="145" y="575" class="small">num_ctx 8192, num_predict 1024, low-latency streaming</text>
+
+  <rect x="585" y="420" width="335" height="230" class="box"/>
+  <text x="615" y="457" class="head">Parser and Command Layer</text>
+  <text x="615" y="490" class="label">JSON tool_call detection</text>
+  <text x="615" y="515" class="label">Bracket tags converted to commands</text>
+  <text x="615" y="540" class="small">[WIDGET], [MAP], [BROWSE], [SPOTIFY]</text>
+  <text x="615" y="562" class="small">[WEB_SEARCH], [WEB_FETCH], [AWAY]</text>
+  <text x="615" y="598" class="label">Command text stripped from spoken answer</text>
+  <text x="615" y="623" class="label">Safe events emitted to renderer</text>
+
+  <rect x="995" y="420" width="345" height="260" class="box"/>
+  <text x="1025" y="457" class="head">Tool Execution</text>
+  <text x="1025" y="490" class="label">web_search and web_fetch</text>
+  <text x="1025" y="515" class="label">dynamic widgets and generated 3D scenes</text>
+  <text x="1025" y="540" class="label">map, browser, Spotify, app launcher</text>
+  <text x="1025" y="565" class="label">calendar, tasks, reminders, timers</text>
+  <text x="1025" y="590" class="label">screen, audio, system context</text>
+  <rect x="1025" y="615" width="280" height="42" class="box2"/>
+  <text x="1045" y="642" class="small">/api/system/scene creates Three.js scene JSON</text>
+
+  <rect x="70" y="725" width="350" height="185" class="box"/>
+  <text x="100" y="762" class="head">SSE Output to Frontend</text>
+  <text x="100" y="795" class="label">meta</text>
+  <text x="100" y="820" class="label">message_part and token chunks</text>
+  <text x="100" y="845" class="label">commands and confirmation requests</text>
+  <text x="100" y="870" class="label">done and usage metadata</text>
+
+  <rect x="500" y="725" width="390" height="185" class="box"/>
+  <text x="530" y="762" class="head">Background Learning</text>
+  <text x="530" y="795" class="label">Fact extraction</text>
+  <text x="530" y="820" class="label">Conversation summary updates</text>
+  <text x="530" y="845" class="label">Memory embedding and dedupe</text>
+  <text x="530" y="870" class="label">Personality reward tuning</text>
+
+  <rect x="970" y="735" width="370" height="205" class="box"/>
+  <text x="1000" y="772" class="head">Vision Loop</text>
+  <text x="1000" y="805" class="label">Frame received by /api/vision</text>
+  <text x="1000" y="830" class="label">moondream produces compact description</text>
+  <text x="1000" y="855" class="label">Observation log stores recent events</text>
+  <text x="1000" y="880" class="label">Session summary is refreshed</text>
+  <text x="1000" y="905" class="label">Next prompt gets visual context</text>
+
+  <path d="M320 195 C350 195 350 195 380 195" class="line"/>
+  <path d="M680 195 C710 195 710 195 740 195" class="line"/>
+  <path d="M1040 370 C880 390 665 410 505 455" class="line"/>
+  <path d="M505 515 C540 515 550 515 585 515" class="line"/>
+  <path d="M920 535 C955 535 960 535 995 535" class="line"/>
+  <path d="M1167 680 C1050 715 1000 730 890 790" class="dash"/>
+  <path d="M752 650 C660 690 520 715 420 790" class="line2"/>
+  <path d="M310 610 C280 660 260 695 245 725" class="line"/>
+  <path d="M245 910 C420 990 800 990 1155 940" class="dash"/>
+  <path d="M1155 735 C1135 660 1120 610 1110 580" class="line2"/>
+
+  <text x="60" y="1010" class="small">Result: the visible answer, spoken audio, widgets, maps, web results, and background memory updates all originate from one streamed chat turn.</text>
+</svg>

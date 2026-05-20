@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { height: 100%; }
+  body { height: 100%; user-select: none; }
+  #root { height: 100%; }
+}
+
+@layer utilities {
+  .prose-invert a { color: #a78bfa; }
+  .prose-invert blockquote {
+    border-left: 2px solid #8b5cf6;
+    padding-left: 12px;
+    color: #94a3b8;
+    font-style: italic;
+  }
+  .prose-invert h1, .prose-invert h2, .prose-invert h3 {
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+  .prose-invert table { border-collapse: collapse; width: 100%; }
+  .prose-invert th, .prose-invert td {
+    border: 1px solid #1e1e2e;
+    padding: 6px 12px;
+    text-align: left;
+    font-size: 12px;
+  }
+  .prose-invert th { background: #16161f; color: #a78bfa; }
+}

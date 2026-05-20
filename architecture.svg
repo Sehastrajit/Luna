@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 980" width="1400" height="980" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#07111f"/>
+      <stop offset="100%" stop-color="#0b1220"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#38bdf8"/>
+    </marker>
+    <style>
+      .title { fill: #f8fafc; font-size: 34px; font-weight: 700; }
+      .subtitle { fill: #94a3b8; font-size: 15px; }
+      .box { fill: rgba(15,23,42,.88); stroke: #334155; stroke-width: 1.5; rx: 18; }
+      .box2 { fill: rgba(17,24,39,.92); stroke: #475569; stroke-width: 1.5; rx: 14; }
+      .head { fill: #e2e8f0; font-size: 20px; font-weight: 700; }
+      .label { fill: #cbd5e1; font-size: 14px; }
+      .small { fill: #94a3b8; font-size: 12px; }
+      .accent { fill: #67e8f9; font-size: 13px; font-weight: 700; }
+      .line { stroke: #38bdf8; stroke-width: 2; fill: none; marker-end: url(#arrow); opacity: .85; }
+      .line2 { stroke: #a78bfa; stroke-width: 2; fill: none; marker-end: url(#arrow); opacity: .75; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="980" fill="url(#bg)"/>
+  <text x="60" y="58" class="title">Luna System Architecture</text>
+  <text x="60" y="86" class="subtitle">Electron desktop shell + React renderer + FastAPI backend + local Ollama models + optional live data providers</text>
+
+  <rect x="55" y="125" width="280" height="255" class="box"/>
+  <text x="80" y="162" class="head">Electron Shell</text>
+  <text x="80" y="195" class="label">main.js starts backend</text>
+  <text x="80" y="220" class="label">preload bridge exposes API</text>
+  <text x="80" y="245" class="label">desktop window lifecycle</text>
+  <text x="80" y="270" class="label">local app launch / browser actions</text>
+  <text x="80" y="315" class="accent">Local-first desktop host</text>
+  <text x="80" y="340" class="small">No cloud required for core chat</text>
+
+  <rect x="400" y="115" width="420" height="330" class="box"/>
+  <text x="430" y="152" class="head">React Renderer</text>
+  <text x="430" y="185" class="label">Chat stream UI and voice controls</text>
+  <text x="430" y="210" class="label">Luna dashboard widgets</text>
+  <text x="430" y="235" class="label">DynamicWidgetOverlay</text>
+  <text x="430" y="260" class="label">GeneratedScene and ThreeDScene</text>
+  <text x="430" y="285" class="label">Map overlay and geolocation</text>
+  <text x="430" y="310" class="label">Spotify and media panels</text>
+  <rect x="430" y="335" width="360" height="74" class="box2"/>
+  <text x="452" y="363" class="accent">Libraries</text>
+  <text x="452" y="388" class="small">React, Vite, TypeScript, Tailwind, Zustand, Three.js, MapLibre</text>
+
+  <rect x="880" y="115" width="460" height="505" class="box"/>
+  <text x="910" y="152" class="head">FastAPI Backend</text>
+  <text x="910" y="185" class="label">/api/chat/stream - SSE chat and commands</text>
+  <text x="910" y="210" class="label">/api/voice - wake word, STT, TTS</text>
+  <text x="910" y="235" class="label">/api/vision - frame analysis and visual memory</text>
+  <text x="910" y="260" class="label">/api/luna - news, weather, markets, dashboard data</text>
+  <text x="910" y="285" class="label">/api/system/scene - LLM generated 3D scene specs</text>
+  <text x="910" y="310" class="label">/api/spotify - playback and queue control</text>
+  <text x="910" y="335" class="label">memory, calendar, tasks, scheduler, activity routes</text>
+
+  <rect x="910" y="365" width="195" height="96" class="box2"/>
+  <text x="930" y="393" class="accent">Core Services</text>
+  <text x="930" y="418" class="small">memory, personality</text>
+  <text x="930" y="440" class="small">scheduler, tool registry</text>
+  <rect x="1120" y="365" width="190" height="96" class="box2"/>
+  <text x="1140" y="393" class="accent">Action Services</text>
+  <text x="1140" y="418" class="small">web_tools, screen, audio</text>
+  <text x="1140" y="440" class="small">spotify, app launcher</text>
+
+  <rect x="910" y="480" width="195" height="96" class="box2"/>
+  <text x="930" y="508" class="accent">Vision Service</text>
+  <text x="930" y="533" class="small">moondream observations</text>
+  <text x="930" y="555" class="small">session summary context</text>
+  <rect x="1120" y="480" width="190" height="96" class="box2"/>
+  <text x="1140" y="508" class="accent">Live Data</text>
+  <text x="1140" y="533" class="small">cached provider calls</text>
+  <text x="1140" y="555" class="small">fallbacks and timeouts</text>
+
+  <rect x="95" y="545" width="335" height="255" class="box"/>
+  <text x="125" y="582" class="head">Ollama and Local Models</text>
+  <text x="125" y="615" class="label">Chat model for conversation</text>
+  <text x="125" y="640" class="label">nomic-embed-text for memory vectors</text>
+  <text x="125" y="665" class="label">moondream for frame descriptions</text>
+  <text x="125" y="690" class="label">scene JSON generation for Three.js</text>
+  <text x="125" y="735" class="accent">Default chat options</text>
+  <text x="125" y="760" class="small">num_ctx 8192, num_predict 1024</text>
+
+  <rect x="500" y="545" width="315" height="255" class="box"/>
+  <text x="530" y="582" class="head">Local Storage</text>
+  <text x="530" y="615" class="label">SQLite app state and memories</text>
+  <text x="530" y="640" class="label">ChromaDB semantic memory</text>
+  <text x="530" y="665" class="label">Conversation summaries</text>
+  <text x="530" y="690" class="label">Vision observation log</text>
+  <text x="530" y="715" class="label">Personality and RL state</text>
+  <text x="530" y="760" class="small">Stored on the user's machine</text>
+
+  <rect x="880" y="670" width="460" height="210" class="box"/>
+  <text x="910" y="707" class="head">Optional External Providers</text>
+  <text x="910" y="740" class="label">TheNewsAPI and RSS feeds</text>
+  <text x="910" y="765" class="label">Open-Meteo weather</text>
+  <text x="910" y="790" class="label">Yahoo Finance, CoinGecko, Alpha Vantage</text>
+  <text x="910" y="815" class="label">DuckDuckGo web search and web fetch</text>
+  <text x="910" y="840" class="label">Spotify API, map tiles, geolocation</text>
+
+  <path d="M335 250 C365 250 370 250 400 250" class="line"/>
+  <path d="M820 270 C850 270 850 270 880 270" class="line"/>
+  <path d="M880 400 C700 445 545 500 430 610" class="line2"/>
+  <path d="M880 500 C805 555 780 580 815 650" class="line2"/>
+  <path d="M1110 620 C1110 645 1110 645 1110 670" class="line"/>
+  <path d="M500 650 C470 650 460 650 430 650" class="line2"/>
+
+  <text x="60" y="925" class="small">Data path: Electron hosts React, React calls FastAPI, FastAPI streams Ollama output and command events back to the renderer.</text>
+</svg>

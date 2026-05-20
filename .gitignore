@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+electron/node_modules/
+
+# Build output
+dist/
+build/
+frontend/dist/
+ docs-site/.next/
+ dist-electron/
+ *.tsbuildinfo
+
+# Docs site dependencies
+ docs-site/node_modules/
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.log
+*.pid
+spotify_token.json
+audio_prefs.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Local tooling
+.claude/
+cloudflared.exe
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# Test and coverage output
+coverage/
+.coverage
+.pytest_cache/
+
+# OS/editor
+.DS_Store
+Thumbs.db

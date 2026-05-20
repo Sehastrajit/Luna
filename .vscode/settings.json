@@ -1,0 +1,20 @@
+{
+  "editor.formatOnSave": false,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "data": true,
+    "dist-electron": true,
+    "frontend/dist": true,
+    "node_modules": true
+  },
+  "python.defaultInterpreterPath": "python",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  }
+}
