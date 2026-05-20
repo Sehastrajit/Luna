@@ -8,7 +8,8 @@
   },
   "workspaces": [
     "frontend",
-    "electron"
+    "electron",
+    "docs-site"
   ],
   "scripts": {
     "luna":        "node ./cli/luna.mjs",
