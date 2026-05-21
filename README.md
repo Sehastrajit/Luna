@@ -1,370 +1,447 @@
 <div align="center">
-  <img src="docs-site/public/images/logo.svg" width="72" height="72" alt="L.U.N.A." />
+  <img src="docs-site/public/images/logo.svg" width="88" height="88" alt="L.U.N.A." />
   <h1>L.U.N.A.</h1>
   <p><strong>Large Unified Nexus Mind AI</strong></p>
-  <p>Local-first AI companion · Voice · Memory · Vision · Automation</p>
+  <p><em>Local-first AI companion — voice, memory, vision, and desktop automation.</em></p>
+
   <p>
-    <a href="https://github.com/Sehastrajit/Luna">GitHub</a> ·
-    <a href="https://www.linkedin.com/in/sehastrajit-s/">LinkedIn</a>
+    <a href="https://github.com/Sehastrajit/Luna/stargazers">
+      <img src="https://img.shields.io/github/stars/Sehastrajit/Luna?style=for-the-badge&logo=github&color=6d28d9&labelColor=030306" alt="Stars" />
+    </a>
+    <a href="https://github.com/Sehastrajit/Luna/forks">
+      <img src="https://img.shields.io/github/forks/Sehastrajit/Luna?style=for-the-badge&logo=github&color=7c3aed&labelColor=030306" alt="Forks" />
+    </a>
+    <a href="https://github.com/Sehastrajit/Luna/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/Sehastrajit/Luna?style=for-the-badge&color=8b5cf6&labelColor=030306" alt="License" />
+    </a>
+    <a href="https://github.com/Sehastrajit/Luna/commits/main">
+      <img src="https://img.shields.io/github/last-commit/Sehastrajit/Luna?style=for-the-badge&color=a78bfa&labelColor=030306" alt="Last Commit" />
+    </a>
+    <a href="https://github.com/Sehastrajit/Luna/issues">
+      <img src="https://img.shields.io/github/issues/Sehastrajit/Luna?style=for-the-badge&color=c4b5fd&labelColor=030306" alt="Issues" />
+    </a>
   </p>
+
+  <p>
+    <a href="https://github.com/Sehastrajit/Luna">
+      <img src="https://img.shields.io/badge/View%20on%20GitHub-%23030306?style=for-the-badge&logo=github&logoColor=white" alt="View on GitHub" />
+    </a>
+    <a href="https://www.linkedin.com/in/sehastrajit-s/">
+      <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
+    </a>
+  </p>
+
+  <br />
+
+  <img src="https://img.shields.io/badge/Electron-191970?style=flat-square&logo=electron&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/FastAPI-005571?style=flat-square&logo=fastapi" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=flat-square&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/Ollama-000000?style=flat-square&logo=ollama&logoColor=white" />
+  <img src="https://img.shields.io/badge/SQLite-07405E?style=flat-square&logo=sqlite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=three.js&logoColor=white" />
 </div>
+
+<br />
 
 ---
 
-L.U.N.A. is a local-first desktop and web AI companion built with Electron, React, FastAPI, and pluggable LLM providers. Core chat, memory, voice, vision, widgets, and automation run on your machine through Ollama. Cloud APIs are optional and only used for configured features such as live news, market data, Spotify, and map tiles.
+L.U.N.A. is an open-source, local-first desktop AI companion. Chat, memory, voice, vision, and desktop automation all run on your machine through Ollama. Cloud APIs are opt-in and only contacted for the specific features they power — news, markets, Spotify, and map tiles.
 
-**Architecture diagrams:**
+---
 
-- [System architecture](architecture.svg)
-- [AI inference and tool flow](architecture_ai.svg)
+## Table of Contents
 
-## What Luna Can Do
+- [Features](#features)
+- [Install — one line](#install--one-line)
+- [Docker](#docker)
+- [Any Model](#any-model)
+- [Quick Start (desktop)](#quick-start-desktop)
+- [Stack](#stack)
+- [Architecture](#architecture)
+- [Configuration](#configuration)
+- [Device Support](#device-support)
+- [Project Layout](#project-layout)
+- [Contributing](#contributing)
+- [Privacy](#privacy)
+- [License](#license)
 
-- Stream chat responses through local Ollama or an OpenAI-compatible model endpoint.
-- Listen for wake words and accept push-to-talk voice input.
-- Speak responses with local TTS.
-- Remember user facts, conversation summaries, and personality preferences.
-- Use the camera/screen vision pipeline to build temporal visual context.
-- Search the web and fetch pages when the model asks for live information.
-- Open dynamic widgets while explaining topics, including tabs, comparisons, step flows, and generated 3D scenes.
-- Show a L.U.N.A.-style dashboard for news, weather, markets, music, system state, and map context.
-- Control Spotify playback and queues when configured.
-- Run scheduler, calendar, task, and proactive follow-up flows.
-- Launch apps, browse, show maps, and execute approved desktop actions through backend tools.
+---
+
+## Install — one line
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Sehastrajit/Luna/main/install.sh | bash
+```
+
+The script checks for Docker, clones the repo, copies `.env.example → .env`, asks CPU / GPU / cloud, and runs `docker compose up`. Luna opens on **http://localhost:8899**.
+
+> Voice, Electron shell, and OS-level automation require the [desktop install](#quick-start-desktop).
+
+---
+
+## Docker
+
+Three compose files cover every scenario:
+
+| File | Use case | Command |
+|---|---|---|
+| `compose.yml` | Local Ollama (CPU) | `docker compose up -d` |
+| `compose.yml` + `compose.gpu.yml` | Local Ollama + NVIDIA GPU | `docker compose -f compose.yml -f compose.gpu.yml up -d` |
+| `compose.cloud.yml` | Cloud API (no Ollama) | `docker compose -f compose.cloud.yml up -d` |
+
+**Manual steps:**
+
+```bash
+git clone https://github.com/Sehastrajit/Luna.git && cd Luna
+cp .env.example .env        # edit model / API keys
+docker compose up -d        # CPU local
+# or
+docker compose -f compose.yml -f compose.gpu.yml up -d   # GPU
+# or
+docker compose -f compose.cloud.yml up -d                # cloud key in .env
+```
+
+Data is persisted in named Docker volumes (`luna_data`, `ollama_data`). Upgrading is:
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+---
+
+## Any Model
+
+Luna treats every LLM as a drop-in. Set two keys in `.env`:
+
+| Provider | `.env` |
+|---|---|
+| **Ollama** (local, default) | `llm_provider=ollama` · `ollama_model=qwen2.5:7b` |
+| **OpenAI** | `llm_provider=openai-compatible` · `openai_base_url=https://api.openai.com/v1` · `openai_api_key=sk-…` · `openai_model=gpt-4o` |
+| **Groq** (fast inference) | `openai_base_url=https://api.groq.com/openai/v1` · `openai_model=llama-3.3-70b-versatile` |
+| **Anthropic Claude** (via OpenRouter) | `openai_base_url=https://openrouter.ai/api/v1` · `openai_model=anthropic/claude-opus-4` |
+| **Google Gemini** (via OpenRouter) | `openai_base_url=https://openrouter.ai/api/v1` · `openai_model=google/gemini-2.5-pro` |
+| **LM Studio / Jan.ai** | `openai_base_url=http://localhost:1234/v1` · `openai_api_key=lm-studio` |
+| **llama.cpp server** | `openai_base_url=http://localhost:8080/v1` |
+
+**OpenRouter** (`openrouter.ai`) is the easiest cloud path — one API key, every major model, pay-as-you-go.
+
+---
+
+## Features
+
+| Capability | Description |
+|---|---|
+| 🎙 **Voice** | Wake-word detection and push-to-talk. Local STT with faster-whisper, local TTS with pyttsx3. |
+| 🧠 **Memory** | Persistent fact storage, personality state, and conversation summaries in SQLite + ChromaDB. |
+| 👁 **Vision** | Screen and camera awareness. Temporal visual context without storing raw frames. |
+| ⚡ **Automation** | Launch apps, control Spotify, manage calendar tasks, and execute approved desktop actions. |
+| 📊 **Dashboard** | Live news, weather, markets, and maps in a heads-up display widget layer. |
+| 🔒 **Private** | Inference runs locally via Ollama. Zero telemetry. No data leaves unless you opt into cloud features. |
+| 🧩 **Dynamic Widgets** | Visual explanations with steps, comparisons, tabs, code blocks, timelines, and live 3D scenes (Three.js). |
+| 🌐 **Web Tools** | DuckDuckGo search and page fetch when the model asks for live information. |
+
+---
+
+## Quick Start (desktop)
+
+**Prerequisites:** Node.js 18+, Python 3.10+, [Ollama](https://ollama.com/) installed and running.
+
+### 1 — Clone
+
+```bash
+git clone https://github.com/Sehastrajit/Luna.git
+cd Luna
+```
+
+### 2 — Install dependencies
+
+```bash
+npm install
+cd frontend && npm install && cd ..
+python -m venv .venv
+```
+
+```powershell
+# Windows
+.venv\Scripts\activate
+```
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+```
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+### 3 — Pull your models
+
+```bash
+ollama pull qwen2.5:7b          # or any chat model
+ollama pull nomic-embed-text    # for memory embeddings
+ollama pull moondream           # optional — for vision
+```
+
+### 4 — Configure
+
+```bash
+cp .env.example .env
+# Edit .env — set ollama_model to match what you pulled
+```
+
+### 5 — Run
+
+```bash
+npm run dev          # desktop (Electron + Vite + FastAPI)
+# or
+npm run luna -- dev  # backend + frontend only (no Electron)
+```
+
+Open `http://localhost:5173` in your browser, or use the Electron window.
+
+> **Tip:** Run `npm run luna -- doctor` first if something doesn't start — it checks your Node, Python, and Ollama versions in one shot.
+
+---
 
 ## Stack
 
-Frontend:
+### Frontend
 
-- Electron shell for desktop
-- Browser access for phones, tablets, and other computers on your network
-- React + Vite
-- TypeScript
-- Tailwind CSS
-- Zustand
-- Three.js
-- MapLibre GL
+| Layer | Tech |
+|---|---|
+| Shell | Electron |
+| UI Framework | React + Vite |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| State | Zustand |
+| 3D | Three.js |
+| Maps | MapLibre GL |
 
-Backend:
+### Backend
 
-- FastAPI
-- Uvicorn
-- SQLite
-- ChromaDB
-- Pluggable LLM provider: Ollama or OpenAI-compatible chat completions
-- faster-whisper / local STT integrations
-- pyttsx3 / local TTS integrations
-- httpx / requests for external APIs
+| Layer | Tech |
+|---|---|
+| API | FastAPI + Uvicorn |
+| Database | SQLite |
+| Vector store | ChromaDB |
+| LLM | Ollama (local) or any OpenAI-compatible endpoint |
+| STT | faster-whisper |
+| TTS | pyttsx3 |
+| HTTP | httpx / requests |
 
-AI models:
+### AI Models
 
-- Chat model through local Ollama by default
-- OpenAI-compatible chat completions for cloud or self-hosted model servers
-- `nomic-embed-text` or OpenAI-compatible embeddings for memory embeddings
-- `moondream` for lightweight vision descriptions
+| Purpose | Default |
+|---|---|
+| Chat | `qwen2.5:7b` via Ollama (configurable) |
+| Embeddings | `nomic-embed-text` |
+| Vision | `moondream` |
 
-## High-Level Architecture
+---
 
-Luna has three main layers:
+## Architecture
 
-1. Electron starts the desktop shell, launches the backend, and hosts the React renderer.
-2. React renders chat, voice controls, Luna dashboard widgets, maps, dynamic widgets, and generated 3D scenes.
-3. FastAPI owns chat streaming, voice, memory, vision, tool execution, live data feeds, Spotify, scheduling, and LLM calls.
+Luna has three layers:
 
-The backend streams chat through Server-Sent Events. A typical stream includes metadata, token chunks, command events, optional confirmation events, and a final done event. Commands can open widgets, maps, Spotify controls, browser actions, web searches, generated scenes, or desktop automation.
+1. **Electron** — starts the desktop shell, launches the FastAPI backend, and hosts the React renderer.
+2. **React** — renders chat, voice controls, Luna dashboard, maps, dynamic widgets, and 3D scenes.
+3. **FastAPI** — owns chat streaming, voice, memory, vision, tool execution, live data, Spotify, scheduling, and all LLM calls.
 
-## AI Flow
+Chat is streamed over **Server-Sent Events**. A typical stream includes metadata, token chunks, command events, and a `done` event. Commands can open widgets, show maps, trigger Spotify controls, run web searches, generate 3D scenes, or execute desktop automation.
 
-The main chat route is `/api/chat/stream`.
+```
+User input
+    │
+    ▼
+Context assembly (memory + personality + calendar + vision + conversation)
+    │
+    ▼
+LLM inference  ←────── Ollama / OpenAI-compatible
+    │
+    ▼
+Tool execution (web_search · web_fetch · Spotify · calendar · widgets · maps)
+    │
+    ▼
+Memory update  (fact extraction · personality update · conversation compaction)
+    │
+    ▼
+Response streamed to UI
+```
 
-For each user message, Luna:
+Full diagrams: [architecture.svg](architecture.svg) · [architecture_ai.svg](architecture_ai.svg)
 
-1. Checks fast-path intents for actions that should not require a full LLM call.
-2. Builds context from memory, personality, current activity, live dashboard state, vision summaries, calendar/task state, and recent conversation.
-3. Calls the configured LLM provider with an expanded context window.
-4. Streams the answer to the UI.
-5. Parses structured tool calls and bracket commands.
-6. Executes safe tools such as web search, dynamic widget display, map display, Spotify control, calendar/task actions, or generated 3D scene creation.
-7. Runs background memory extraction and summary updates.
-
-Current LLM defaults documented in the diagrams:
-
-- `num_ctx`: 8192
-- `num_predict`: 1024
-
-## Dynamic Widgets and 3D Scenes
-
-The dynamic widget layer lets Luna show visual explanations while it talks. The model can request widgets through structured tool calls or bracket tags.
-
-Supported widget styles include:
-
-- Steps
-- Lists
-- Comparisons
-- Tabs
-- Code blocks
-- Data cards
-- Timelines
-- Generated 3D scenes
-
-Generated scenes use:
-
-- Backend endpoint: `/api/system/scene`
-- Frontend renderer: `GeneratedScene`
-- Runtime: Three.js
-
-For example, when asked "how GPUs work visually", Luna can open an interactive 3D visualization instead of only returning a web search result.
-
-## Vision System
-
-The vision route receives frames, sends them to a local vision model, and stores compact observations. Luna does not need to paste every frame into the prompt. Instead, it keeps:
-
-- Recent observations
-- A rolling session summary
-- Important detected changes
-- Current visual context for chat
-
-This gives the assistant awareness of what is happening on screen or camera without flooding the LLM context.
-
-## Live Data
-
-Luna widgets can load live data from configured services:
-
-- News: TheNewsAPI when configured, RSS fallback when needed
-- Weather: Open-Meteo by default, no API key required
-- Markets: Yahoo Finance and CoinGecko paths, with Alpha Vantage support where configured
-- Web search: DuckDuckGo HTML search
-- Maps: MapLibre-compatible map tiles and geolocation
-- Music: Spotify API when configured
-
-The UI should render provider names only when useful to debug. User-facing widgets should focus on the data itself.
+---
 
 ## Configuration
 
-Create or update `.env` in the project root. Do not commit secrets.
-
-Common keys:
+Copy `.env.example` to `.env`. Never commit `.env`.
 
 ```env
+# Identity
 user_name=friend
-luna_api_key=
+luna_api_key=                        # leave empty for local-only dev
+
+# LLM — Ollama (default)
 llm_provider=ollama
 ollama_base_url=http://localhost:11434
-ollama_model=qcwind/qwen3-8b-instruct-Q4-K-M:latest
-the_news_api=...
-alpha_vantage=...
-open_weather=...
+ollama_model=qwen2.5:7b
+
+# LLM — OpenAI-compatible cloud / self-hosted
+# llm_provider=openai-compatible
+# openai_base_url=https://api.openai.com/v1
+# openai_api_key=sk-...
+# openai_model=gpt-4o
+
+# Optional cloud features (all opt-in)
+the_news_api=
+alpha_vantage=
+spotify_client_id=
+spotify_client_secret=
 ```
 
-Notes:
+Full reference on the [Environment](https://github.com/Sehastrajit/Luna/blob/main/docs-site/pages/environment.js) docs page.
 
-- Copy `.env.example` to `.env` before running locally.
-- Keep `luna_api_key` empty for local-only development, or set a strong random value before exposing the app to other devices.
-- Set `llm_provider=ollama` for local Ollama.
-- Set `llm_provider=openai-compatible`, `openai_base_url`, `openai_api_key`, and `openai_model` for cloud APIs or self-hosted OpenAI-compatible servers.
-- Set `embedding_provider=openai-compatible` only if your configured API supports `/embeddings`; otherwise leave embeddings on Ollama.
-- `the_news_api` is used for news when available.
-- `alpha_vantage` can be used for market data paths that support it.
-- Weather uses Open-Meteo by default and does not require an API key.
-- `open_weather` may exist for older flows but should not be required for the current Luna weather widget.
+---
 
 ## Device Support
 
-L.U.N.A. can run as a desktop app or as a browser-accessible web app.
-
-Desktop:
+**Desktop (Electron):**
 
 ```powershell
 npm run dev
 ```
 
-Other devices on your network:
+**Other devices on your LAN (phone, tablet, second computer):**
 
-```powershell
+```env
 # .env
 host=0.0.0.0
 luna_api_key=replace-with-a-strong-random-key
+```
 
-# start Vite on your LAN
+```powershell
 npm run dev:lan
 ```
 
-Then open `http://YOUR-COMPUTER-LAN-IP:5173` on a phone, tablet, or another computer and enter the same `luna_api_key` when prompted. Voice, camera, notifications, app launching, audio switching, and other OS-level features depend on browser/device permissions and may be desktop-only.
+Then open `http://YOUR-LAN-IP:5173` on any device. Voice, camera, notifications, and OS-level features depend on browser permissions and may be desktop-only.
 
-## Development
-
-Install dependencies:
-
-```powershell
-npm install
-cd frontend
-npm install
-```
-
-Install Python dependencies according to the backend requirements used by your checkout.
-
-Start Luna:
-
-```powershell
-npm run dev
-```
-
-If the backend port is already in use, stop the older Luna backend process or change the configured port. The common bind error is:
-
-```text
-[Errno 10048] only one usage of each socket address is normally permitted
-```
-
-Run backend syntax checks:
-
-```powershell
-python -m py_compile backend\routers\chat.py backend\routers\system.py backend\routers\luna.py backend\services\web_tools.py backend\services\vision.py
-```
-
-Build the frontend:
-
-```powershell
-cd frontend
-npm run build
-```
+---
 
 ## Project Layout
 
-```text
+```
 Luna/
-  backend/
-    main.py
-    processes/
-      registry.py
-      calendar_reminders/
-      memory_maintenance/
-      proactive_followups/
-      voice_runtime/
-    routers/
-      chat.py
-      luna.py
-      system.py
-      vision.py
-      voice.py
-      spotify.py
-    services/
-      dashboard/
-        articles.py
-        markets.py
-        news.py
-        weather.py
-      memory.py
-      personality.py
-      scheduler.py
-      tool_registry.py
-      vision.py
-      web_tools.py
-  electron/
-    main.js
-    preload.js
-  frontend/
-    src/
-      components/
-        Dynamic/
-          DynamicWidgetOverlay.tsx
-          GeneratedScene.tsx
-          ThreeDScene.tsx
-        Luna/
-        Map/
-        Voice/
-      hooks/
-      services/
-      store/
-  docs/
-    ARCHITECTURE.md
-  architecture.svg
-  architecture_ai.svg
-  README.md
+├── backend/
+│   ├── main.py
+│   ├── processes/
+│   │   ├── registry.py
+│   │   ├── calendar_reminders/
+│   │   ├── memory_maintenance/
+│   │   ├── proactive_followups/
+│   │   └── voice_runtime/
+│   ├── routers/
+│   │   ├── chat.py
+│   │   ├── luna.py
+│   │   ├── system.py
+│   │   ├── vision.py
+│   │   ├── voice.py
+│   │   └── spotify.py
+│   └── services/
+│       ├── dashboard/
+│       │   ├── articles.py
+│       │   ├── markets.py
+│       │   ├── news.py
+│       │   └── weather.py
+│       ├── memory.py
+│       ├── personality.py
+│       ├── scheduler.py
+│       ├── tool_registry.py
+│       ├── vision.py
+│       └── web_tools.py
+├── electron/
+│   ├── main.js
+│   └── preload.js
+├── frontend/
+│   └── src/
+│       ├── components/
+│       │   ├── Dynamic/
+│       │   │   ├── DynamicWidgetOverlay.tsx
+│       │   │   ├── GeneratedScene.tsx
+│       │   │   └── ThreeDScene.tsx
+│       │   ├── Luna/
+│       │   ├── Map/
+│       │   └── Voice/
+│       ├── hooks/
+│       ├── services/
+│       └── store/
+├── docs-site/          # Next.js documentation site
+├── docs/
+│   ├── ARCHITECTURE.md
+│   ├── PROCESSES.md
+│   ├── CLI.md
+│   └── VSCODE.md
+├── architecture.svg
+├── architecture_ai.svg
+└── .env.example
 ```
 
-For contributor boundaries and module ownership guidance, see `docs/ARCHITECTURE.md`.
-For background/runtime process ownership, see `docs/PROCESSES.md`.
-For CLI usage, see `docs/CLI.md`.
-For VS Code setup, see `docs/VSCODE.md`.
+---
 
-## Command and Tool Model
+## Agent Platform
 
-Luna supports two command styles:
+Luna includes a foundation for broader agent workflows:
 
-- Structured JSON tool calls such as `web_search`, `web_fetch`, and UI actions.
-- Bracket command tags such as `[WIDGET:...]`, `[WEB_SEARCH:...]`, `[MAP:...]`, `[SPOTIFY:...]`, and related UI commands.
+- **Skills** — local skills in `skills/` or `data/workspace/skills/` with `skill.json` and `SKILL.md`
+- **Permissions** — every tool has a mode: `allow`, `confirm`, or `block`
+- **Workspace** — agent-created files are sandboxed to `data/workspace/`
+- **Audit log** — all tool and agent actions written to `data/audit.log`
+- **Browser** — public page reading over HTTP; optional Playwright for full browser automation
+- **Tasks** — multi-step tasks can be created, planned, and expanded over time
 
-The backend strips command tags from spoken/displayed answer text after converting them into executable command events.
-
-## Agent Platform Layer
-
-Luna includes an OpenClaw-style foundation for broader agent workflows:
-
-- Skills: local skills live in `skills/` or `data/workspace/skills/` with `skill.json` and `SKILL.md`.
-- Permissions: every registered tool has a mode of `allow`, `confirm`, or `block`.
-- Workspace: agent-created files are restricted to `data/workspace`.
-- Audit log: tool and agent actions are appended to `data/audit.log`.
-- Browser layer: public page reading works through HTTP now, with optional Playwright support for fuller browser automation.
-- Agent tasks: multi-step tasks can be created, planned, listed, and expanded over time.
-
-Main API routes:
-
-```text
+```
 GET  /api/agent/skills
 GET  /api/agent/permissions
 POST /api/agent/permissions/{tool_name}
 GET  /api/agent/workspace
-GET  /api/agent/workspace/read?path=...
 POST /api/agent/workspace/write
-GET  /api/agent/browser/status
-POST /api/agent/browser/open
-POST /api/agent/browser/read
 GET  /api/agent/tasks
 POST /api/agent/tasks
 GET  /api/agent/audit
 ```
 
-The frontend has an Agent page for reviewing installed skills, permissions, workspace files, browser status, tasks, and the audit stream.
+---
+
+## Contributing
+
+1. Fork the repo and create a branch from `main`.
+2. Make your changes. Run `npm run luna -- check` to verify the backend compiles.
+3. Run `cd frontend && npm run build` to verify no TypeScript errors.
+4. Open a pull request with a clear description of what changed and why.
+
+Please avoid non-ASCII characters in backend log messages (Windows `cp1252` compatibility). See the troubleshooting docs for details.
+
+---
 
 ## Privacy
 
-Luna is designed to keep core assistant behavior local:
+- Chat inference runs through local Ollama — no tokens leave your machine by default.
+- Memory, facts, and personality state are stored in local SQLite and ChromaDB.
+- Vision summaries are generated locally.
+- External APIs (news, weather, markets, Spotify) are only contacted when those features are configured and used.
+- Keep `.env`, `data/`, and generated memory stores out of version control.
 
-- Chat inference runs through local Ollama.
-- Memory is stored locally in SQLite and ChromaDB.
-- Vision summaries are generated locally when using local vision models.
-- External services are contacted only for features that need live outside data.
+---
 
-Keep `.env`, local databases, logs, and generated memory stores out of version control.
+## License
 
-## Troubleshooting
+MIT — see [LICENSE](LICENSE).
 
-Voice says "off":
+---
 
-- Confirm microphone permission.
-- Confirm the voice route is running.
-- Check wake word logs for "Microphone opened OK".
-
-Backend exits with port bind error:
-
-- Another process is already listening on the configured port.
-- Stop the older backend/Electron process or change the port.
-
-UI widgets show no data:
-
-- Check the browser console and backend logs.
-- Verify the Luna API route returns JSON.
-- Confirm `.env` keys exist for optional providers.
-- Remember weather should work through Open-Meteo without a key.
-
-Unicode encode error on Windows:
-
-- Replace non-ASCII console log characters with ASCII text, or run Python with UTF-8 output enabled.
-- The known symptom is `UnicodeEncodeError` from `cp1252` while printing arrows or box characters.
-
-Dynamic visual explanations only search the web:
-
-- Confirm the model prompt includes widget guidance.
-- Confirm `DynamicWidgetOverlay` is mounted.
-- Confirm command parsing handles `[WIDGET:...]` and JSON tool calls.
-- Confirm `/api/system/scene` works for generated 3D scene requests.
+<div align="center">
+  <sub>Built by <a href="https://github.com/Sehastrajit">Sehastrajit</a> · <a href="https://www.linkedin.com/in/sehastrajit-s/">LinkedIn</a> · Open source, always.</sub>
+</div>

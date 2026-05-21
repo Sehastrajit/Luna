@@ -1,0 +1,16 @@
+# NVIDIA GPU override — merge on top of compose.yml:
+#   docker compose -f compose.yml -f compose.gpu.yml up -d
+#
+# Requirements:
+#   - NVIDIA driver installed on the host
+#   - nvidia-container-toolkit installed (https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

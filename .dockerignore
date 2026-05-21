@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+electron/node_modules/
+docs-site/node_modules/
+
+# Build artifacts (rebuilt inside Docker)
+frontend/dist/
+docs-site/.next/
+docs-site/out/
+
+# Runtime data (mounted as a named volume)
+data/
+
+# Secrets — never bake into the image
+.env
+
+# Git / editor
+.git/
+.gitignore
+.vscode/
+
+# Electron desktop shell (not needed in Docker)
+electron/
+
+# Docs site (not served by the backend)
+docs-site/
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+.pytest_cache/
+*.egg-info/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

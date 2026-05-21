@@ -24,7 +24,13 @@
     "dist":        "npm run build --workspace=frontend && npm run build:win --workspace=electron",
     "docs":        "npm --prefix docs-site run dev",
     "docs:build":  "npm --prefix docs-site run build",
-    "docs:start":  "npm --prefix docs-site run start"
+    "docs:start":  "npm --prefix docs-site run start",
+    "docker":      "node scripts/docker.mjs",
+    "docker:down": "node scripts/docker.mjs --down",
+    "docker:logs": "node scripts/docker.mjs --logs",
+    "docker:gpu":  "node scripts/docker.mjs --gpu",
+    "docker:cloud":"node scripts/docker.mjs --cloud",
+    "docker:pull": "node scripts/docker.mjs --pull"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
