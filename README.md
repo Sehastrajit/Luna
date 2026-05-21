@@ -5,25 +5,25 @@
   <p><em>Local-first AI companion - voice, memory, vision, and desktop automation.</em></p>
 
   <p>
-    <a href="https://github.com/luna-ai-project/Luna/stargazers">
-      <img src="https://img.shields.io/github/stars/luna-ai-project/Luna?style=for-the-badge&logo=github&color=6d28d9&labelColor=030306" alt="Stars" />
+    <a href="https://github.com/Sehastrajit/Luna/stargazers">
+      <img src="https://img.shields.io/github/stars/Sehastrajit/Luna?style=for-the-badge&logo=github&color=6d28d9&labelColor=030306" alt="Stars" />
     </a>
-    <a href="https://github.com/luna-ai-project/Luna/forks">
-      <img src="https://img.shields.io/github/forks/luna-ai-project/Luna?style=for-the-badge&logo=github&color=7c3aed&labelColor=030306" alt="Forks" />
+    <a href="https://github.com/Sehastrajit/Luna/forks">
+      <img src="https://img.shields.io/github/forks/Sehastrajit/Luna?style=for-the-badge&logo=github&color=7c3aed&labelColor=030306" alt="Forks" />
     </a>
-    <a href="https://github.com/luna-ai-project/Luna/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/luna-ai-project/Luna?style=for-the-badge&color=8b5cf6&labelColor=030306" alt="License" />
+    <a href="https://github.com/Sehastrajit/Luna/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/Sehastrajit/Luna?style=for-the-badge&color=8b5cf6&labelColor=030306" alt="License" />
     </a>
-    <a href="https://github.com/luna-ai-project/Luna/commits/main">
-      <img src="https://img.shields.io/github/last-commit/luna-ai-project/Luna?style=for-the-badge&color=a78bfa&labelColor=030306" alt="Last Commit" />
+    <a href="https://github.com/Sehastrajit/Luna/commits/main">
+      <img src="https://img.shields.io/github/last-commit/Sehastrajit/Luna?style=for-the-badge&color=a78bfa&labelColor=030306" alt="Last Commit" />
     </a>
-    <a href="https://github.com/luna-ai-project/Luna/issues">
-      <img src="https://img.shields.io/github/issues/luna-ai-project/Luna?style=for-the-badge&color=c4b5fd&labelColor=030306" alt="Issues" />
+    <a href="https://github.com/Sehastrajit/Luna/issues">
+      <img src="https://img.shields.io/github/issues/Sehastrajit/Luna?style=for-the-badge&color=c4b5fd&labelColor=030306" alt="Issues" />
     </a>
   </p>
 
   <p>
-    <a href="https://github.com/luna-ai-project/Luna">
+    <a href="https://github.com/Sehastrajit/Luna">
       <img src="https://img.shields.io/badge/View%20on%20GitHub-%23030306?style=for-the-badge&logo=github&logoColor=white" alt="View on GitHub" />
     </a>
   </p>
@@ -90,7 +90,7 @@ Switch at any time by changing `luna_variant=personal` or `luna_variant=business
 ## Install — one line
 
 ```bash
-git clone https://github.com/luna-ai-project/Luna.git
+git clone https://github.com/Sehastrajit/Luna.git
 cd Luna
 npm install
 npm run luna -- setup
@@ -188,7 +188,7 @@ openai_model=anthropic/claude-opus-4
 ### 1 — Clone and run the setup wizard
 
 ```bash
-git clone https://github.com/luna-ai-project/Luna.git
+git clone https://github.com/Sehastrajit/Luna.git
 cd Luna
 npm install
 npm run luna -- setup
