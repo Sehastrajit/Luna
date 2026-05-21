@@ -1,0 +1,52 @@
+L.U.N.A. — Large Unified Nexus Mind AI
+Copyright (c) 2026 L.U.N.A. contributors
+https://github.com/Sehastrajit/Luna
+
+This product is licensed under the MIT License (see LICENSE).
+
+-------------------------------------------------------------------------------
+ATTRIBUTION REQUIREMENT
+-------------------------------------------------------------------------------
+
+The MIT License requires that the above copyright notice and this permission
+notice be included in all copies or substantial portions of the software.
+
+In addition, if you publicly distribute a product, service, or project that is
+built on, derived from, or substantially uses Luna's source code, you are
+expected to:
+
+  1. Retain the copyright notice in any source files you copy or adapt.
+
+  2. Include a visible acknowledgement in your project's README, documentation,
+     or public-facing About page, such as:
+
+       Built with L.U.N.A. (https://github.com/Sehastrajit/Luna)
+
+  3. Not represent Luna as your own original work in a way that misleads users
+     about its origin.
+
+These expectations are part of the community norms of this project and are
+consistent with the spirit of the MIT License, even where they exceed its
+minimum legal requirements.
+
+-------------------------------------------------------------------------------
+THIRD-PARTY COMPONENTS
+-------------------------------------------------------------------------------
+
+Luna bundles or depends on the following open-source components. Each retains
+its own copyright and license:
+
+  - Electron           MIT       https://github.com/electron/electron
+  - React              MIT       https://github.com/facebook/react
+  - Vite               MIT       https://github.com/vitejs/vite
+  - FastAPI            MIT       https://github.com/tiangolo/fastapi
+  - Ollama             MIT       https://github.com/ollama/ollama
+  - Three.js           MIT       https://github.com/mrdoob/three.js
+  - MapLibre GL JS     BSD-3     https://github.com/maplibre/maplibre-gl-js
+  - ChromaDB           Apache-2  https://github.com/chroma-core/chroma
+  - faster-whisper     MIT       https://github.com/SYSTRAN/faster-whisper
+  - Framer Motion      MIT       https://github.com/framer/motion
+  - Tailwind CSS       MIT       https://github.com/tailwindlabs/tailwindcss
+  - Zustand            MIT       https://github.com/pmndrs/zustand
+
+See each project's repository for the full license text.
