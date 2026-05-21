@@ -5,29 +5,26 @@
   <p><em>Local-first AI companion - voice, memory, vision, and desktop automation.</em></p>
 
   <p>
-    <a href="https://github.com/Sehastrajit/Luna/stargazers">
-      <img src="https://img.shields.io/github/stars/Sehastrajit/Luna?style=for-the-badge&logo=github&color=6d28d9&labelColor=030306" alt="Stars" />
+    <a href="https://github.com/luna-ai-project/Luna/stargazers">
+      <img src="https://img.shields.io/github/stars/luna-ai-project/Luna?style=for-the-badge&logo=github&color=6d28d9&labelColor=030306" alt="Stars" />
     </a>
-    <a href="https://github.com/Sehastrajit/Luna/forks">
-      <img src="https://img.shields.io/github/forks/Sehastrajit/Luna?style=for-the-badge&logo=github&color=7c3aed&labelColor=030306" alt="Forks" />
+    <a href="https://github.com/luna-ai-project/Luna/forks">
+      <img src="https://img.shields.io/github/forks/luna-ai-project/Luna?style=for-the-badge&logo=github&color=7c3aed&labelColor=030306" alt="Forks" />
     </a>
-    <a href="https://github.com/Sehastrajit/Luna/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/Sehastrajit/Luna?style=for-the-badge&color=8b5cf6&labelColor=030306" alt="License" />
+    <a href="https://github.com/luna-ai-project/Luna/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/luna-ai-project/Luna?style=for-the-badge&color=8b5cf6&labelColor=030306" alt="License" />
     </a>
-    <a href="https://github.com/Sehastrajit/Luna/commits/main">
-      <img src="https://img.shields.io/github/last-commit/Sehastrajit/Luna?style=for-the-badge&color=a78bfa&labelColor=030306" alt="Last Commit" />
+    <a href="https://github.com/luna-ai-project/Luna/commits/main">
+      <img src="https://img.shields.io/github/last-commit/luna-ai-project/Luna?style=for-the-badge&color=a78bfa&labelColor=030306" alt="Last Commit" />
     </a>
-    <a href="https://github.com/Sehastrajit/Luna/issues">
-      <img src="https://img.shields.io/github/issues/Sehastrajit/Luna?style=for-the-badge&color=c4b5fd&labelColor=030306" alt="Issues" />
+    <a href="https://github.com/luna-ai-project/Luna/issues">
+      <img src="https://img.shields.io/github/issues/luna-ai-project/Luna?style=for-the-badge&color=c4b5fd&labelColor=030306" alt="Issues" />
     </a>
   </p>
 
   <p>
-    <a href="https://github.com/Sehastrajit/Luna">
+    <a href="https://github.com/luna-ai-project/Luna">
       <img src="https://img.shields.io/badge/View%20on%20GitHub-%23030306?style=for-the-badge&logo=github&logoColor=white" alt="View on GitHub" />
-    </a>
-    <a href="https://www.linkedin.com/in/sehastrajit-s/">
-      <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" />
     </a>
   </p>
 
@@ -47,7 +44,7 @@
 
 ---
 
-L.U.N.A. is an open-source, local-first desktop AI companion. Chat, memory, voice, vision, and desktop automation all run on your machine through Ollama. Cloud APIs are opt-in and only contacted for the specific features they power — news, markets, Spotify, and map tiles.
+L.U.N.A. is an open-source, local-first AI companion. Chat, memory, voice, vision, and automation can run locally through Ollama, or through an opt-in OpenAI-compatible cloud/self-hosted provider. The browser UI works on desktop, phone, tablet, and other computers on your LAN.
 
 ---
 
@@ -58,6 +55,7 @@ L.U.N.A. is an open-source, local-first desktop AI companion. Chat, memory, voic
 - [Docker](#docker)
 - [Any Model](#any-model)
 - [Quick Start (desktop)](#quick-start-desktop)
+- [Documentation Site](#documentation-site)
 - [Stack](#stack)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
@@ -72,7 +70,7 @@ L.U.N.A. is an open-source, local-first desktop AI companion. Chat, memory, voic
 ## Install — one line
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Sehastrajit/Luna/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/luna-ai-project/Luna/main/install.sh | bash
 ```
 
 The script checks for Docker, clones the repo, copies `.env.example → .env`, asks CPU / GPU / cloud, and runs `docker compose up`. Luna opens on **http://localhost:8899**.
@@ -94,7 +92,7 @@ Three compose files cover every scenario:
 **Manual steps:**
 
 ```bash
-git clone https://github.com/Sehastrajit/Luna.git && cd Luna
+git clone https://github.com/luna-ai-project/Luna.git && cd Luna
 cp .env.example .env        # edit model / API keys
 docker compose up -d        # CPU local
 # or
@@ -126,7 +124,7 @@ Luna treats every LLM as a drop-in. Set two keys in `.env`:
 | **LM Studio / Jan.ai** | `openai_base_url=http://localhost:1234/v1` · `openai_api_key=lm-studio` |
 | **llama.cpp server** | `openai_base_url=http://localhost:8080/v1` |
 
-**OpenRouter** (`openrouter.ai`) is the easiest cloud path — one API key, every major model, pay-as-you-go.
+**OpenRouter** (`openrouter.ai`) is the easiest cloud path - one API key, every major model, pay-as-you-go.
 
 ---
 
@@ -152,7 +150,7 @@ Luna treats every LLM as a drop-in. Set two keys in `.env`:
 ### 1 — Clone
 
 ```bash
-git clone https://github.com/Sehastrajit/Luna.git
+git clone https://github.com/luna-ai-project/Luna.git
 cd Luna
 ```
 
@@ -198,12 +196,49 @@ cp .env.example .env
 ```bash
 npm run dev          # desktop (Electron + Vite + FastAPI)
 # or
-npm run luna -- dev  # backend + frontend only (no Electron)
+npm run luna -- web  # browser UI + FastAPI only (no Electron)
 ```
 
 Open `http://localhost:5173` in your browser, or use the Electron window.
 
 > **Tip:** Run `npm run luna -- doctor` first if something doesn't start — it checks your Node, Python, and Ollama versions in one shot.
+
+---
+
+## Documentation Site
+
+The documentation lives in `docs-site/` and runs as a Next.js app.
+
+```bash
+npm run docs
+```
+
+Open `http://localhost:3000` to browse the docs locally. The docs site includes a light/dark theme toggle in the top bar; your preference is saved in the browser.
+
+Production build:
+
+```bash
+npm run docs:build
+npm run docs:start
+```
+
+---
+
+## CLI Chat
+
+After Luna is running through Docker or the desktop backend, start an interactive terminal chat:
+
+```bash
+npm run chat
+# or
+npm run luna -- chat
+```
+
+Inside chat, use `/new` to start a fresh conversation and `/exit` to quit. One-shot messages also work:
+
+```bash
+npm run luna -- chat "summarize today's setup"
+```
 
 ---
 
@@ -303,7 +338,7 @@ spotify_client_id=
 spotify_client_secret=
 ```
 
-Full reference on the [Environment](https://github.com/Sehastrajit/Luna/blob/main/docs-site/pages/environment.js) docs page.
+Full reference is in `docs-site/pages/environment.js`.
 
 ---
 
@@ -324,10 +359,10 @@ luna_api_key=replace-with-a-strong-random-key
 ```
 
 ```powershell
-npm run dev:lan
+npm run luna -- web:lan
 ```
 
-Then open `http://YOUR-LAN-IP:5173` on any device. Voice, camera, notifications, and OS-level features depend on browser permissions and may be desktop-only.
+Then open `http://YOUR-LAN-IP:5173` on any device. Use `npm run luna -- dev:lan` only when you also want the Electron shell running on the host computer. Voice, camera, notifications, and OS-level features depend on browser permissions and may be desktop-only.
 
 ---
 
@@ -443,5 +478,5 @@ MIT — see [LICENSE](LICENSE).
 ---
 
 <div align="center">
-  <sub>Built by <a href="https://github.com/Sehastrajit">Sehastrajit</a> · <a href="https://www.linkedin.com/in/sehastrajit-s/">LinkedIn</a> · Open source, always.</sub>
+  <sub>Built by the L.U.N.A. contributors. Open source, always.</sub>
 </div>

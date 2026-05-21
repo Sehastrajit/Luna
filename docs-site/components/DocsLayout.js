@@ -1,5 +1,6 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 const GitHubIcon = () => (
@@ -8,15 +9,22 @@ const GitHubIcon = () => (
   </svg>
 );
 
-const LinkedInIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-  </svg>
-);
-
 const ExternalArrow = () => (
   <svg viewBox="0 0 12 12" fill="currentColor" style={{ width: 10, height: 10, opacity: 0.4 }}>
     <path d="M3.5 3a.5.5 0 000 1H7.3L2.15 9.15a.5.5 0 00.7.7L8 4.7V8.5a.5.5 0 001 0v-5a.5.5 0 00-.5-.5h-5z" />
+  </svg>
+);
+
+const SunIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M20.99 12.74A8.99 8.99 0 1111.26 3.01a7 7 0 009.73 9.73z" />
   </svg>
 );
 
@@ -58,6 +66,22 @@ const navGroups = [
 
 export default function DocsLayout({ title, description, toc, children }) {
   const router = useRouter();
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('luna-docs-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = saved || (prefersDark ? 'dark' : 'light');
+    setTheme(initialTheme);
+    document.documentElement.dataset.theme = initialTheme;
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem('luna-docs-theme', nextTheme);
+  };
 
   const isActive = (href) =>
     router.pathname === href || router.asPath === href || router.asPath.startsWith(`${href}/`);
@@ -88,11 +112,17 @@ export default function DocsLayout({ title, description, toc, children }) {
               <span className="docs-topbar-label">Documentation</span>
             </div>
             <div className="docs-topbar-right">
-              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer" className="docs-topbar-link">
+              <button
+                type="button"
+                className="theme-toggle"
+                onClick={toggleTheme}
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              >
+                {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+              </button>
+              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer" className="docs-topbar-link">
                 <GitHubIcon /> GitHub
-              </a>
-              <a href="https://www.linkedin.com/in/sehastrajit-s/" target="_blank" rel="noopener noreferrer" className="docs-topbar-link">
-                <LinkedInIcon /> LinkedIn
               </a>
               <Link href="/" className="docs-topbar-cta">← Home</Link>
             </div>
@@ -126,11 +156,8 @@ export default function DocsLayout({ title, description, toc, children }) {
             </nav>
 
             <div className="docs-sidebar-footer">
-              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer">
                 <GitHubIcon /> GitHub <ExternalArrow />
-              </a>
-              <a href="https://www.linkedin.com/in/sehastrajit-s/" target="_blank" rel="noopener noreferrer">
-                <LinkedInIcon /> LinkedIn <ExternalArrow />
               </a>
             </div>
           </aside>

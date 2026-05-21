@@ -1013,6 +1013,7 @@ async def chat_stream(
     request: Request,
     db: Session = Depends(get_db),
     voice: bool = False,
+    cli: bool = False,
 ):
     """Stream a chat response from Luna with full memory and personality context."""
 
@@ -1048,7 +1049,7 @@ async def chat_stream(
     conv.message_count += 1
     db.commit()
 
-    _src = "voice" if voice else "text"
+    _src = "voice" if voice else "cli" if cli else "text"
     _chat_print(f"\n[chat] {settings.user_name} ({_src}): {req.message}")
 
     memory = MemoryManager(db)
@@ -1203,7 +1204,7 @@ async def chat_stream(
             try:
                 async for token in ollama.stream_chat(step_messages, system_prompt):
                     full_response_parts.append(token)
-                    if voice:
+                    if voice or cli:
                         clean = re.sub(r'<think>.*?</think>', '', token, flags=re.DOTALL)
                         if clean:
                             yield f"data: {json.dumps({'type': 'message_part', 'content': clean})}\n\n"

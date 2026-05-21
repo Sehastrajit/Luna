@@ -17,6 +17,8 @@
     "start":       "npm start --workspace=electron",
     "dev":         "concurrently -n vite,electron -c cyan,magenta \"npm run dev --workspace=frontend\" \"npm start --workspace=electron\"",
     "dev:lan":     "concurrently -n vite,electron -c cyan,magenta \"npm run dev --workspace=frontend -- --host 0.0.0.0\" \"npm start --workspace=electron\"",
+    "web":         "concurrently -n api,vite -c green,cyan \"node ./cli/luna.mjs backend\" \"npm run dev --workspace=frontend\"",
+    "web:lan":     "concurrently -n api,vite -c green,cyan \"node ./cli/luna.mjs backend\" \"npm run dev --workspace=frontend -- --host 0.0.0.0\"",
     "tunnel":      "npx --yes cloudflared tunnel --url http://localhost:5173",
     "tunnel:lt":   "npx --yes localtunnel --port 5173",
     "build":       "npm run build --workspace=frontend",
@@ -32,6 +34,7 @@
     "docker:gpu":  "node scripts/docker.mjs --gpu",
     "docker:cloud":"node scripts/docker.mjs --cloud",
     "docker:pull": "node scripts/docker.mjs --pull",
+    "chat":        "node cli/luna.mjs chat",
     "health":      "node cli/luna.mjs health"
   },
   "devDependencies": {

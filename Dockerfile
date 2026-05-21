@@ -15,7 +15,7 @@ FROM python:3.11-slim
 
 LABEL org.opencontainers.image.title="L.U.N.A."
 LABEL org.opencontainers.image.description="Large Unified Nexus Mind AI — local-first AI companion"
-LABEL org.opencontainers.image.source="https://github.com/Sehastrajit/Luna"
+LABEL org.opencontainers.image.source="https://github.com/luna-ai-project/Luna"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # System packages:

@@ -104,10 +104,11 @@ class TaskPlan:
         ctx = "\n".join(
             f"Step {i+1} result: {r}" for i, r in enumerate(self.results)
         )
+        prior_results = f"Prior results:\n{ctx}" if ctx else ""
         return (
             f"You are executing a plan.\n"
             f"Overall task: {self.description}\n"
-            f"{'Prior results:\\n' + ctx if ctx else ''}\n\n"
+            f"{prior_results}\n\n"
             f"Current step ({self.current + 1}/{self.total}): {self.current_step}\n\n"
             "Respond as Luna, completing this step. "
             "If a tool call is needed, include a tool_call JSON. "

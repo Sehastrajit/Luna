@@ -12,6 +12,8 @@ import { spawn, spawnSync, execSync } from 'node:child_process'
 import { existsSync, rmSync, copyFileSync, readFileSync } from 'node:fs'
 import { tmpdir, platform } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
+import { createInterface } from 'node:readline/promises'
+import { stdin as input, stdout as output } from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -54,6 +56,16 @@ const COMMANDS = {
     group: 'Dev',
     summary: 'Start dev mode with Vite exposed on your LAN',
     run: () => npm(['run', 'dev:lan', ...rest]),
+  },
+  web: {
+    group: 'Dev',
+    summary: 'Start backend + browser UI without Electron',
+    run: () => npm(['run', 'web', ...rest]),
+  },
+  'web:lan': {
+    group: 'Dev',
+    summary: 'Start browser UI on your LAN for phones and tablets',
+    run: () => npm(['run', 'web:lan', ...rest]),
   },
   backend: {
     group: 'Dev',
@@ -140,6 +152,12 @@ const COMMANDS = {
   },
 
   // ── Docs ──
+  chat: {
+    group: 'Chat',
+    summary: 'Interactive terminal chat with the running Luna backend',
+    run: () => chatCli(rest),
+  },
+
   docs: {
     group: 'Docs',
     summary: 'Start the docs site (Next.js dev server)',
@@ -324,6 +342,113 @@ async function healthCheck() {
 }
 
 // ── Doctor ────────────────────────────────────────────────────────────────────
+async function chatCli(args = []) {
+  const env = readEnvFile()
+  const port = env.port || '8899'
+  const baseUrl = process.env.LUNA_URL || env.luna_url || `http://localhost:${port}`
+  let conversationId = null
+  const firstMessage = args.join(' ').trim()
+
+  console.log(`${c.bold}
+  ██╗     ██╗   ██╗███╗   ██╗ █████╗
+  ██║     ██║   ██║████╗  ██║██╔══██╗
+  ██║     ██║   ██║██╔██╗ ██║███████║
+  ██║     ██║   ██║██║╚██╗██║██╔══██║
+  ███████╗╚██████╔╝██║ ╚████║██║  ██║
+  ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝
+${c.reset}  Large Unified Nexus Mind AI
+`)
+  console.log(`  ${c.dim}${baseUrl}${c.reset}`)
+  console.log(`  ${c.dim}Type /exit or press Ctrl+C to quit. Type /new for a new conversation.${c.reset}\n`)
+
+  async function sendMessage(message) {
+    const body = { message }
+    if (conversationId) body.conversation_id = conversationId
+
+    let wrote = false
+    output.write(`${c.purple}Luna>${c.reset} `)
+
+    try {
+      const response = await fetch(`${baseUrl}/api/chat/stream?cli=true`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => '')
+        output.write('\n')
+        err(`Chat failed ${response.status}: ${text || response.statusText}`)
+        return
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      for await (const chunk of response.body) {
+        buffer += decoder.decode(chunk, { stream: true })
+        const events = buffer.split('\n\n')
+        buffer = events.pop() || ''
+
+        for (const event of events) {
+          for (const line of event.split('\n')) {
+            if (!line.startsWith('data:')) continue
+            const raw = line.slice(5).trim()
+            if (!raw) continue
+
+            let data
+            try { data = JSON.parse(raw) }
+            catch { continue }
+
+            if (data.type === 'meta' && data.conversation_id) {
+              conversationId = data.conversation_id
+            } else if (data.type === 'message_part' && data.content) {
+              output.write(data.content)
+              wrote = true
+            } else if (data.type === 'confirmation_required') {
+              output.write(`\n${c.yellow}Confirmation required:${c.reset} ${data.message}\n`)
+            } else if (data.type === 'error') {
+              output.write('\n')
+              err(data.message || 'Chat stream error')
+            } else if (data.type === 'done' && data.conversation_id) {
+              conversationId = data.conversation_id
+            }
+          }
+        }
+      }
+    } catch (e) {
+      output.write('\n')
+      err(`Not reachable: ${e.message}`)
+      info('Start Luna first: npm run docker')
+      return
+    }
+
+    output.write(wrote ? '\n\n' : '(no response)\n\n')
+  }
+
+  if (firstMessage) {
+    await sendMessage(firstMessage)
+    return
+  }
+
+  const rl = createInterface({ input, output })
+  try {
+    while (true) {
+      const message = (await rl.question(`${c.cyan}You>${c.reset} `)).trim()
+      if (!message) continue
+      if (message === '/exit' || message === '/quit') break
+      if (message === '/new') {
+        conversationId = null
+        ok('Started a new conversation')
+        continue
+      }
+      await sendMessage(message)
+    }
+  } finally {
+    rl.close()
+  }
+}
+
 function doctor() {
   head('Environment check...')
   const checks = [

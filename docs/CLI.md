@@ -21,6 +21,8 @@ luna doctor
 - `doctor`: check Node, npm, and Python availability.
 - `dev`: start Vite and Electron together.
 - `dev:lan`: start development mode with Vite exposed on the LAN.
+- `web`: start the FastAPI backend and browser UI without Electron.
+- `web:lan`: start the backend and expose the browser UI on the LAN for phones, tablets, and other computers.
 - `backend`: start only the FastAPI backend.
 - `frontend`: start only the Vite frontend.
 - `electron`: start only the Electron shell.

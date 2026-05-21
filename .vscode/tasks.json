@@ -16,6 +16,20 @@
       "problemMatcher": []
     },
     {
+      "label": "LUNA: Web",
+      "type": "shell",
+      "command": "npm run luna -- web",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "LUNA: Web LAN",
+      "type": "shell",
+      "command": "npm run luna -- web:lan",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
       "label": "LUNA: Backend",
       "type": "shell",
       "command": "npm run luna -- backend",

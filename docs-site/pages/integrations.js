@@ -10,35 +10,21 @@ const toc = [
 ];
 
 const Badge = ({ label, color = 'purple' }) => {
-  const colors = {
-    purple: { bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)', text: '#c4b5fd' },
-    green:  { bg: 'rgba(16,185,129,0.10)', border: 'rgba(16,185,129,0.3)', text: '#6ee7b7' },
-    blue:   { bg: 'rgba(59,130,246,0.10)', border: 'rgba(59,130,246,0.3)', text: '#93c5fd' },
-    gray:   { bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.3)', text: '#9ca3af' },
-  };
-  const s = colors[color] || colors.purple;
   return (
-    <span style={{
-      display: 'inline-block', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-      background: s.bg, border: `1px solid ${s.border}`, color: s.text, whiteSpace: 'nowrap',
-    }}>{label}</span>
+    <span className={`int-badge int-badge-${color}`}>{label}</span>
   );
 };
 
 const Card = ({ icon, title, subtitle, badges = [], note }) => (
-  <div style={{
-    display: 'flex', gap: 16, padding: '18px 20px', borderRadius: 12,
-    background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.14)',
-    marginBottom: 10,
-  }}>
-    <div style={{ fontSize: 26, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{icon}</div>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-        <span style={{ fontWeight: 600, color: '#e2e8f0', fontSize: 15 }}>{title}</span>
+  <div className="int-card">
+    <div className="int-icon">{icon}</div>
+    <div className="int-card-body">
+      <div className="int-card-head">
+        <span className="int-title">{title}</span>
         {badges.map(b => <Badge key={b.label} label={b.label} color={b.color} />)}
       </div>
-      {subtitle && <p style={{ margin: 0, color: '#94a3b8', fontSize: 14, lineHeight: 1.55 }}>{subtitle}</p>}
-      {note    && <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 12 }}>{note}</p>}
+      {subtitle && <p className="int-subtitle">{subtitle}</p>}
+      {note    && <p className="int-note">{note}</p>}
     </div>
   </div>
 );
@@ -50,14 +36,11 @@ const Grid = ({ children }) => (
 );
 
 const PlatformCard = ({ icon, name, status, detail }) => (
-  <div style={{
-    padding: '16px 18px', borderRadius: 12,
-    background: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.14)',
-  }}>
-    <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
-    <div style={{ fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>{name}</div>
-    <div style={{ marginBottom: 6 }}><Badge label={status} color={status === 'Full support' ? 'green' : status === 'Partial' ? 'blue' : 'gray'} /></div>
-    <div style={{ color: '#64748b', fontSize: 13, lineHeight: 1.5 }}>{detail}</div>
+  <div className="int-platform-card">
+    <div className="int-platform-icon">{icon}</div>
+    <div className="int-platform-name">{name}</div>
+    <div className="int-platform-status"><Badge label={status} color={status === 'Full support' ? 'green' : status === 'Partial' ? 'blue' : 'gray'} /></div>
+    <div className="int-detail">{detail}</div>
   </div>
 );
 

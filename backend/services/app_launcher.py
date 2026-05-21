@@ -2,15 +2,21 @@
 Windows app launcher — searches Start Menu, registry, and common paths.
 """
 import os
+import platform
 import subprocess
-import winreg
 import shutil
 from difflib import get_close_matches
 from pathlib import Path
 from functools import lru_cache
 
+try:
+    import winreg
+except ImportError:
+    winreg = None
+
 
 LUNA_APPS_DIR = Path("data/apps")
+IS_WINDOWS = platform.system() == "Windows"
 
 
 def _get_luna_apps() -> dict[str, str]:
@@ -80,6 +86,8 @@ def _get_start_menu_apps() -> dict[str, str]:
 def _get_registry_apps() -> dict[str, str]:
     """Read installed apps from Windows Uninstall registry keys."""
     apps = {}
+    if winreg is None:
+        return apps
     keys = [
         r"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths",
         r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths",
@@ -104,6 +112,8 @@ def _get_registry_apps() -> dict[str, str]:
 def _get_store_apps() -> dict[str, str]:
     """Read packaged apps from Get-StartApps."""
     apps = {}
+    if not IS_WINDOWS:
+        return apps
     try:
         result = subprocess.run(
             [
@@ -159,6 +169,9 @@ def find_app(name: str) -> tuple[bool, str]:
     """
     query = _normalize(name)
 
+    if not IS_WINDOWS:
+        return False, query
+
     # Direct alias lookup
     if query in COMMON_APP_ALIASES:
         return True, COMMON_APP_ALIASES[query]
@@ -184,6 +197,8 @@ def find_app(name: str) -> tuple[bool, str]:
 def launch_app(name: str) -> tuple[bool, str]:
     """Launch an application. Returns (success, message)."""
     found, target = find_app(name)
+    if not found:
+        return False, "App launching is only available in the desktop Windows runtime."
 
     try:
         # Shell / ms-protocol URLs (Settings, Store, packaged apps, etc.)
@@ -210,6 +225,8 @@ def launch_app(name: str) -> tuple[bool, str]:
 
 def list_known_apps() -> list[str]:
     """Return a combined list of findable app names."""
+    if not IS_WINDOWS:
+        return []
     names = list(COMMON_APP_ALIASES.keys())
     names += list(_get_registry_apps().keys())
     names += list(_get_start_menu_apps().keys())

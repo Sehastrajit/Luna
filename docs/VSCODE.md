@@ -17,6 +17,8 @@ Open the command palette and run `Tasks: Run Task`:
 
 - `LUNA: Dev`
 - `LUNA: Dev LAN`
+- `LUNA: Web`
+- `LUNA: Web LAN`
 - `LUNA: Backend`
 - `LUNA: Frontend`
 - `LUNA: Electron`
@@ -32,4 +34,4 @@ Open the Run and Debug panel:
 - `LUNA: CLI Processes`: debugs process registry listing.
 - `LUNA: CLI Doctor`: debugs CLI environment checks.
 
-For full desktop development, use the `LUNA: Dev` task.
+For full desktop development, use the `LUNA: Dev` task. For browser-only development or testing from another device, use `LUNA: Web` or `LUNA: Web LAN`.

@@ -79,7 +79,7 @@ ollama pull qwen2.5:3b`}</code></pre>
         <Steps>
           <Step num={1} title="Clone the repository">
             <CodeFile label="terminal">
-              <pre><code>{`git clone https://github.com/Sehastrajit/Luna.git
+              <pre><code>{`git clone https://github.com/luna-ai-project/Luna.git
 cd Luna`}</code></pre>
             </CodeFile>
           </Step>

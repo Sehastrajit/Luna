@@ -7,7 +7,10 @@ window titles, which is enough for many browsers and media players.
 import re
 from dataclasses import dataclass
 
-import win32gui
+try:
+    import win32gui
+except ImportError:
+    win32gui = None
 
 
 MEDIA_TITLE_HINTS = {
@@ -89,6 +92,8 @@ def _score_title(title: str) -> float:
 
 
 def get_foreground_window_title() -> str:
+    if win32gui is None:
+        return ""
     try:
         hwnd = win32gui.GetForegroundWindow()
         return win32gui.GetWindowText(hwnd).strip()

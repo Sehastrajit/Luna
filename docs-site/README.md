@@ -17,6 +17,8 @@ npm install
 npm run dev
 ```
 
+Open `http://localhost:3000`.
+
 ## Use from the repository root
 
 ```powershell
@@ -40,3 +42,7 @@ npm run docs:start
 - `/contributing`: contributor and PR guidelines
 - `/project-structure`: repository layout and module ownership
 - `/environment`: runtime configuration and `.env` guidance
+
+## Theme
+
+The docs UI supports light and dark modes. Use the top-bar toggle to switch themes; the selected theme is saved in `localStorage` and falls back to the system color scheme on first visit.

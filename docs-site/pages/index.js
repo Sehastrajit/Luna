@@ -7,12 +7,6 @@ const GitHubIcon = () => (
   </svg>
 );
 
-const LinkedInIcon = () => (
-  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-  </svg>
-);
-
 const ic = (path) => (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
     stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
@@ -110,11 +104,8 @@ export default function Home() {
               <span className="site-nav-logo">L.U.N.A.</span>
             </Link>
             <div className="site-nav-links">
-              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer" className="site-nav-link">
+              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer" className="site-nav-link">
                 <GitHubIcon /><span>GitHub</span>
-              </a>
-              <a href="https://www.linkedin.com/in/sehastrajit-s/" target="_blank" rel="noopener noreferrer" className="site-nav-link">
-                <LinkedInIcon /><span>LinkedIn</span>
               </a>
               <div className="site-nav-divider" aria-hidden="true" />
               <Link href="/workflow" className="site-nav-link"><span>Workflow</span></Link>
@@ -185,7 +176,7 @@ export default function Home() {
               <span className="lp-stat"><span className="lp-stat-dot" />FastAPI Backend</span>
             </div>
             <div className="lp-hero-actions">
-              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-primary">
+              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-primary">
                 <GitHubIcon />View on GitHub
               </a>
               <Link href="/getting-started" className="lp-btn lp-btn-outline">
@@ -250,11 +241,8 @@ export default function Home() {
             <h2>Built in the open.</h2>
             <p>Free, open-source, and always will be. Inspect every line, fork it, or contribute.</p>
             <div className="lp-oss-actions">
-              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-primary">
+              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-primary">
                 <GitHubIcon />Star on GitHub
-              </a>
-              <a href="https://www.linkedin.com/in/sehastrajit-s/" target="_blank" rel="noopener noreferrer" className="lp-btn lp-btn-ghost">
-                <LinkedInIcon />Connect
               </a>
             </div>
           </div>
@@ -271,8 +259,7 @@ export default function Home() {
               </div>
             </div>
             <nav className="lp-footer-links">
-              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer">GitHub</a>
-              <a href="https://www.linkedin.com/in/sehastrajit-s/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer">GitHub</a>
               <Link href="/workflow">Workflow</Link>
               <Link href="/getting-started">Docs</Link>
               <Link href="/architecture">Architecture</Link>

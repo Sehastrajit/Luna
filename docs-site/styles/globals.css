@@ -1704,13 +1704,117 @@ img, svg {
 /* =====================================================
    INTEGRATION CARD TEXT (integrations page)
    ===================================================== */
+.int-card {
+  display: flex;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 10px;
+  background: rgba(124,58,237,0.045);
+  border: 1px solid rgba(124,58,237,0.14);
+  margin-bottom: 10px;
+}
+
+.int-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.int-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.int-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.int-title {
+  font-weight: 700;
+  color: #111827;
+  font-size: 15px;
+}
+
 .int-subtitle { color: #374151; font-size: 14px; line-height: 1.55; margin: 0; }
 .int-note     { color: #6b7280; font-size: 12px; margin: 6px 0 0; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .int-detail   { color: #4b5563; font-size: 13px; line-height: 1.5; }
 
+.int-platform-card {
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: rgba(124,58,237,0.045);
+  border: 1px solid rgba(124,58,237,0.14);
+}
+
+.int-platform-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.int-platform-name {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.int-platform-status {
+  margin-bottom: 6px;
+}
+
+.int-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.int-badge-purple {
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.26);
+  color: #6d28d9;
+}
+
+.int-badge-green {
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.28);
+  color: #047857;
+}
+
+.int-badge-blue {
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.28);
+  color: #1d4ed8;
+}
+
+.int-badge-gray {
+  background: rgba(107,114,128,0.1);
+  border: 1px solid rgba(107,114,128,0.24);
+  color: #4b5563;
+}
+
+[data-theme="dark"] .int-card,
+[data-theme="dark"] .int-platform-card {
+  background: rgba(167,139,250,0.08);
+  border-color: rgba(167,139,250,0.18);
+}
+
+[data-theme="dark"] .int-title,
+[data-theme="dark"] .int-platform-name { color: #f1f5f9; }
 [data-theme="dark"] .int-subtitle { color: #cbd5e1; }
 [data-theme="dark"] .int-note     { color: #94a3b8; }
 [data-theme="dark"] .int-detail   { color: #94a3b8; }
+
+[data-theme="dark"] .int-badge-purple { background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.3); color: #c4b5fd; }
+[data-theme="dark"] .int-badge-green  { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.3); color: #6ee7b7; }
+[data-theme="dark"] .int-badge-blue   { background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.3); color: #93c5fd; }
+[data-theme="dark"] .int-badge-gray   { background: rgba(107,114,128,0.16); border-color: rgba(107,114,128,0.34); color: #cbd5e1; }
 
 /* Theme toggle button */
 .theme-toggle {
@@ -1728,6 +1832,7 @@ img, svg {
   flex-shrink: 0;
 }
 .theme-toggle:hover { background: #f3f4f6; color: #111827; }
+.theme-toggle svg { width: 16px; height: 16px; }
 [data-theme="dark"] .theme-toggle { border-color: rgba(255,255,255,0.1); color: #94a3b8; }
 [data-theme="dark"] .theme-toggle:hover { background: rgba(255,255,255,0.07); color: #e2e8f0; }
 
@@ -1748,6 +1853,7 @@ img, svg {
 
 /* Sidebar */
 [data-theme="dark"] .docs-sidebar { border-right-color: rgba(255,255,255,0.07); scrollbar-color: rgba(255,255,255,0.1) transparent; }
+[data-theme="dark"] .docs-sidebar { background: #0d0b14; }
 [data-theme="dark"] .docs-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
 [data-theme="dark"] .docs-sidebar-brand { border-bottom-color: rgba(255,255,255,0.07); }
 [data-theme="dark"] .docs-sidebar-logo { color: #e2e8f0; }
@@ -1784,6 +1890,11 @@ img, svg {
 [data-theme="dark"] .docs-content table { border-color: rgba(255,255,255,0.08); }
 [data-theme="dark"] .docs-content table th { background: rgba(255,255,255,0.04); color: #64748b; border-bottom-color: rgba(255,255,255,0.08); }
 [data-theme="dark"] .docs-content table td { color: #94a3b8; border-bottom-color: rgba(255,255,255,0.05); }
+[data-theme="dark"] .prop-table { border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .prop-table th { background: rgba(255,255,255,0.04); color: #94a3b8; border-bottom-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .prop-table td { color: #cbd5e1; border-bottom-color: rgba(255,255,255,0.05); }
+[data-theme="dark"] .prop-table td:first-child { color: #f1f5f9; }
+[data-theme="dark"] .prop-table td code { background: rgba(167,139,250,0.12); border-color: rgba(167,139,250,0.2); color: #c4b5fd; }
 
 /* TOC */
 [data-theme="dark"] .docs-toc-label { color: #64748b; }
@@ -1809,15 +1920,16 @@ img, svg {
 /* Doc steps */
 [data-theme="dark"] .doc-steps::before { background: rgba(255,255,255,0.07); }
 [data-theme="dark"] .doc-step-num { background: #1a1826; border-color: rgba(255,255,255,0.1); color: #a78bfa; }
-[data-theme="dark"] .doc-step-content h3 { color: #f1f5f9; }
-[data-theme="dark"] .doc-step-content p { color: #94a3b8; }
+[data-theme="dark"] .doc-step-body h3 { color: #f1f5f9; }
+[data-theme="dark"] .doc-step-body p { color: #94a3b8; }
 
 /* Next steps cards */
-[data-theme="dark"] .next-steps-card { background: #13111e; border-color: rgba(255,255,255,0.08); }
-[data-theme="dark"] .next-steps-card:hover { background: #1a1826; border-color: rgba(167,139,250,0.3); }
-[data-theme="dark"] .next-steps-label { background: rgba(167,139,250,0.12); color: #a78bfa; }
-[data-theme="dark"] .next-steps-title { color: #f1f5f9; }
-[data-theme="dark"] .next-steps-desc { color: #64748b; }
+[data-theme="dark"] .next-steps { border-top-color: rgba(255,255,255,0.07); }
+[data-theme="dark"] .next-step-card { background: #13111e; border-color: rgba(255,255,255,0.08); }
+[data-theme="dark"] .next-step-card:hover { background: #1a1826; border-color: rgba(167,139,250,0.3); }
+[data-theme="dark"] .next-step-label { color: #a78bfa; }
+[data-theme="dark"] .next-step-card h4 { color: #f1f5f9; }
+[data-theme="dark"] .next-step-card p { color: #94a3b8; }
 
 /* =====================================================
    RESPONSIVE — LANDING

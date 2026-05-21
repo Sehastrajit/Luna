@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # L.U.N.A. one-liner installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/Sehastrajit/Luna/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/luna-ai-project/Luna/main/install.sh | bash
 set -euo pipefail
 
-REPO="https://github.com/Sehastrajit/Luna.git"
+REPO="${LUNA_REPO:-https://github.com/luna-ai-project/Luna.git}"
 DIR="Luna"
 BOLD='\033[1m'
 CYAN='\033[0;36m'
@@ -129,5 +129,5 @@ echo -e "  Logs:    ${CYAN}$COMPOSE_CMD $COMPOSE_FILES logs -f luna${RESET}"
 echo -e "  Stop:    ${CYAN}$COMPOSE_CMD $COMPOSE_FILES down${RESET}"
 echo ""
 echo -e "  Voice, Electron shell, and OS automation require the desktop install."
-echo -e "  See https://github.com/Sehastrajit/Luna for full docs."
+echo -e "  See https://github.com/luna-ai-project/Luna for full docs."
 echo ""
