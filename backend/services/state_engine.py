@@ -311,8 +311,9 @@ class StateEngine:
                     self._was_last_state(db, UserState.SLEEPING)):
                 return UserState.JUST_WOKE_UP
 
-        # 3. Away: no interaction for > N minutes while PC is nominally on
-        if self._last_seen:
+        # 3. Away: personal-only — idle detection disabled in business variant
+        from backend.config import settings as _cfg
+        if _cfg.luna_variant == "personal" and self._last_seen:
             gone_min = (now - self._last_seen).total_seconds() / 60
             if gone_min > self.AWAY_THRESHOLD_MIN and idle_seconds < 3600:
                 return UserState.AWAY

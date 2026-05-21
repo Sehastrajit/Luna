@@ -392,61 +392,131 @@ Events:        ✓ Pushes  ✓ Pull requests  ✓ Issues  ✓ Issue comments  �
       <section>
         <h2 id="apps">Desktop Apps &amp; Automation</h2>
         <p>
-          Luna can control these through natural language. Each action goes through the permission
-          system — <code>allow</code>, <code>confirm</code>, or <code>block</code> per tool.
-          These features are available in the <strong>Personal</strong> variant only.
+          Luna can launch and control apps through natural language on Windows, macOS, and Linux.
+          Every action goes through the permission system — <code>allow</code>, <code>confirm</code>,
+          or <code>block</code> per tool. Desktop features are available in the{' '}
+          <strong>Personal</strong> variant only unless noted.
         </p>
 
+        <h3>App launcher</h3>
+        <Card
+          icon="🖥"
+          title="App launcher — 80+ app profiles"
+          subtitle='Launch any app by name across Windows, macOS, and Linux. Say "open VS Code", "launch Figma", "open Discord". Discovery uses curated profiles, macOS Spotlight (mdfind), Linux .desktop files, Windows registry, and Start Menu — covering virtually any installed app.'
+          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Cross-platform', color: 'purple' }]}
+          note='luna dev → "open <app name>" to launch. Covers all categories below.'
+        />
+
+        <table>
+          <thead><tr><th>Category</th><th>Apps covered</th></tr></thead>
+          <tbody>
+            <tr><td>Browsers</td><td>Chrome, Firefox, Edge, Safari, Brave, Opera, Vivaldi, Tor, Arc</td></tr>
+            <tr><td>Terminals &amp; editors</td><td>VS Code, Cursor, Sublime Text, Vim, Emacs, Warp, Hyper, Xcode, Visual Studio</td></tr>
+            <tr><td>IDEs</td><td>PyCharm, IntelliJ, WebStorm, Android Studio, Rider, CLion, DataGrip, GoLand, Eclipse, NetBeans</td></tr>
+            <tr><td>Dev tools</td><td>Postman, Insomnia, DBeaver, TablePlus, Sequel Pro, GitHub Desktop, GitKraken, Sourcetree, Docker, Figma</td></tr>
+            <tr><td>Communication</td><td>Slack, Zoom, Teams, Discord, Signal, WhatsApp, Telegram, Skype, Viber, Messages, FaceTime, Outlook, Thunderbird</td></tr>
+            <tr><td>Office</td><td>Word, Excel, PowerPoint, LibreOffice, Pages, Numbers, Keynote, Notion, Obsidian</td></tr>
+            <tr><td>Media &amp; creative</td><td>VLC, Spotify, Music, GIMP, Inkscape, Audacity, Blender, OBS, Kdenlive, DaVinci Resolve, HandBrake</td></tr>
+            <tr><td>Cloud &amp; storage</td><td>Dropbox, OneDrive, Google Drive</td></tr>
+            <tr><td>Gaming</td><td>Steam, Epic Games, Xbox</td></tr>
+            <tr><td>Security</td><td>Bitwarden, 1Password, Windows Security</td></tr>
+            <tr><td>System utilities</td><td>Task Manager, Activity Monitor, Event Viewer, Device Manager, Registry Editor, Disk Utility, Disk Management, Task Scheduler, Resource Monitor</td></tr>
+            <tr><td>System settings</td><td>Settings, Display, Sound, Bluetooth, Network, Updates, Privacy, Accessibility (all platforms)</td></tr>
+            <tr><td>macOS system apps</td><td>Safari, Mail, Messages, FaceTime, Music, Podcasts, Books, News, Contacts, Reminders, Calendar, Maps, Notes, Stickies, Console, Keychain Access, Disk Utility, Script Editor, Automator, Font Book, Preview, Voice Memos, Find My</td></tr>
+            <tr><td>Linux (XDG)</td><td>Any app with a <code>.desktop</code> file — Flatpak, Snap, and natively installed apps all discovered automatically</td></tr>
+          </tbody>
+        </table>
+
+        <h3>System controls</h3>
+        <Card
+          icon="🔊"
+          title="Volume"
+          subtitle='Get and set system volume (0–100), mute/unmute. Works on Windows (PowerShell/nircmd), macOS (osascript), and Linux (pactl/amixer). Say "set volume to 40", "mute", "unmute".'
+          badges={[{ label: 'Cross-platform', color: 'purple' }]}
+          note="API: GET/POST /api/system/volume  ·  POST /api/system/volume/mute|unmute"
+        />
+        <Card
+          icon="☀️"
+          title="Brightness"
+          subtitle='Get and set display brightness (0–100). Windows uses WMI, macOS uses the brightness CLI (brew install brightness), Linux uses brightnessctl or xbacklight. Say "set brightness to 60".'
+          badges={[{ label: 'Cross-platform', color: 'purple' }]}
+          note="API: GET/POST /api/system/brightness"
+        />
+        <Card
+          icon="🔒"
+          title="Lock screen"
+          subtitle='Instantly lock the workstation. Windows: rundll32 LockWorkStation. macOS: Command+Control+Q. Linux: loginctl lock-session or xdg-screensaver. Say "lock my screen".'
+          badges={[{ label: 'Cross-platform', color: 'purple' }]}
+          note="API: POST /api/system/lock"
+        />
+        <Card
+          icon="💤"
+          title="Sleep"
+          subtitle='Put the system to sleep / suspend. Windows: SetSuspendState. macOS: pmset sleepnow. Linux: systemctl suspend. Requires confirm permission by default.'
+          badges={[{ label: 'Cross-platform', color: 'purple' }]}
+          note="API: POST /api/system/sleep  ·  Permission: confirm"
+        />
+        <Card
+          icon="📋"
+          title="Clipboard"
+          subtitle='Read and write the system clipboard. Windows: PowerShell Get/Set-Clipboard. macOS: pbpaste/pbcopy. Linux: xclip, xsel, or wl-paste/wl-copy. Say "copy this to clipboard" or "what\'s in my clipboard?"'
+          badges={[{ label: 'Cross-platform', color: 'purple' }]}
+          note="API: GET/POST /api/system/clipboard"
+        />
+        <Card
+          icon="🖥"
+          title="Display off"
+          subtitle="Turn off the display without sleeping the system. Windows: SendMessage. macOS: pmset displaysleepnow. Linux: xset dpms."
+          badges={[{ label: 'Cross-platform', color: 'purple' }]}
+          note="API: POST /api/system/display/off"
+        />
+        <Card
+          icon="ℹ️"
+          title="System info"
+          subtitle="Report OS, RAM, battery percentage, and machine name. Cross-platform via WMI (Windows), sysctl (macOS), and /proc (Linux)."
+          badges={[{ label: 'Cross-platform', color: 'purple' }]}
+          note="API: GET /api/system/info"
+        />
+
+        <h3>Other personal features</h3>
         <Card
           icon="🎵"
           title="Spotify"
           subtitle='Playback control, queue management, search, and now-playing display. Trigger with phrases like "play something chill" or "skip this".'
           badges={[{ label: 'Personal only', color: 'green' }, { label: 'Opt-in', color: 'blue' }]}
-          note="Requires spotify_client_id and spotify_client_secret in .env. See Environment → Spotify."
+          note="Requires spotify_client_id and spotify_client_secret in .env."
         />
         <Card
           icon="🌐"
           title="Web browser"
-          subtitle="Open URLs, navigate to pages, and read public page content. Playwright can be enabled for full browser automation including JavaScript-rendered pages."
+          subtitle="Open URLs and read public page content. Playwright can be enabled for full browser automation including JavaScript-rendered pages."
           badges={[{ label: 'Built-in', color: 'purple' }]}
-          note="Public HTTP fetch is always available. Playwright requires: pip install playwright && playwright install chromium"
-        />
-        <Card
-          icon="🖥"
-          title="App launcher"
-          subtitle='Launch common apps by name across Windows, macOS, and Linux. Say "open calculator", "launch VS Code", or "open Sticky Notes".'
-          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Built-in', color: 'purple' }]}
-          note="Profiles include browsers, editors, terminals, file managers, notes, office apps, settings, camera, photos, maps, task manager, and screenshot tools."
-        />
-        <Card
-          icon="📝"
-          title="Sticky Notes / Notes"
-          subtitle="Opens the system notes app safely. Prefers Microsoft Sticky Notes on Windows, Stickies/Notes on macOS, and common sticky-note apps on Linux."
-          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Cross-platform', color: 'purple' }]}
+          note="Playwright: pip install playwright && playwright install chromium"
         />
         <Card
           icon="📅"
           title="Calendar &amp; tasks"
-          subtitle="Create, list, update, and complete tasks stored in Luna's local SQLite database. Triggers proactive follow-up reminders when due. Available in both variants."
+          subtitle="Create, list, update, and complete tasks in Luna's local SQLite database. Proactive reminders fire when tasks are due."
           badges={[{ label: 'Both variants', color: 'purple' }]}
         />
         <Card
           icon="🔍"
           title="Web search"
-          subtitle="DuckDuckGo HTML search — no API key required. Luna fetches and parses results automatically when a model tool call requests live information. Available in both variants."
+          subtitle="DuckDuckGo HTML search — no API key required. Fires automatically when the LLM needs live information."
           badges={[{ label: 'Both variants', color: 'purple' }]}
         />
         <Card
-          icon="🔊"
+          icon="🔈"
           title="Audio device switcher"
-          subtitle="Switch the default Windows audio output device by name. Useful for toggling between headphones, speakers, and virtual devices."
-          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Windows only', color: 'gray' }]}
+          subtitle="Switch the default Windows audio output device by name — headphones, speakers, virtual audio."
+          badges={[{ label: 'Windows only', color: 'gray' }]}
+          note="API: GET /api/system/audio-devices  ·  POST /api/system/audio-device"
         />
         <Card
           icon="🗺"
           title="Maps"
-          subtitle="Open interactive MapLibre map overlays with a location query. Works in the browser and Electron UI."
-          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Built-in', color: 'purple' }]}
+          subtitle="Open interactive MapLibre map overlays with a location query."
+          badges={[{ label: 'Personal only', color: 'green' }]}
         />
       </section>
 

@@ -5,6 +5,7 @@ from backend.models.schemas import AppLaunchRequest, StatusResponse
 from backend.services.app_launcher import launch_app, list_app_profiles, list_known_apps
 from backend.services.media_context import get_watching_context
 from backend.services.scheduler import proactive_queue
+from backend.services import system_controls as sc
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 
@@ -127,6 +128,71 @@ async def generate_scene(topic: str = ""):
     except Exception as e:
         return {"error": f"JSON parse failed: {e}", "raw": raw[:300]}
 
+
+@router.get("/volume")
+def get_volume():
+    ok, val = sc.get_volume()
+    return {"ok": ok, "volume": val if ok else None, "error": None if ok else val}
+
+@router.post("/volume")
+async def set_volume(request: Request):
+    body = await request.json()
+    level = body.get("level", 50)
+    ok, msg = sc.set_volume(int(level))
+    return {"ok": ok, "message": msg}
+
+@router.post("/volume/mute")
+def mute_audio():
+    ok, msg = sc.mute_audio()
+    return {"ok": ok, "message": msg}
+
+@router.post("/volume/unmute")
+def unmute_audio():
+    ok, msg = sc.unmute_audio()
+    return {"ok": ok, "message": msg}
+
+@router.get("/brightness")
+def get_brightness():
+    ok, val = sc.get_brightness()
+    return {"ok": ok, "brightness": val if ok else None, "error": None if ok else val}
+
+@router.post("/brightness")
+async def set_brightness(request: Request):
+    body = await request.json()
+    level = body.get("level", 50)
+    ok, msg = sc.set_brightness(int(level))
+    return {"ok": ok, "message": msg}
+
+@router.post("/lock")
+def lock_screen():
+    ok, msg = sc.lock_screen()
+    return {"ok": ok, "message": msg}
+
+@router.post("/display/off")
+def display_off():
+    ok, msg = sc.turn_off_display()
+    return {"ok": ok, "message": msg}
+
+@router.post("/sleep")
+def sleep():
+    ok, msg = sc.sleep_system()
+    return {"ok": ok, "message": msg}
+
+@router.get("/clipboard")
+def get_clipboard():
+    ok, text = sc.get_clipboard()
+    return {"ok": ok, "text": text if ok else None, "error": None if ok else text}
+
+@router.post("/clipboard")
+async def set_clipboard_route(request: Request):
+    body = await request.json()
+    text = body.get("text", "")
+    ok, msg = sc.set_clipboard(text)
+    return {"ok": ok, "message": msg}
+
+@router.get("/info")
+def system_info():
+    return sc.get_system_info()
 
 @router.get("/health")
 async def health():

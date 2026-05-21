@@ -1482,16 +1482,17 @@ def parse_commands(response: str, user_message: str = "") -> list[dict]:
         is_bedtime = any(w in msg.lower() for w in _bedtime_words) or _response_is_farewell(resp)
         commands.append({"type": "away", "action": "on", "label": "bedtime" if is_bedtime else "away"})
 
-    # Check for [AWAY] bracket or malformed "AWAY." emitted literally by the model
-    has_away_bracket = bool(re.search(r'\[AWAY\]', response))
-    has_away_literal = bool(re.search(r'(?<!\[)\bAWAY\b(?!\s*])', response))
+    # Away mode is personal-only — disabled in business variant
+    from backend.config import settings as _cfg
+    if _cfg.luna_variant == "personal":
+        has_away_bracket = bool(re.search(r'\[AWAY\]', response))
+        has_away_literal = bool(re.search(r'(?<!\[)\bAWAY\b(?!\s*])', response))
 
-    if has_away_bracket or has_away_literal:
-        if not user_message or _user_is_leaving(user_message) or _response_is_farewell(response):
+        if has_away_bracket or has_away_literal:
+            if not user_message or _user_is_leaving(user_message) or _response_is_farewell(response):
+                _emit_away(user_message, response)
+        elif user_message and _user_is_leaving(user_message):
             _emit_away(user_message, response)
-    elif user_message and _user_is_leaving(user_message):
-        # LLM forgot to emit [AWAY] — user clearly stated they're leaving, force-trigger
-        _emit_away(user_message, response)
 
     _BROWSE_BLOCK = re.compile(
         r"(weather\.com|wttr\.in|open-meteo|wunderground|weather\.gov"

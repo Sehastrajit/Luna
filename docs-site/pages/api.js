@@ -377,6 +377,37 @@ Body: file=<wav blob>`}</code></pre>
           <pre><code>{`{ "app": "notepad" }`}</code></pre>
         </CodeFile>
 
+        <h3>List launchable apps — <code>GET /api/system/apps</code></h3>
+        <p>Returns every app name Luna can launch on the current platform (profiles + registry + .desktop files).</p>
+
+        <h3>Volume — <code>GET /api/system/volume</code> / <code>POST /api/system/volume</code></h3>
+        <CodeFile label="GET response">
+          <pre><code>{`{ "ok": true, "volume": 65 }`}</code></pre>
+        </CodeFile>
+        <CodeFile label="POST request body">
+          <pre><code>{`{ "level": 40 }`}</code></pre>
+        </CodeFile>
+        <h3>Mute — <code>POST /api/system/volume/mute</code> / <code>POST /api/system/volume/unmute</code></h3>
+
+        <h3>Brightness — <code>GET /api/system/brightness</code> / <code>POST /api/system/brightness</code></h3>
+        <CodeFile label="POST request body">
+          <pre><code>{`{ "level": 75 }`}</code></pre>
+        </CodeFile>
+
+        <h3>Lock screen — <code>POST /api/system/lock</code></h3>
+        <h3>Display off — <code>POST /api/system/display/off</code></h3>
+        <h3>Sleep — <code>POST /api/system/sleep</code></h3>
+
+        <h3>Clipboard — <code>GET /api/system/clipboard</code> / <code>POST /api/system/clipboard</code></h3>
+        <CodeFile label="POST request body">
+          <pre><code>{`{ "text": "text to copy" }`}</code></pre>
+        </CodeFile>
+
+        <h3>System info — <code>GET /api/system/info</code></h3>
+        <CodeFile label="response">
+          <pre><code>{`{ "os": "Windows", "version": "10.0.26200", "machine": "AMD64", "ram_gb": 32.0, "battery_pct": 87 }`}</code></pre>
+        </CodeFile>
+
         <h3>Generate 3D scene — <code>POST /api/system/scene</code></h3>
         <p>Asks the LLM to generate a Three.js scene description for the dynamic overlay.</p>
         <CodeFile label="request body">
