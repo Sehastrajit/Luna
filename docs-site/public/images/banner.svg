@@ -1,0 +1,144 @@
+<svg width="1280" height="400" viewBox="0 0 1280 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background radial glow: dark purple centre fading to near-black -->
+    <radialGradient id="bgGlow" cx="50%" cy="42%" r="55%" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#1a0a2e"/>
+      <stop offset="100%" stop-color="#030306"/>
+    </radialGradient>
+
+    <!-- Moon gradient (same stops as logo.svg, in user-space so it maps to the scaled shape) -->
+    <linearGradient id="moonGrad" x1="568" y1="78" x2="706" y2="216" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ddd6fe"/>
+      <stop offset="0.45" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#4c1d95"/>
+    </linearGradient>
+
+    <!-- Title horizontal gradient -->
+    <linearGradient id="titleGrad" x1="420" y1="0" x2="860" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ede9fe"/>
+      <stop offset="45%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+
+    <!--
+      Crescent mask: white = show, black = hide.
+      Moon main circle: cx=640 cy=140 r=76  (logo scaled 4×, translated so main circle centre = 640,140)
+      Cutout circle offset mirrors logo: (32-21)×4=44 right, (18-27)×4=36 up → cx=684 cy=104 r=64
+    -->
+    <mask id="crescent">
+      <rect width="1280" height="400" fill="white"/>
+      <circle cx="684" cy="104" r="64" fill="black"/>
+    </mask>
+
+    <!-- Purple glow halo behind moon -->
+    <filter id="moonGlow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="16" result="blur"/>
+      <feFlood flood-color="#7c3aed" flood-opacity="0.55" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="colorBlur"/>
+      <feMerge>
+        <feMergeNode in="colorBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Soft glow on the title text -->
+    <filter id="titleGlow" x="-8%" y="-60%" width="116%" height="220%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="9" result="blur"/>
+      <feFlood flood-color="#8b5cf6" flood-opacity="0.65" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="colorBlur"/>
+      <feMerge>
+        <feMergeNode in="colorBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ═══ Background ═══ -->
+  <rect width="1280" height="400" fill="#030306"/>
+  <rect width="1280" height="400" fill="url(#bgGlow)"/>
+
+  <!-- ═══ Star field (left side) ═══ -->
+  <circle cx="74"  cy="34"  r="1.7" fill="#ddd6fe" opacity="0.90"/>
+  <circle cx="198" cy="118" r="1.3" fill="#ede9fe" opacity="0.72"/>
+  <circle cx="342" cy="57"  r="1.1" fill="#c4b5fd" opacity="0.78"/>
+  <circle cx="148" cy="278" r="1.5" fill="#ddd6fe" opacity="0.68"/>
+  <circle cx="42"  cy="192" r="0.9" fill="#c4b5fd" opacity="0.58"/>
+  <circle cx="418" cy="335" r="1.2" fill="#ede9fe" opacity="0.63"/>
+  <circle cx="271" cy="368" r="0.8" fill="#c4b5fd" opacity="0.48"/>
+  <circle cx="119" cy="158" r="1.3" fill="#ddd6fe" opacity="0.53"/>
+  <circle cx="488" cy="83"  r="1.0" fill="#c4b5fd" opacity="0.68"/>
+  <circle cx="302" cy="214" r="1.1" fill="#ede9fe" opacity="0.44"/>
+  <circle cx="58"  cy="324" r="0.8" fill="#ddd6fe" opacity="0.58"/>
+  <circle cx="184" cy="43"  r="0.9" fill="#c4b5fd" opacity="0.68"/>
+  <circle cx="437" cy="171" r="1.0" fill="#ddd6fe" opacity="0.48"/>
+  <circle cx="511" cy="42"  r="1.3" fill="#ddd6fe" opacity="0.58"/>
+
+  <!-- ═══ Star field (right side) ═══ -->
+  <circle cx="848"  cy="40"  r="1.5" fill="#ddd6fe" opacity="0.80"/>
+  <circle cx="974"  cy="127" r="1.2" fill="#ede9fe" opacity="0.68"/>
+  <circle cx="1102" cy="54"  r="1.3" fill="#c4b5fd" opacity="0.73"/>
+  <circle cx="1215" cy="175" r="0.9" fill="#ddd6fe" opacity="0.63"/>
+  <circle cx="922"  cy="292" r="1.4" fill="#ede9fe" opacity="0.58"/>
+  <circle cx="1044" cy="345" r="1.0" fill="#c4b5fd" opacity="0.53"/>
+  <circle cx="1176" cy="308" r="0.8" fill="#ddd6fe" opacity="0.68"/>
+  <circle cx="808"  cy="167" r="1.2" fill="#c4b5fd" opacity="0.48"/>
+  <circle cx="1240" cy="85"  r="0.9" fill="#ede9fe" opacity="0.78"/>
+  <circle cx="868"  cy="356" r="0.7" fill="#ddd6fe" opacity="0.48"/>
+  <circle cx="1064" cy="218" r="1.1" fill="#c4b5fd" opacity="0.43"/>
+  <circle cx="1142" cy="136" r="0.8" fill="#ede9fe" opacity="0.63"/>
+  <circle cx="760"  cy="36"  r="1.5" fill="#ede9fe" opacity="0.68"/>
+
+  <!-- ═══ Ambient glow halos behind moon ═══ -->
+  <circle cx="640" cy="140" r="172" fill="#3b0764" opacity="0.07"/>
+  <circle cx="640" cy="140" r="116" fill="#4c1d95" opacity="0.08"/>
+  <circle cx="640" cy="140" r="74"  fill="#6d28d9" opacity="0.06"/>
+
+  <!-- ═══ Crescent moon ═══ -->
+  <!-- Main circle cx=640 cy=140 r=76, crescent cut by mask -->
+  <circle cx="640" cy="140" r="76" fill="url(#moonGrad)" mask="url(#crescent)" filter="url(#moonGlow)"/>
+
+  <!--
+    Orbital ring: original logo ellipse cx=26 cy=22 rx=21 ry=8 rotate(-28 26 22), scale 4×
+    translate(556, 32): cx=(26×4+556)=660 cy=(22×4+32)=120 rx=84 ry=32
+    rotate(-28) pivot stays at ring centre
+  -->
+  <ellipse cx="660" cy="120" rx="84" ry="32" stroke="#a78bfa" stroke-width="1.3"
+    stroke-linecap="round" stroke-dasharray="5 7" opacity="0.40"
+    transform="rotate(-28 660 120)"/>
+
+  <!--
+    Stars from logo (scale 4×, translate 556 32):
+      cx=40 cy=9  → (716, 68)  r≈3.5
+      cx=7  cy=8  → (584, 64)  r≈2.0
+      cx=43 cy=34 → (728, 168) r≈2.0
+  -->
+  <circle cx="716" cy="68"  r="3.5" fill="#ddd6fe" opacity="0.86"/>
+  <circle cx="584" cy="64"  r="2.0" fill="#c4b5fd" opacity="0.64"/>
+  <circle cx="728" cy="168" r="2.0" fill="#c4b5fd" opacity="0.50"/>
+
+  <!-- ═══ Title ═══ -->
+  <text x="640" y="278"
+    text-anchor="middle"
+    font-family="'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif"
+    font-size="70" font-weight="800" letter-spacing="10"
+    fill="url(#titleGrad)" filter="url(#titleGlow)">L.U.N.A.</text>
+
+  <!-- ═══ Subtitle ═══ -->
+  <text x="640" y="314"
+    text-anchor="middle"
+    font-family="'Segoe UI', 'SF Pro Text', system-ui, -apple-system, sans-serif"
+    font-size="14.5" font-weight="400" letter-spacing="3.5"
+    fill="#a78bfa" opacity="0.88">LARGE UNIFIED NEXUS MIND AI</text>
+
+  <!-- ═══ Separator ═══ -->
+  <line x1="530" y1="336" x2="622" y2="336" stroke="#4c1d95" stroke-width="0.8" opacity="0.55"/>
+  <circle cx="640" cy="336" r="2.2" fill="#8b5cf6" opacity="0.80"/>
+  <line x1="658" y1="336" x2="750" y2="336" stroke="#4c1d95" stroke-width="0.8" opacity="0.55"/>
+
+  <!-- ═══ Tagline ═══ -->
+  <text x="640" y="362"
+    text-anchor="middle"
+    font-family="'Segoe UI', system-ui, -apple-system, sans-serif"
+    font-size="13" font-weight="300" letter-spacing="2.5"
+    fill="#7c3aed" opacity="0.82">voice  ·  memory  ·  vision  ·  desktop automation</text>
+</svg>
