@@ -13,13 +13,56 @@ const LinkedInIcon = () => (
   </svg>
 );
 
+const ic = (path) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+    stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+    aria-hidden="true">
+    {path}
+  </svg>
+);
+
+/* Dotted grid wave — pre-computed at module load */
+const COLS = 32, ROWS = 18, GAP = 60, DOT = 3, DUR = 5, SPD = 0.24;
+const cx = (COLS - 1) / 2, cy = (ROWS - 1) / 2;
+const dots = [];
+for (let r = 0; r < ROWS; r++) {
+  for (let c = 0; c < COLS; c++) {
+    const dist = Math.sqrt((c - cx) ** 2 + (r - cy) ** 2);
+    dots.push({ r, c, delay: +(dist * SPD - DUR / 2).toFixed(2) });
+  }
+}
+
 const features = [
-  { icon: '🎙️', title: 'Voice', desc: 'Wake-word detection and push-to-talk. Luna listens, understands, and speaks back with local TTS.' },
-  { icon: '🧠', title: 'Memory', desc: 'Persistent facts, personality state, and conversation summaries — stored in local SQLite and ChromaDB.' },
-  { icon: '👁️', title: 'Vision', desc: 'Screen and camera awareness. Luna builds temporal visual context without storing raw frames.' },
-  { icon: '⚡', title: 'Automation', desc: 'Launch apps, control the browser, manage Spotify, execute calendar tasks and desktop actions.' },
-  { icon: '📊', title: 'Dashboard', desc: 'Live news, markets, weather, and maps in a heads-up display widget layer.' },
-  { icon: '🔒', title: 'Private by Default', desc: 'Inference runs on your machine via Ollama. Zero data leaves unless you opt into cloud features.' },
+  {
+    icon: ic(<><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/></>),
+    title: 'Voice', href: '/voice',
+    desc: 'Wake-word detection and push-to-talk. Luna listens, understands, and speaks back with local TTS.',
+  },
+  {
+    icon: ic(<><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></>),
+    title: 'Memory', href: '/memory',
+    desc: 'Persistent facts, personality state, and conversation summaries stored in local SQLite and ChromaDB.',
+  },
+  {
+    icon: ic(<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>),
+    title: 'Vision', href: '/architecture',
+    desc: 'Screen and camera awareness. Luna builds temporal visual context without storing raw frames.',
+  },
+  {
+    icon: ic(<><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></>),
+    title: 'Automation', href: '/agent',
+    desc: 'Launch apps, control the browser, manage Spotify, execute calendar tasks and desktop actions.',
+  },
+  {
+    icon: ic(<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></>),
+    title: 'Dashboard', href: '/api#luna',
+    desc: 'Live news, markets, weather, and maps in a heads-up display widget layer.',
+  },
+  {
+    icon: ic(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></>),
+    title: 'Private by Default', href: '/environment',
+    desc: 'Inference runs on your machine via Ollama. Zero data leaves unless you opt into cloud features.',
+  },
 ];
 
 const steps = [
@@ -29,19 +72,6 @@ const steps = [
   { title: 'Actions & response', desc: 'Luna streams the reply, executes tools, opens widgets, updates memory, and delivers voice output.' },
 ];
 
-/* Floating sea particles */
-const particles = [
-  { top: '58%', left: '8%',  size: 3, delay: '0s',    dur: '6s' },
-  { top: '72%', left: '22%', size: 2, delay: '1.2s',  dur: '8s' },
-  { top: '65%', left: '40%', size: 4, delay: '2.4s',  dur: '7s' },
-  { top: '80%', left: '55%', size: 2, delay: '0.6s',  dur: '9s' },
-  { top: '60%', left: '70%', size: 3, delay: '3.1s',  dur: '6s' },
-  { top: '75%', left: '85%', size: 2, delay: '1.8s',  dur: '8s' },
-  { top: '68%', left: '94%', size: 3, delay: '0.3s',  dur: '7s' },
-  { top: '85%', left: '12%', size: 2, delay: '2.1s',  dur: '9s' },
-  { top: '62%', left: '32%', size: 2, delay: '4.0s',  dur: '7s' },
-  { top: '78%', left: '62%', size: 3, delay: '1.5s',  dur: '6s' },
-];
 
 export default function Home() {
   return (
@@ -55,22 +85,17 @@ export default function Home() {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
         <style>{`
-          @keyframes wave-drift-fwd { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-          @keyframes wave-drift-rev { from { transform: translateX(-50%); } to { transform: translateX(0); } }
-          @keyframes sea-particle {
-            0%   { transform: translateY(0) scale(1);    opacity: 0; }
-            15%  { opacity: 0.85; }
-            80%  { opacity: 0.35; }
-            100% { transform: translateY(-80px) scale(0.4); opacity: 0; }
-          }
-          @keyframes moon-glow {
-            0%, 100% { opacity: 0.65; transform: scale(1); }
-            50%      { opacity: 0.85; transform: scale(1.06); }
-          }
-          @keyframes reflection-shimmer {
-            0%, 100% { opacity: 0.22; transform: scaleX(1) translateY(0); }
-            33%      { opacity: 0.32; transform: scaleX(1.04) translateY(-6px); }
-            66%      { opacity: 0.18; transform: scaleX(0.97) translateY(4px); }
+          @keyframes dot-wave {
+            0%, 100% {
+              background: rgba(109,40,217,0.2);
+              transform: scale(0.6);
+              box-shadow: none;
+            }
+            50% {
+              background: rgba(216,180,254,0.88);
+              transform: scale(1.25);
+              box-shadow: 0 0 7px 2px rgba(167,139,250,0.45);
+            }
           }
         `}</style>
       </Head>
@@ -101,56 +126,46 @@ export default function Home() {
         {/* ── Hero ── */}
         <section className="lp-hero" style={{ background: '#02020a', overflow: 'hidden' }}>
 
-          {/* Moon glow — top center */}
+          {/* ── Dotted grid wave ── */}
           <div aria-hidden="true" style={{
-            position: 'absolute', top: '-80px', left: '50%', transform: 'translateX(-50%)',
-            width: '560px', height: '560px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(109,40,217,0.55) 0%, rgba(76,29,149,0.25) 40%, transparent 70%)',
-            filter: 'blur(60px)',
-            animation: 'moon-glow 8s ease-in-out infinite',
-            pointerEvents: 'none',
-          }} />
-
-          {/* Horizon glow — left */}
-          <div aria-hidden="true" style={{
-            position: 'absolute', top: '30%', left: '-8%',
-            width: '420px', height: '420px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(55,48,163,0.4) 0%, transparent 68%)',
-            filter: 'blur(80px)', opacity: 0.6, pointerEvents: 'none',
-          }} />
-
-          {/* Horizon glow — right */}
-          <div aria-hidden="true" style={{
-            position: 'absolute', top: '25%', right: '-5%',
-            width: '380px', height: '380px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(91,33,182,0.4) 0%, transparent 68%)',
-            filter: 'blur(80px)', opacity: 0.55, pointerEvents: 'none',
-          }} />
-
-          {/* Moon reflection in the sea */}
-          <div aria-hidden="true" style={{
-            position: 'absolute', bottom: '15%', left: '50%', transform: 'translateX(-50%)',
-            width: '220px', height: '80px', borderRadius: '50%',
-            background: 'radial-gradient(ellipse, rgba(139,92,246,0.6) 0%, transparent 70%)',
-            filter: 'blur(24px)',
-            animation: 'reflection-shimmer 6s ease-in-out infinite',
-            pointerEvents: 'none',
-          }} />
-
-          {/* Subtle grid */}
-          <div className="lp-grid" aria-hidden="true" />
-
-          {/* Floating sea particles */}
-          {particles.map((p, i) => (
-            <div key={i} aria-hidden="true" className="lp-node" style={{
-              top: p.top, left: p.left,
-              width: p.size, height: p.size,
-              animation: `sea-particle ${p.dur} ease-in-out ${p.delay} infinite`,
+            position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none',
+          }}>
+            {/* Dot grid — centered, overflows and gets clipped */}
+            <div style={{
+              position: 'absolute',
+              top: '50%', left: '50%',
+              width: COLS * GAP, height: ROWS * GAP,
+              transform: 'translate(-50%, -50%)',
+            }}>
+              {dots.map((dot, i) => (
+                <div key={i} style={{
+                  position: 'absolute',
+                  left: dot.c * GAP + (GAP - DOT) / 2,
+                  top:  dot.r * GAP + (GAP - DOT) / 2,
+                  width: DOT, height: DOT,
+                  borderRadius: '50%',
+                  background: 'rgba(109,40,217,0.2)',
+                  animation: `dot-wave ${DUR}s ease-in-out ${dot.delay}s infinite`,
+                }} />
+              ))}
+            </div>
+            {/* Vignette — fades grid at edges, keeps centre bright */}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'radial-gradient(ellipse 70% 75% at 50% 50%, transparent 10%, rgba(2,2,10,0.82) 100%)',
             }} />
-          ))}
+          </div>
+
+          {/* Bottom fade — blends hero into next section */}
+          <div aria-hidden="true" style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            height: 220, pointerEvents: 'none',
+            background: 'linear-gradient(to bottom, transparent, #02020a)',
+            zIndex: 2,
+          }} />
 
           {/* Hero text */}
-          <div className="lp-hero-inner">
+          <div className="lp-hero-inner" style={{ position: 'relative', zIndex: 3 }}>
             <div className="lp-eyebrow">
               <span className="lp-badge">Open Source</span>
               Local-first AI companion
@@ -161,7 +176,7 @@ export default function Home() {
             </h1>
             <p className="lp-subheading">
               L.U.N.A. runs entirely on your machine. Voice, memory, vision,
-              and desktop automation — with zero cloud dependency.
+              and desktop automation with zero cloud dependency.
             </p>
             <div className="lp-hero-stats" aria-hidden="true">
               <span className="lp-stat"><span className="lp-stat-dot" />Open Source</span>
@@ -179,51 +194,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ── Animated Sea ── */}
-          <div aria-hidden="true" style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            height: '42%', overflow: 'hidden', pointerEvents: 'none',
-          }}>
-            {/* Wave 3 — surface shimmer (fast) */}
-            <svg
-              style={{ position: 'absolute', bottom: '52%', width: '200%', height: '60px', animation: 'wave-drift-fwd 7s linear infinite' }}
-              viewBox="0 0 2880 60" preserveAspectRatio="none"
-            >
-              <path
-                d="M0,30 C240,50 480,10 720,30 C960,50 1200,10 1440,30 C1680,50 1920,10 2160,30 C2400,50 2640,10 2880,30 L2880,60 L0,60 Z"
-                fill="rgba(139,92,246,0.18)"
-              />
-            </svg>
-
-            {/* Wave 2 — mid (medium) */}
-            <svg
-              style={{ position: 'absolute', bottom: '30%', width: '200%', height: '80px', animation: 'wave-drift-rev 11s linear infinite' }}
-              viewBox="0 0 2880 80" preserveAspectRatio="none"
-            >
-              <path
-                d="M0,40 C360,70 720,10 1080,40 C1440,70 1800,10 2160,40 C2520,70 2880,10 2880,40 L2880,80 L0,80 Z"
-                fill="rgba(109,40,217,0.32)"
-              />
-            </svg>
-
-            {/* Wave 1 — deep (slow, opaque) */}
-            <svg
-              style={{ position: 'absolute', bottom: 0, width: '200%', height: '110px', animation: 'wave-drift-fwd 16s linear infinite' }}
-              viewBox="0 0 2880 110" preserveAspectRatio="none"
-            >
-              <path
-                d="M0,55 C480,10 960,100 1440,55 C1920,10 2400,100 2880,55 L2880,110 L0,110 Z"
-                fill="rgba(76,29,149,0.55)"
-              />
-            </svg>
-
-            {/* Sea fill */}
-            <div style={{
-              position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%',
-              background: 'linear-gradient(to bottom, transparent, rgba(55,20,120,0.45))',
-            }} />
-          </div>
-
         </section>
 
         {/* ── Features ── */}
@@ -234,11 +204,18 @@ export default function Home() {
             <p className="lp-section-sub">No subscriptions. No data harvesting. Just intelligence, locally.</p>
             <div className="lp-features-grid">
               {features.map((f) => (
-                <div key={f.title} className="lp-feature-card">
-                  <div className="lp-feature-icon" aria-hidden="true">{f.icon}</div>
+                <Link key={f.title} href={f.href} className="lp-feature-card" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 10, marginBottom: 16,
+                    background: 'rgba(124,58,237,0.12)',
+                    border: '1px solid rgba(139,92,246,0.22)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {f.icon}
+                  </div>
                   <h3>{f.title}</h3>
                   <p>{f.desc}</p>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

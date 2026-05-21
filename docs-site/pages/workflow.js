@@ -1,5 +1,17 @@
+import { useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+
+/* Dot grid — same wave system as landing page hero */
+const COLS = 32, ROWS = 18, GAP = 60, DOT = 3, DUR = 5, SPD = 0.24;
+const cx = (COLS - 1) / 2, cy = (ROWS - 1) / 2;
+const wfDots = [];
+for (let r = 0; r < ROWS; r++) {
+  for (let c = 0; c < COLS; c++) {
+    const dist = Math.sqrt((c - cx) ** 2 + (r - cy) ** 2);
+    wfDots.push({ r, c, delay: +(dist * SPD - DUR / 2).toFixed(2) });
+  }
+}
 
 const GitHubIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ width: 18, height: 18 }}>
@@ -53,6 +65,21 @@ const workflowSteps = [
 ];
 
 export default function Workflow() {
+  useEffect(() => {
+    const steps = document.querySelectorAll('.wf-step');
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add('wf-visible');
+          io.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.12, rootMargin: '0px 0px -60px 0px' }
+    );
+    steps.forEach((s) => io.observe(s));
+    return () => io.disconnect();
+  }, []);
+
   return (
     <>
       <Head>
@@ -63,9 +90,46 @@ export default function Workflow() {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <style>{`
+          @keyframes dot-wave {
+            0%, 100% { background: rgba(109,40,217,0.2); transform: scale(0.6); box-shadow: none; }
+            50%       { background: rgba(216,180,254,0.88); transform: scale(1.25); box-shadow: 0 0 7px 2px rgba(167,139,250,0.45); }
+          }
+          body { background: #030306; }
+        `}</style>
       </Head>
 
-      <div className="wf-root">
+      {/* ── Fixed full-page dot grid ── */}
+      <div aria-hidden="true" style={{
+        position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none',
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '50%', left: '50%',
+          width: COLS * GAP, height: ROWS * GAP,
+          transform: 'translate(-50%, -50%)',
+        }}>
+          {wfDots.map((dot, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              left: dot.c * GAP + (GAP - DOT) / 2,
+              top:  dot.r * GAP + (GAP - DOT) / 2,
+              width: DOT, height: DOT,
+              borderRadius: '50%',
+              background: 'rgba(109,40,217,0.2)',
+              animation: `dot-wave ${DUR}s ease-in-out ${dot.delay}s infinite`,
+            }} />
+          ))}
+        </div>
+        {/* Soft edge vignette */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 85% 85% at 50% 50%, transparent 15%, rgba(3,3,6,0.55) 100%)',
+        }} />
+      </div>
+
+      {/* ── Page content ── */}
+      <div className="wf-root" style={{ position: 'relative', zIndex: 1, background: 'transparent' }}>
 
         {/* ── Nav ── */}
         <nav className="site-nav" aria-label="Main navigation">
@@ -74,25 +138,12 @@ export default function Workflow() {
               <img src="/images/logo.svg" alt="" width={26} height={26} />
               <span className="site-nav-logo">L.U.N.A.</span>
             </Link>
-
             <div className="site-nav-links">
-              <a
-                href="https://github.com/Sehastrajit/Luna"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="site-nav-link"
-              >
-                <GitHubIcon />
-                <span>GitHub</span>
+              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer" className="site-nav-link">
+                <GitHubIcon /><span>GitHub</span>
               </a>
-              <a
-                href="https://www.linkedin.com/in/sehastrajit-s/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="site-nav-link"
-              >
-                <LinkedInIcon />
-                <span>LinkedIn</span>
+              <a href="https://www.linkedin.com/in/sehastrajit-s/" target="_blank" rel="noopener noreferrer" className="site-nav-link">
+                <LinkedInIcon /><span>LinkedIn</span>
               </a>
               <div className="site-nav-divider" aria-hidden="true" />
               <Link href="/" className="site-nav-link"><span>Home</span></Link>
@@ -102,8 +153,7 @@ export default function Workflow() {
         </nav>
 
         {/* ── Hero ── */}
-        <section className="wf-hero">
-          <div className="wf-hero-orb" aria-hidden="true" />
+        <section className="wf-hero" style={{ background: 'transparent' }}>
           <div className="wf-hero-inner">
             <p className="wf-eyebrow">How it works</p>
             <h1 className="wf-h1">
@@ -118,14 +168,14 @@ export default function Workflow() {
               </span>
             </h1>
             <p className="wf-sub">
-              From your first word to the final response — every step of how L.U.N.A. processes,
+              From your first word to the final response, every step of how L.U.N.A. processes,
               acts, and learns. Entirely local.
             </p>
           </div>
         </section>
 
         {/* ── Flow Steps ── */}
-        <div className="wf-flow">
+        <div className="wf-flow" style={{ background: 'transparent' }}>
           <p className="wf-flow-title">Request lifecycle</p>
 
           {workflowSteps.map((step, i) => (
@@ -152,7 +202,7 @@ export default function Workflow() {
         </div>
 
         {/* ── CTA ── */}
-        <section className="wf-cta-section">
+        <section className="wf-cta-section" style={{ background: 'transparent' }}>
           <h2>Ready to run it?</h2>
           <p>
             Get Luna running locally in minutes with the setup guide,
@@ -175,7 +225,7 @@ export default function Workflow() {
         </section>
 
         {/* ── Footer ── */}
-        <footer className="lp-footer">
+        <footer className="lp-footer" style={{ background: '#030306', position: 'relative', zIndex: 2 }}>
           <div className="lp-footer-inner">
             <div className="lp-footer-brand">
               <img src="/images/logo.svg" alt="" width={22} height={22} />
@@ -184,7 +234,6 @@ export default function Workflow() {
                 <span className="lp-footer-tagline">Large Unified Nexus Mind AI</span>
               </div>
             </div>
-
             <nav className="lp-footer-links" aria-label="Footer navigation">
               <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer">GitHub</a>
               <a href="https://www.linkedin.com/in/sehastrajit-s/" target="_blank" rel="noopener noreferrer">LinkedIn</a>

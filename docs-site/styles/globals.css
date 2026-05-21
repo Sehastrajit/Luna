@@ -652,6 +652,21 @@ img, svg {
 /* =====================================================
    WORKFLOW PAGE
    ===================================================== */
+@keyframes wf-glass-in {
+  from { opacity: 0; transform: translateY(28px) scale(0.982); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes wf-line-draw {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+@keyframes wf-circle-glow {
+  0%, 100% { box-shadow: 0 0 18px rgba(124,58,237,0.35), inset 0 1px 0 rgba(196,181,253,0.1); }
+  50%       { box-shadow: 0 0 28px rgba(124,58,237,0.6),  inset 0 1px 0 rgba(196,181,253,0.2); }
+}
+
 .wf-root {
   background: #030306;
   color: #f0eeff;
@@ -662,7 +677,7 @@ img, svg {
 .wf-hero {
   padding: 150px 32px 90px;
   text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: none;
   position: relative;
   overflow: hidden;
 }
@@ -736,13 +751,8 @@ img, svg {
   display: grid;
   grid-template-columns: 72px 1fr;
   gap: 36px;
-  align-items: start;
-  padding: 44px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.wf-step:last-child {
-  border-bottom: none;
+  align-items: stretch;
+  padding: 20px 0;
 }
 
 .wf-step-left {
@@ -756,27 +766,64 @@ img, svg {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: rgba(139, 92, 246, 0.1);
-  border: 1.5px solid rgba(139, 92, 246, 0.38);
-  color: #a78bfa;
-  font-size: 1.1rem;
+  background: rgba(20, 8, 48, 0.85);
+  border: 1.5px solid rgba(139, 92, 246, 0.55);
+  color: #c4b5fd;
+  font-size: 1.05rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 0 18px rgba(124, 58, 237, 0.35), inset 0 1px 0 rgba(196,181,253,0.1);
+  position: relative;
+  z-index: 1;
+  /* Hidden until step scrolls into view */
+  opacity: 0;
 }
 
 .wf-step-line {
-  width: 1.5px;
+  width: 1px;
   flex: 1;
-  min-height: 32px;
-  background: linear-gradient(to bottom, rgba(139, 92, 246, 0.3), transparent);
-  margin-top: 10px;
+  min-height: 24px;
+  margin-top: 8px;
+  transform: scaleY(0);
+  transform-origin: top;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(124, 58, 237, 0.55) 0,
+    rgba(124, 58, 237, 0.55) 4px,
+    transparent 4px,
+    transparent 12px
+  );
 }
 
 .wf-step-right {
-  padding-top: 10px;
+  padding: 26px 30px 28px;
+  border-radius: 18px;
+  background: rgba(6, 4, 20, 0.62);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* Hidden until step scrolls into view */
+  opacity: 0;
+  transform: translateY(28px) scale(0.982);
+}
+
+/* ── Scroll-triggered: JS adds .wf-visible when step enters viewport ── */
+.wf-step.wf-visible .wf-step-circle {
+  animation: wf-glass-in 0.45s cubic-bezier(0.16,1,0.3,1) both,
+             wf-circle-glow 3s ease-in-out 0.5s infinite;
+}
+
+.wf-step.wf-visible .wf-step-right {
+  animation: wf-glass-in 0.65s cubic-bezier(0.16,1,0.3,1) both 0.1s;
+}
+
+/* Line draws down AFTER circle and card have appeared */
+.wf-step.wf-visible .wf-step-line {
+  animation: wf-line-draw 0.8s cubic-bezier(0.4, 0, 0.2, 1) both 0.55s;
 }
 
 .wf-step-tag {
@@ -828,7 +875,7 @@ img, svg {
 .wf-cta-section {
   text-align: center;
   padding: 90px 32px 110px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(124, 58, 237, 0.12);
 }
 
 .wf-cta-section h2 {
