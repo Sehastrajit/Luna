@@ -2,7 +2,7 @@
   <img src="docs-site/public/images/logo.svg" width="88" height="88" alt="L.U.N.A." />
   <h1>L.U.N.A.</h1>
   <p><strong>Large Unified Nexus Mind AI</strong></p>
-  <p><em>Local-first AI companion — voice, memory, vision, and desktop automation.</em></p>
+  <p><em>Local-first AI companion - voice, memory, vision, and desktop automation.</em></p>
 
   <p>
     <a href="https://github.com/Sehastrajit/Luna/stargazers">

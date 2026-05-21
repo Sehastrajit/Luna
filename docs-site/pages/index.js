@@ -45,7 +45,7 @@ const features = [
   },
   {
     icon: ic(<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>),
-    title: 'Vision', href: '/architecture',
+    title: 'Vision', href: '/integrations#voice',
     desc: 'Screen and camera awareness. Luna builds temporal visual context without storing raw frames.',
   },
   {
@@ -55,12 +55,12 @@ const features = [
   },
   {
     icon: ic(<><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></>),
-    title: 'Dashboard', href: '/api#luna',
+    title: 'Dashboard', href: '/integrations#data',
     desc: 'Live news, markets, weather, and maps in a heads-up display widget layer.',
   },
   {
     icon: ic(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></>),
-    title: 'Private by Default', href: '/environment',
+    title: 'Private by Default', href: '/integrations#platforms',
     desc: 'Inference runs on your machine via Ollama. Zero data leaves unless you opt into cloud features.',
   },
 ];

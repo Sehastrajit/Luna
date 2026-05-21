@@ -97,7 +97,7 @@ function dc(mode, ...extra) {
   return ['docker', 'compose', ...composeArgs(mode), ...extra].join(' ');
 }
 
-async function waitForHealth(url, maxMs = 120_000) {
+async function waitForHealth(url, maxMs = 180_000) {
   process.stdout.write(`${c.cyan}  ▸${c.reset} Waiting for Luna`);
   const start = Date.now();
   while (Date.now() - start < maxMs) {

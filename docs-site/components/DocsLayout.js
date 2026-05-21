@@ -32,9 +32,10 @@ const navGroups = [
   {
     label: 'Features',
     items: [
-      { href: '/voice',   label: 'Voice' },
-      { href: '/memory',  label: 'Memory' },
-      { href: '/agent',   label: 'Agent & Skills' },
+      { href: '/voice',        label: 'Voice' },
+      { href: '/memory',       label: 'Memory' },
+      { href: '/agent',        label: 'Agent & Skills' },
+      { href: '/integrations', label: 'Integrations' },
     ],
   },
   {

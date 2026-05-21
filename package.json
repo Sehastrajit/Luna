@@ -25,12 +25,14 @@
     "docs":        "npm --prefix docs-site run dev",
     "docs:build":  "npm --prefix docs-site run build",
     "docs:start":  "npm --prefix docs-site run start",
+    "setup":       "node cli/luna.mjs setup",
     "docker":      "node scripts/docker.mjs",
     "docker:down": "node scripts/docker.mjs --down",
     "docker:logs": "node scripts/docker.mjs --logs",
     "docker:gpu":  "node scripts/docker.mjs --gpu",
     "docker:cloud":"node scripts/docker.mjs --cloud",
-    "docker:pull": "node scripts/docker.mjs --pull"
+    "docker:pull": "node scripts/docker.mjs --pull",
+    "health":      "node cli/luna.mjs health"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"
