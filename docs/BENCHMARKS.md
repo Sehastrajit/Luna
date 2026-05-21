@@ -1,106 +1,112 @@
 # Luna Benchmark Results
 
-> **Last run:** 2026-05-21 22:50 UTC
-> **Hardware:** NVIDIA GeForce RTX 3060 12 GB · Driver 596.21
-> **Model:** `qcwind/qwen3-8b-instruct-Q4-K-M` (Qwen3 8B, 4-bit quantized, local via Ollama)
-> **Method:** standalone runner, no server — pure service-layer latency
+> **Run:** 2026-05-21 23:01 UTC  
+> **Hardware:** NVIDIA GeForce RTX 3060  12288 MB VRAM  (driver 596.21)  
+> **CPU:** Intel64 Family 6 Model 151 Stepping 2, GenuineIntel  31.8 GB RAM  
+> **OS:** Windows 11  
+> **Model:** `qcwind/qwen3-8b-instruct-Q4-K-M:latest`  provider: `ollama`  
+> **Runs per probe:** 3  (cold call reported separately; warm stats exclude it)
 
----
+## Summary
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| LLM TTFT (warm, p50) | **763 ms** | first token latency |
+| LLM TTFT (warm, p95) | 799.6 ms | tail latency |
+| Sustained throughput | **35 tok/s** | long-form prompts only |
+| Memory retrieval p50 | 599 ms | ChromaDB vector search |
+| Tool success rate    | 100% | safe tools only |
 
 ## LLM Latency
 
+> Throughput (tok/s) is only reported for long-form prompts (50+ output tokens).
+> Short prompts measure TTFT responsiveness, not decode speed.
+
+### Distribution (warm calls, all probes)
+
 | Metric | Value |
 |--------|-------|
-| Time-to-first-token p50 | **1148 ms** |
-| Time-to-first-token p95 | 1169 ms |
-| Total response p50 | 1374 ms |
-| Total response p95 | 5149 ms |
-| Throughput (sustained) | **~26 tok/s** |
-| Throughput (avg incl. short) | 11.8 tok/s |
+| TTFT mean | 763 ms  (p50 763  p95 800  sd 26) |
+| Total mean | 2232 ms  (p50 1038  p95 5783  sd 1795) |
+| Throughput | 35 tok/s  (p50 35  p95 48  sd 9) |
 
-> **Note on throughput:** single-token responses (echo, math) drag the average to 11.8 tok/s.
-> Sustained generation (medium-length responses) runs at **24–29 tok/s** on the RTX 3060,
-> which is the number that matters for real conversations.
-> The p95 total of 5149 ms is a 150-token response, not latency.
+### Per-prompt
 
-### Per-prompt breakdown
-
-| Prompt | TTFT | Total | tok/s | Output |
-|--------|------|-------|-------|--------|
-| short-echo | 818 ms | 864 ms | 1.2 | 1 token |
-| short-math | 1169 ms | 1265 ms | 0.8 | 1 token |
-| short-list | 1134 ms | 1374 ms | 3.6 | ~5 tokens |
-| medium-bullets | 1150 ms | 5149 ms | **29.1** | ~150 tokens |
-| medium-explain | 1148 ms | 3060 ms | **24.2** | ~75 tokens |
-
----
+| Probe | Cold TTFT | Warm TTFT (mean) | Warm Total (mean) | tok/s |
+|-------|-----------|------------------|-------------------|-------|
+| echo | 3881 ms | 748 ms | 766 ms | N/A (short) |
+| arithmetic | 4106 ms | 778 ms | 842 ms | N/A (short) |
+| short-list | 3796 ms | 761 ms | 1038 ms | N/A (short) |
+| medium | 3829 ms | 794 ms | 5168 ms | 36 tok/s |
+| long | 3775 ms | 736 ms | 3346 ms | 34 tok/s |
 
 ## Memory Retrieval
 
 | Metric | Value |
 |--------|-------|
 | Facts in DB | 0 |
-| Hit rate | 0% |
-| Retrieval latency p50 | 593.5 ms |
-| Retrieval latency p95 | 616.8 ms |
+| Hit rate | N/A (< 10 facts) |
+| Retrieval latency | 599 ms  (p50 601  p95 619  sd 10) |
 
-> **Why 0% hits:** no facts are stored yet — the database is new. The retrieval latency
-> (593 ms) is ChromaDB cold-query overhead on an empty index. Once facts accumulate
-> through normal use, this will be the latency for semantic lookup (expected to remain
-> under 100 ms for a personal-scale collection of hundreds of facts).
-
----
+> Re-run after 10+ conversations for quality metrics.
 
 ## Tool Execution
 
-| Tool | Latency | Result |
-|------|---------|--------|
-| workspace_list | **1 ms** | OK — local filesystem |
-| web_search | 1143 ms | OK — 6 results returned |
+**Overall success rate:** 100%
 
-**Tool success rate:** 100%
-
----
+| Tool | Success Rate | Latency (mean) | p95 |
+|------|-------------|----------------|-----|
+| workspace_list | 100% | 1 ms | 1 ms |
+| web_search | 100% | 1030 ms | 1318 ms |
 
 ## System
 
 | | |
 |---|---|
-| GPU | NVIDIA GeForce RTX 3060 |
-| VRAM total | 12 288 MiB |
-| VRAM during inference | 9 588 MiB (model fully resident) |
-| GPU temp | 45 °C |
-| SM clock | 780 MHz |
+| Accelerator | NVIDIA GeForce RTX 3060 |
+| VRAM total | 12288 MB |
+| VRAM used (at run) | 3530 MB |
+| Temperature | 50 C |
 | Driver | 596.21 |
+| CPU | Intel64 Family 6 Model 151 Stepping 2, GenuineIntel |
+| RAM | 31.8 GB |
+| OS | Windows 11 |
 | Model | `qcwind/qwen3-8b-instruct-Q4-K-M:latest` |
-| Model size | ~5 GB on disk, ~9.6 GB active VRAM |
-| Quantisation | Q4\_K\_M (4-bit, k-quant) |
-| Runtime | Ollama local |
-| OS | Windows 11 Pro |
+| Provider | ollama |
 
 ---
 
-## Reading the numbers
+## Provider Comparison
 
-**TTFT ~1 s** is the scheduling + first-token generation time for Qwen3 8B Q4\_K\_M
-on the RTX 3060. This is expected for an 8 B parameter model — Ollama has to load the
-prompt, run prefill, and emit the first token before the stream starts.
+> Both runs executed 2026-05-21 on the same machine (RTX 3060, Win11).  
+> Groq is a cloud inference API; Ollama runs the model locally on the GPU.
 
-**Sustained 25–29 tok/s** is the actual decode speed once generation is rolling.
-At this rate, a 200-token response takes ~7–8 s total (1 s TTFT + 6–7 s generation).
+| Metric | Ollama — Qwen3 8B Q4_K_M (local) | Groq — llama-3.3-70b-versatile (cloud) |
+|--------|----------------------------------|----------------------------------------|
+| TTFT warm p50 | 763 ms | **482 ms** |
+| TTFT warm p95 | 800 ms | 611 ms |
+| Throughput p50 | 35 tok/s | **210 tok/s** |
+| Cold TTFT | ~3.8 s (model load) | ~500 ms (no cold penalty) |
+| Memory retrieval | 599 ms (local ChromaDB) | N/A |
+| Tool success rate | **100%** | N/A (LLM suite only) |
+| Cost | $0 (local GPU) | Pay-per-token |
+| Privacy | Local — no data leaves machine | Cloud API |
 
-**Memory 0%** will become meaningful after the first few conversations: facts extracted
-from chat history are embedded via Ollama and stored in ChromaDB.  Re-run this benchmark
-after 10+ conversations to see real retrieval precision.
+**When to use each:**
+- **Ollama (local)**: Privacy-sensitive tasks, offline use, zero API cost, tool execution
+- **Groq (cloud)**: Fastest responses, long context, 70B quality, no GPU required
 
 ---
 
 ## Rerunning
 
 ```bash
-cd Luna
+# Local Ollama (default)
 python scripts/run_benchmark.py
-```
 
-Results are appended to `data/luna.db` (table `benchmark_results`) and this file is
-overwritten with the latest run.
+# Groq cloud
+python scripts/run_benchmark.py --provider groq --suite llm --runs 3
+
+# Full suite with more runs
+python scripts/run_benchmark.py --suite all --runs 5
+```
