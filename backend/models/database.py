@@ -221,6 +221,32 @@ class PlanRecord(Base):
     completed_at    = Column(Float, nullable=True)
 
 
+class HealthMetric(Base):
+    """One data point from any health platform (steps, HR, sleep, weight, etc.)."""
+    __tablename__ = "health_metrics"
+    id          = Column(Integer, primary_key=True, index=True)
+    platform    = Column(String, nullable=False, index=True)   # fitbit | google_fit | oura | withings | garmin | apple | samsung
+    metric_type = Column(String, nullable=False, index=True)   # steps | heart_rate | sleep_duration_min | weight_kg | …
+    value       = Column(Float, nullable=False)
+    unit        = Column(String, nullable=True)                 # steps | bpm | min | kg | % | mmHg | …
+    date_str    = Column(String, nullable=False, index=True)    # YYYY-MM-DD — daily bucket
+    timestamp   = Column(DateTime, nullable=True)               # intra-day precision if available
+    raw_json    = Column(Text, nullable=True)                   # original API response snippet
+    created_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class HealthSync(Base):
+    """Last sync state per platform."""
+    __tablename__ = "health_syncs"
+    id              = Column(Integer, primary_key=True, index=True)
+    platform        = Column(String, nullable=False, unique=True)
+    last_sync_at    = Column(DateTime, nullable=True)
+    status          = Column(String, default="never")       # never | ok | error
+    metrics_synced  = Column(Integer, default=0)
+    error_message   = Column(Text, nullable=True)
+    updated_at      = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
 def init_db():
     Base.metadata.create_all(bind=engine)
     # Add new columns to existing tables when they don't exist yet (SQLite ALTER TABLE)

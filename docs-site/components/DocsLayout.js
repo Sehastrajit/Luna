@@ -44,6 +44,7 @@ const navGroups = [
       { href: '/memory',       label: 'Memory' },
       { href: '/agent',        label: 'Agent & Skills' },
       { href: '/integrations', label: 'Integrations' },
+      { href: '/health',       label: 'Health Platforms' },
     ],
   },
   {
@@ -133,12 +134,7 @@ export default function DocsLayout({ title, description, toc, children }) {
 
           {/* Sidebar */}
           <aside className="docs-sidebar">
-            <div className="docs-sidebar-brand">
-              <img src="/images/logo.svg" alt="" width={24} height={24} />
-              <span className="docs-sidebar-logo">L.U.N.A.</span>
-            </div>
-
-            <nav style={{ flex: 1 }}>
+            <nav style={{ flex: 1, paddingTop: 8 }}>
               {navGroups.map((group) => (
                 <div key={group.label} className="docs-nav-group">
                   <p className="docs-nav-group-label">{group.label}</p>

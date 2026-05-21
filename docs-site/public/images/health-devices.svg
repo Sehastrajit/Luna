@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300">
+  <defs>
+    <radialGradient id="dbg" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#0f0a1e"/>
+      <stop offset="100%" stop-color="#030306"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="300" fill="url(#dbg)"/>
+  <text x="600" y="32" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="600" letter-spacing="4" fill="#6d28d9" opacity="0.9">SUPPORTED SMARTWATCHES &amp; WEARABLES</text>
+
+  <!-- ── Device group cards ── -->
+
+  <!-- Fitbit Devices -->
+  <g transform="translate(30,52)">
+    <rect width="230" height="220" rx="12" fill="#0a1015" stroke="#00b0b9" stroke-width="1.5" stroke-opacity="0.4"/>
+    <text x="16" y="26" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#00b0b9">⌚ Fitbit</text>
+    <line x1="16" y1="34" x2="214" y2="34" stroke="#00b0b9" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="16" y="52" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Charge 5 / 6</text>
+    <text x="16" y="68" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Inspire 3</text>
+    <text x="16" y="84" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Versa 3 / 4</text>
+    <text x="16" y="100" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Sense 2</text>
+    <text x="16" y="116" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Luxe</text>
+    <text x="16" y="132" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Ace 3</text>
+    <text x="16" y="148" font-family="Inter,system-ui" font-size="10" fill="#6b7280">Aria 2 (smart scale)</text>
+    <line x1="16" y1="160" x2="214" y2="160" stroke="#00b0b9" stroke-opacity="0.15" stroke-width="1"/>
+    <text x="16" y="175" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Steps · HR · HRV · Sleep</text>
+    <text x="16" y="189" font-family="Inter,system-ui" font-size="9" fill="#6b7280">SpO2 · Skin temp · Calories</text>
+    <text x="16" y="203" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Breathing rate · Weight</text>
+    <rect x="150" y="168" width="64" height="20" rx="5" fill="#00b0b9" fill-opacity="0.15"/>
+    <text x="182" y="182" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#00b0b9">OAuth2 API</text>
+  </g>
+
+  <!-- Garmin Devices -->
+  <g transform="translate(274,52)">
+    <rect width="230" height="220" rx="12" fill="#0a1015" stroke="#cf0a2c" stroke-width="1.5" stroke-opacity="0.4"/>
+    <text x="16" y="26" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#cf0a2c">🏔 Garmin</text>
+    <line x1="16" y1="34" x2="214" y2="34" stroke="#cf0a2c" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="16" y="52" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Forerunner 255 / 265 / 965</text>
+    <text x="16" y="68" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Fenix 7 / 7S / 7X / 8</text>
+    <text x="16" y="84" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Venu 3 / 3S</text>
+    <text x="16" y="100" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Vivoactive 5</text>
+    <text x="16" y="116" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Vivosmart 5</text>
+    <text x="16" y="132" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Instinct 2</text>
+    <text x="16" y="148" font-family="Inter,system-ui" font-size="10" fill="#6b7280">+ all Garmin Connect devices</text>
+    <line x1="16" y1="160" x2="214" y2="160" stroke="#cf0a2c" stroke-opacity="0.15" stroke-width="1"/>
+    <text x="16" y="175" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Steps · HR · HRV · Sleep</text>
+    <text x="16" y="189" font-family="Inter,system-ui" font-size="9" fill="#6b7280">VO2 Max · Body Battery</text>
+    <text x="16" y="203" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Stress · SpO2 · Calories</text>
+    <rect x="136" y="168" width="78" height="20" rx="5" fill="#cf0a2c" fill-opacity="0.15"/>
+    <text x="175" y="182" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#cf0a2c">garth library</text>
+  </g>
+
+  <!-- Oura -->
+  <g transform="translate(518,52)">
+    <rect width="200" height="220" rx="12" fill="#0a1015" stroke="#d4a017" stroke-width="1.5" stroke-opacity="0.4"/>
+    <text x="16" y="26" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#d4a017">💍 Oura Ring</text>
+    <line x1="16" y1="34" x2="184" y2="34" stroke="#d4a017" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="16" y="52" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Oura Ring Gen 3</text>
+    <text x="16" y="68" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Oura Ring 4</text>
+    <text x="16" y="100" font-family="Inter,system-ui" font-size="10" fill="#4b5563">Form factor: finger ring</text>
+    <text x="16" y="116" font-family="Inter,system-ui" font-size="10" fill="#4b5563">Optical + temp sensors</text>
+    <line x1="16" y1="130" x2="184" y2="130" stroke="#d4a017" stroke-opacity="0.15" stroke-width="1"/>
+    <text x="16" y="148" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Sleep stages · HRV · RHR</text>
+    <text x="16" y="164" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Readiness · Activity</text>
+    <text x="16" y="180" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Stress · Respiratory rate</text>
+    <text x="16" y="196" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Steps · Calories · SpO2</text>
+    <rect x="90" y="204" width="94" height="20" rx="5" fill="#d4a017" fill-opacity="0.15"/>
+    <text x="137" y="218" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#d4a017">Personal Token</text>
+  </g>
+
+  <!-- Withings -->
+  <g transform="translate(730,52)">
+    <rect width="200" height="220" rx="12" fill="#0a1015" stroke="#00c851" stroke-width="1.5" stroke-opacity="0.4"/>
+    <text x="16" y="26" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#00c851">⚖️ Withings</text>
+    <line x1="16" y1="34" x2="184" y2="34" stroke="#00c851" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="16" y="52" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">ScanWatch 2</text>
+    <text x="16" y="68" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Steel HR Sport</text>
+    <text x="16" y="84" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Move ECG</text>
+    <text x="16" y="100" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Body+ (smart scale)</text>
+    <text x="16" y="116" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">BPM Core (BP monitor)</text>
+    <text x="16" y="132" font-family="Inter,system-ui" font-size="10" fill="#9ca3af">Thermo (thermometer)</text>
+    <line x1="16" y1="146" x2="184" y2="146" stroke="#00c851" stroke-opacity="0.15" stroke-width="1"/>
+    <text x="16" y="164" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Weight · BMI · Body fat</text>
+    <text x="16" y="180" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Blood pressure · HR</text>
+    <text x="16" y="196" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Sleep stages · ECG</text>
+    <rect x="100" y="204" width="84" height="20" rx="5" fill="#00c851" fill-opacity="0.15"/>
+    <text x="142" y="218" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#00c851">OAuth2 API</text>
+  </g>
+
+  <!-- Apple + Samsung -->
+  <g transform="translate(942,52)">
+    <rect width="228" height="104" rx="12" fill="#0a1015" stroke="#8e8e93" stroke-width="1.5" stroke-opacity="0.4"/>
+    <text x="16" y="24" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#aeaeb2">🍎 Apple Watch</text>
+    <text x="16" y="42" font-family="Inter,system-ui" font-size="9.5" fill="#9ca3af">Series 4–10 · Ultra 1 &amp; 2 · SE</text>
+    <text x="16" y="58" font-family="Inter,system-ui" font-size="9" fill="#6b7280">All HealthKit metrics via iOS</text>
+    <text x="16" y="72" font-family="Inter,system-ui" font-size="9" fill="#6b7280">"Health Auto Export" app</text>
+    <rect x="130" y="82" width="82" height="16" rx="4" fill="#3a3a3c" fill-opacity="0.5"/>
+    <text x="171" y="94" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#8e8e93">Webhook push</text>
+  </g>
+
+  <g transform="translate(942,168)">
+    <rect width="228" height="104" rx="12" fill="#0a1015" stroke="#1428a0" stroke-width="1.5" stroke-opacity="0.4"/>
+    <text x="16" y="24" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#748ffc">📱 Samsung Galaxy Watch</text>
+    <text x="16" y="42" font-family="Inter,system-ui" font-size="9.5" fill="#9ca3af">Watch 4 / 5 / 6 / 7 · Fit 3</text>
+    <text x="16" y="58" font-family="Inter,system-ui" font-size="9" fill="#6b7280">Via compatible Android exporter</text>
+    <text x="16" y="72" font-family="Inter,system-ui" font-size="9" fill="#6b7280">or Health Auto Export format</text>
+    <rect x="130" y="82" width="82" height="16" rx="4" fill="#1428a0" fill-opacity="0.2"/>
+    <text x="171" y="94" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#748ffc">Webhook push</text>
+  </g>
+</svg>

@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#0f0a1e"/>
+      <stop offset="100%" stop-color="#030306"/>
+    </radialGradient>
+    <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#a78bfa" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Fitbit teal -->
+    <radialGradient id="fitGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#00b0b9"/>
+      <stop offset="100%" stop-color="#007a85"/>
+    </radialGradient>
+    <!-- Google blue -->
+    <radialGradient id="gfitGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#4285f4"/>
+      <stop offset="100%" stop-color="#1a56c4"/>
+    </radialGradient>
+    <!-- Oura gold -->
+    <radialGradient id="ouraGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#9a6f00"/>
+    </radialGradient>
+    <!-- Withings green -->
+    <radialGradient id="withGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#00c851"/>
+      <stop offset="100%" stop-color="#007a30"/>
+    </radialGradient>
+    <!-- Garmin red -->
+    <radialGradient id="garGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#cf0a2c"/>
+      <stop offset="100%" stop-color="#8c0019"/>
+    </radialGradient>
+    <!-- Apple silver -->
+    <radialGradient id="aplGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#e5e5ea"/>
+      <stop offset="100%" stop-color="#8e8e93"/>
+    </radialGradient>
+    <!-- Samsung blue -->
+    <radialGradient id="samGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#1428a0"/>
+      <stop offset="100%" stop-color="#0a1870"/>
+    </radialGradient>
+    <!-- Luna purple -->
+    <radialGradient id="lunaGrad" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#4c1d95"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="340" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="600" y="36" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="600" letter-spacing="4" fill="#6d28d9" opacity="0.9">HEALTH PLATFORM INTEGRATIONS</text>
+
+  <!-- Flow line -->
+  <line x1="80" y1="170" x2="1120" y2="170" stroke="url(#lineGrad)" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+  <!-- ── Platform cards ── -->
+  <!-- Each card: rect + icon + label + arrow -->
+
+  <!-- Helper macro: x offsets for 7 platforms -->
+  <!-- Positions: 80, 230, 380, 530(skip-luna@880), 680, 830 then Luna at 980 -->
+  <!-- Platform spacing: 7 cards at x = 55, 200, 345, 490, 635, 780, but skip middle for Luna at 880 -->
+  <!-- Let's do: 7 platforms evenly + Luna centered -->
+
+  <!-- Platform 1: Fitbit @ x=60 -->
+  <g transform="translate(60,110)">
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="#0f0d1a" stroke="#00b0b9" stroke-width="1.5" stroke-opacity="0.5"/>
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="none" stroke="#00b0b9" stroke-width="0.5" stroke-opacity="0.3"/>
+    <!-- Fitbit icon: stylized wave -->
+    <rect x="35" y="20" width="40" height="40" rx="20" fill="url(#fitGrad)" filter="url(#glow)"/>
+    <text x="55" y="47" text-anchor="middle" font-family="system-ui" font-size="20" fill="white">⌚</text>
+    <text x="55" y="82" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#00b0b9">Fitbit</text>
+    <text x="55" y="97" text-anchor="middle" font-family="Inter,system-ui" font-size="8.5" fill="#6b7280">OAuth2</text>
+    <text x="55" y="110" text-anchor="middle" font-family="Inter,system-ui" font-size="7.5" fill="#4b5563">steps · HR · sleep</text>
+  </g>
+
+  <!-- Platform 2: Google Fit @ x=195 -->
+  <g transform="translate(195,110)">
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="#0f0d1a" stroke="#4285f4" stroke-width="1.5" stroke-opacity="0.5"/>
+    <rect x="35" y="20" width="40" height="40" rx="20" fill="url(#gfitGrad)" filter="url(#glow)"/>
+    <text x="55" y="47" text-anchor="middle" font-family="system-ui" font-size="20" fill="white">🏃</text>
+    <text x="55" y="82" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#4285f4">Google Fit</text>
+    <text x="55" y="97" text-anchor="middle" font-family="Inter,system-ui" font-size="8.5" fill="#6b7280">OAuth2</text>
+    <text x="55" y="110" text-anchor="middle" font-family="Inter,system-ui" font-size="7.5" fill="#4b5563">activity · calories</text>
+  </g>
+
+  <!-- Platform 3: Oura @ x=330 -->
+  <g transform="translate(330,110)">
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="#0f0d1a" stroke="#d4a017" stroke-width="1.5" stroke-opacity="0.5"/>
+    <rect x="35" y="20" width="40" height="40" rx="20" fill="url(#ouraGrad)" filter="url(#glow)"/>
+    <text x="55" y="47" text-anchor="middle" font-family="system-ui" font-size="20" fill="white">💍</text>
+    <text x="55" y="82" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#d4a017">Oura Ring</text>
+    <text x="55" y="97" text-anchor="middle" font-family="Inter,system-ui" font-size="8.5" fill="#6b7280">API Token</text>
+    <text x="55" y="110" text-anchor="middle" font-family="Inter,system-ui" font-size="7.5" fill="#4b5563">HRV · readiness</text>
+  </g>
+
+  <!-- Platform 4: Withings @ x=465 -->
+  <g transform="translate(465,110)">
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="#0f0d1a" stroke="#00c851" stroke-width="1.5" stroke-opacity="0.5"/>
+    <rect x="35" y="20" width="40" height="40" rx="20" fill="url(#withGrad)" filter="url(#glow)"/>
+    <text x="55" y="47" text-anchor="middle" font-family="system-ui" font-size="20" fill="white">⚖️</text>
+    <text x="55" y="82" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#00c851">Withings</text>
+    <text x="55" y="97" text-anchor="middle" font-family="Inter,system-ui" font-size="8.5" fill="#6b7280">OAuth2</text>
+    <text x="55" y="110" text-anchor="middle" font-family="Inter,system-ui" font-size="7.5" fill="#4b5563">weight · BP · sleep</text>
+  </g>
+
+  <!-- Platform 5: Garmin @ x=600 -->
+  <g transform="translate(600,110)">
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="#0f0d1a" stroke="#cf0a2c" stroke-width="1.5" stroke-opacity="0.5"/>
+    <rect x="35" y="20" width="40" height="40" rx="20" fill="url(#garGrad)" filter="url(#glow)"/>
+    <text x="55" y="47" text-anchor="middle" font-family="system-ui" font-size="20" fill="white">🏔</text>
+    <text x="55" y="82" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#cf0a2c">Garmin</text>
+    <text x="55" y="97" text-anchor="middle" font-family="Inter,system-ui" font-size="8.5" fill="#6b7280">Credentials</text>
+    <text x="55" y="110" text-anchor="middle" font-family="Inter,system-ui" font-size="7.5" fill="#4b5563">VO2 · body battery</text>
+  </g>
+
+  <!-- Platform 6: Apple Health @ x=735 -->
+  <g transform="translate(735,110)">
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="#0f0d1a" stroke="#8e8e93" stroke-width="1.5" stroke-opacity="0.5"/>
+    <rect x="35" y="20" width="40" height="40" rx="20" fill="url(#aplGrad)" filter="url(#glow)"/>
+    <text x="55" y="47" text-anchor="middle" font-family="system-ui" font-size="20" fill="#1c1c1e">🍎</text>
+    <text x="55" y="82" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#aeaeb2">Apple Health</text>
+    <text x="55" y="97" text-anchor="middle" font-family="Inter,system-ui" font-size="8.5" fill="#6b7280">Webhook</text>
+    <text x="55" y="110" text-anchor="middle" font-family="Inter,system-ui" font-size="7.5" fill="#4b5563">HealthKit export</text>
+  </g>
+
+  <!-- Platform 7: Samsung @ x=870 -->
+  <g transform="translate(870,110)">
+    <rect x="0" y="0" width="110" height="120" rx="12" fill="#0f0d1a" stroke="#1428a0" stroke-width="1.5" stroke-opacity="0.5"/>
+    <rect x="35" y="20" width="40" height="40" rx="20" fill="url(#samGrad)" filter="url(#glow)"/>
+    <text x="55" y="47" text-anchor="middle" font-family="system-ui" font-size="20" fill="white">📱</text>
+    <text x="55" y="82" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="700" fill="#748ffc">Samsung</text>
+    <text x="55" y="97" text-anchor="middle" font-family="Inter,system-ui" font-size="8.5" fill="#6b7280">Webhook</text>
+    <text x="55" y="110" text-anchor="middle" font-family="Inter,system-ui" font-size="7.5" fill="#4b5563">Galaxy Watch</text>
+  </g>
+
+  <!-- Luna center orb -->
+  <g transform="translate(1040,90)" filter="url(#softglow)">
+    <circle cx="55" cy="70" r="52" fill="#0f0d1a" stroke="#7c3aed" stroke-width="2"/>
+    <circle cx="55" cy="70" r="44" fill="url(#lunaGrad)" opacity="0.15"/>
+    <!-- Crescent moon -->
+    <circle cx="55" cy="52" r="22" fill="#a78bfa"/>
+    <circle cx="66" cy="44" r="18" fill="#0f0d1a"/>
+    <text x="55" y="100" text-anchor="middle" font-family="Inter,system-ui" font-size="11" font-weight="800" letter-spacing="1" fill="#a78bfa">L.U.N.A.</text>
+    <text x="55" y="114" text-anchor="middle" font-family="Inter,system-ui" font-size="8" fill="#6d28d9">16 metrics</text>
+  </g>
+
+  <!-- Arrows from all platforms to Luna -->
+  <!-- From Fitbit (115, 170) to Luna (1040, 170) -->
+  <path d="M175 170 Q600 145 1040 160" stroke="#7c3aed" stroke-width="1" stroke-opacity="0.25" fill="none" stroke-dasharray="4 4"/>
+  <path d="M310 170 Q660 148 1040 163" stroke="#4285f4" stroke-width="1" stroke-opacity="0.25" fill="none" stroke-dasharray="4 4"/>
+  <path d="M445 170 Q720 150 1040 166" stroke="#d4a017" stroke-width="1" stroke-opacity="0.25" fill="none" stroke-dasharray="4 4"/>
+  <path d="M580 170 Q800 158 1040 168" stroke="#00c851" stroke-width="1" stroke-opacity="0.3" fill="none" stroke-dasharray="4 4"/>
+  <path d="M715 170 Q860 168 1040 170" stroke="#cf0a2c" stroke-width="1" stroke-opacity="0.3" fill="none" stroke-dasharray="4 4"/>
+  <path d="M850 170 Q940 170 1040 170" stroke="#8e8e93" stroke-width="1" stroke-opacity="0.35" fill="none" stroke-dasharray="4 4"/>
+  <path d="M985 170 L1038 170" stroke="#1428a0" stroke-width="1" stroke-opacity="0.4" fill="none"/>
+
+  <!-- Arrow heads -->
+  <polygon points="1038,166 1048,170 1038,174" fill="#7c3aed" opacity="0.6"/>
+
+  <!-- Bottom label -->
+  <text x="600" y="318" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="11" fill="#4b5563">All metrics normalized · stored in SQLite · queryable via REST API</text>
+</svg>

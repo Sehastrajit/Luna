@@ -50,6 +50,7 @@ L.U.N.A. is an open-source AI platform that ships as two variants: a **Personal*
 
 - [Variants](#variants)
 - [Features](#features)
+- [Health Platforms](#health-platforms)
 - [Install — one line](#install--one-line)
 - [Docker](#docker)
 - [Any Model](#any-model)
@@ -182,10 +183,45 @@ nvidia_nim_model=meta/llama-3.1-8b-instruct
 | 📊 **Dashboard** — live news, weather, markets, and maps widget layer | ✓ | ✓ |
 | 🌐 **Web Tools** — DuckDuckGo search and page fetch | ✓ | ✓ |
 | 🧩 **Dynamic Widgets** — steps, timelines, code blocks, 3D scenes (Three.js) | ✓ | ✓ |
+| 💓 **Health Platforms** — Fitbit, Google Fit, Oura, Withings, Garmin, Apple Health, Samsung | ✓ | ✓ |
 | ✈️ **Messaging Channels** — Telegram, Discord, Slack, generic webhook | — | ✓ |
 | 🔐 **JWT Auth** — multi-user tokens, admin user management API | — | ✓ |
 | 🚦 **Rate Limiting** — sliding-window per-IP, configurable burst | — | ✓ |
 | 🔒 **Private** — inference runs locally via Ollama by default, zero telemetry | ✓ | ✓ |
+
+---
+
+## Health Platforms
+
+<div align="center">
+  <img src="docs-site/public/images/health-platforms.svg" width="100%" alt="Health platform integrations" />
+</div>
+
+Luna connects to 7 major health platforms and normalizes data into 23 metric types stored locally in SQLite.
+
+| Platform | Auth | Key Metrics |
+|---|---|---|
+| **Fitbit** | OAuth2 | Steps, HR, HRV, sleep stages, SpO2, skin temp, weight, breathing rate |
+| **Google Fit** | OAuth2 | Steps, calories, HR, weight, body fat, SpO2, sleep — all Android wearables |
+| **Oura Ring** | API token | Sleep stages, HRV, resting HR, readiness score, stress, respiratory rate |
+| **Withings** | OAuth2 | Weight, BMI, body fat, **blood pressure**, HR, sleep |
+| **Garmin Connect** | Credentials | VO2 Max, Body Battery, stress, GPS workouts, sleep, SpO2 |
+| **Apple Health** | Webhook | All HealthKit metrics via iOS "Health Auto Export" app |
+| **Samsung Health** | Webhook | Galaxy Watch metrics via compatible Android exporter |
+
+**Supported wearables:** Fitbit Charge/Versa/Sense, Garmin Forerunner/Fenix/Venu, Oura Ring Gen 3 & 4, Withings ScanWatch, Apple Watch Series 4–10 & Ultra, Samsung Galaxy Watch 4–7.
+
+```bash
+# Quick setup — trigger sync after configuring credentials in .env
+curl -X POST http://localhost:8899/api/health/sync
+
+# Ask Luna about your health
+# "How was my sleep last night?"
+# "What's my HRV trend this week?"
+# "Sync my Fitbit and tell me how my recovery looks"
+```
+
+> **Docs:** [Health Platforms →](docs-site/pages/health.js) — full setup guide, device list, all metric types, and API reference.
 
 ---
 

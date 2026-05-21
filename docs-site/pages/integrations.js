@@ -9,6 +9,7 @@ const toc = [
   { id: 'voice',     label: 'Voice engines' },
   { id: 'apps',      label: 'Desktop apps' },
   { id: 'data',      label: 'Live data & APIs' },
+  { id: 'health',    label: 'Health platforms' },
   { id: 'production',label: 'Production' },
   { id: 'platforms', label: 'Platforms' },
 ];
@@ -565,6 +566,73 @@ Events:        ✓ Pushes  ✓ Pull requests  ✓ Issues  ✓ Issue comments  �
           badges={[{ label: 'Opt-in', color: 'blue' }]}
           note="alpha_vantage=your-key"
         />
+      </section>
+
+      {/* ── Health ── */}
+      <section>
+        <h2 id="health">Health Platforms</h2>
+        <p>
+          Connect wearables and health apps to give Luna awareness of your fitness, sleep,
+          heart rate, and body metrics. All data is stored locally — nothing is sent to any cloud.
+        </p>
+
+        <Card
+          icon="⌚"
+          title="Fitbit"
+          subtitle="Full REST API coverage: steps, distance, calories, heart rate, HRV, all sleep stages, SpO2, breathing rate, skin temperature, and weight. OAuth2 setup takes about 2 minutes."
+          badges={[{ label: 'OAuth2', color: 'blue' }, { label: 'Personal', color: 'green' }]}
+          note="fitbit_client_id= · fitbit_client_secret= · GET /api/health/oauth/authorize/fitbit"
+        />
+        <Card
+          icon="🏃"
+          title="Google Fit"
+          subtitle="Aggregates activity data from any Android wearable synced to Google Fit — Pixel Watch, Galaxy Watch, Wear OS devices, and more. Steps, calories, HR, weight, sleep via Google OAuth2."
+          badges={[{ label: 'OAuth2', color: 'blue' }, { label: 'Android ecosystem', color: 'purple' }]}
+          note="google_fit_client_id= · google_fit_client_secret= · GET /api/health/oauth/authorize/google_fit"
+        />
+        <Card
+          icon="💍"
+          title="Oura Ring"
+          subtitle="Best-in-class sleep staging, HRV, resting heart rate, readiness score, stress levels, and respiratory rate. Simple personal access token auth — no OAuth flow."
+          badges={[{ label: 'API token', color: 'purple' }, { label: 'Best HRV data', color: 'green' }]}
+          note="oura_api_key= — cloud.ouraring.com/user/api-tokens"
+        />
+        <Card
+          icon="⚖️"
+          title="Withings"
+          subtitle="Medical-grade smart scales (weight, BMI, body fat), blood pressure monitors, and sleep mats. The only platform that provides blood pressure readings."
+          badges={[{ label: 'OAuth2', color: 'blue' }, { label: 'Blood pressure', color: 'purple' }]}
+          note="withings_client_id= · withings_client_secret= · GET /api/health/oauth/authorize/withings"
+        />
+        <Card
+          icon="🏔"
+          title="Garmin Connect"
+          subtitle="Detailed GPS workouts, VO2 Max, Body Battery (readiness), stress, sleep stages, and SpO2 via the garth library. Works with every Garmin wearable: Forerunner, Fenix, Venu, and more."
+          badges={[{ label: 'Credentials', color: 'gray' }]}
+          note="garmin_email= · garmin_password= · pip install garth"
+        />
+        <Card
+          icon="🍎"
+          title="Apple Health"
+          subtitle="All HealthKit metrics from Apple Watch via webhook push. Apple has no public REST API, so Luna uses the free 'Health Auto Export' iOS app to push data on a schedule."
+          badges={[{ label: 'Webhook', color: 'gray' }, { label: 'iOS app needed', color: 'blue' }]}
+          note="Endpoint: POST /api/health/webhook/apple · health_webhook_secret= in .env"
+        />
+        <Card
+          icon="📱"
+          title="Samsung Health"
+          subtitle="Galaxy Watch and Galaxy Fit data via a compatible Android exporter app. Supports the same Health Auto Export JSON format as Apple Health."
+          badges={[{ label: 'Webhook', color: 'gray' }, { label: 'Android app needed', color: 'blue' }]}
+          note="Endpoint: POST /api/health/webhook/samsung · health_webhook_secret= in .env"
+        />
+
+        <Callout type="tip" title="Full health documentation">
+          <p>
+            For setup guides, supported device lists, all 23 metric types, API reference,
+            and chat examples, see the{' '}
+            <a href="/health" style={{ color: '#7c3aed' }}>Health Platforms</a> page.
+          </p>
+        </Callout>
       </section>
 
       {/* ── Production ── */}

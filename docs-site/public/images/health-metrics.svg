@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420">
+  <defs>
+    <radialGradient id="mbg" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#0f0a1e"/>
+      <stop offset="100%" stop-color="#030306"/>
+    </radialGradient>
+    <filter id="mglow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <!-- Heartbeat line path -->
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#mbg)"/>
+
+  <!-- Section title -->
+  <text x="600" y="36" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="600" letter-spacing="4" fill="#6d28d9" opacity="0.9">UNIFIED HEALTH METRICS DASHBOARD</text>
+
+  <!-- ── Metric Cards Row 1 ── -->
+
+  <!-- Steps -->
+  <g transform="translate(40,56)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#6d28d9" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">STEPS</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#a78bfa">8,432</text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">steps today</text>
+    <!-- Mini bar chart -->
+    <rect x="14" y="84" width="18" height="8" rx="2" fill="#6d28d9" opacity="0.5"/>
+    <rect x="36" y="80" width="18" height="12" rx="2" fill="#6d28d9" opacity="0.6"/>
+    <rect x="58" y="76" width="18" height="16" rx="2" fill="#6d28d9" opacity="0.7"/>
+    <rect x="80" y="78" width="18" height="14" rx="2" fill="#7c3aed" opacity="0.8"/>
+    <rect x="102" y="82" width="18" height="10" rx="2" fill="#6d28d9" opacity="0.6"/>
+    <rect x="124" y="72" width="18" height="20" rx="2" fill="#a78bfa"/>
+    <text x="148" y="90" font-family="Inter,system-ui" font-size="8" fill="#4ade80">+12%</text>
+  </g>
+
+  <!-- Heart Rate -->
+  <g transform="translate(216,56)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#ef4444" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">HEART RATE</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#f87171">72 <tspan font-size="14" fill="#6b7280">bpm</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">resting · avg today</text>
+    <!-- Heartbeat line -->
+    <polyline points="14,90 30,90 36,76 42,98 50,70 58,92 66,90 132,90 138,82 144,90 150,90" fill="none" stroke="#ef4444" stroke-width="1.5" opacity="0.8"/>
+  </g>
+
+  <!-- HRV -->
+  <g transform="translate(392,56)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#8b5cf6" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">HRV</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#c4b5fd">48 <tspan font-size="14" fill="#6b7280">ms</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">heart rate variability</text>
+    <!-- Trend arc -->
+    <path d="M 14 90 Q 80 60 146 88" fill="none" stroke="#8b5cf6" stroke-width="2" opacity="0.7"/>
+    <circle cx="146" cy="88" r="3" fill="#8b5cf6"/>
+  </g>
+
+  <!-- Sleep -->
+  <g transform="translate(568,56)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#3b82f6" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">SLEEP</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#60a5fa">7h 24m</text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">deep 1h22 · REM 1h48</text>
+    <!-- Sleep stages bar -->
+    <rect x="14" y="82" width="36" height="10" rx="2" fill="#1d4ed8"/>
+    <rect x="52" y="82" width="52" height="10" rx="2" fill="#3b82f6"/>
+    <rect x="106" y="82" width="28" height="10" rx="2" fill="#93c5fd"/>
+    <rect x="136" y="82" width="10" height="10" rx="2" fill="#dbeafe"/>
+  </g>
+
+  <!-- SpO2 -->
+  <g transform="translate(744,56)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#06b6d4" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">BLOOD OXYGEN</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#22d3ee">97 <tspan font-size="14" fill="#6b7280">%</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">SpO2 · avg last night</text>
+    <!-- Ring gauge -->
+    <circle cx="130" cy="76" r="18" fill="none" stroke="#0e7490" stroke-width="5"/>
+    <circle cx="130" cy="76" r="18" fill="none" stroke="#22d3ee" stroke-width="5" stroke-dasharray="98 15" stroke-linecap="round" transform="rotate(-90 130 76)"/>
+    <text x="130" y="80" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#22d3ee">97%</text>
+  </g>
+
+  <!-- Readiness -->
+  <g transform="translate(920,56)">
+    <rect width="240" height="100" rx="10" fill="#0c1024" stroke="#10b981" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">READINESS SCORE</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#34d399">82 <tspan font-size="14" fill="#6b7280">/ 100</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">Oura Ring · Good</text>
+    <!-- Progress bar -->
+    <rect x="14" y="84" width="210" height="8" rx="4" fill="#0f2620"/>
+    <rect x="14" y="84" width="172" height="8" rx="4" fill="url(#readyGrad)"/>
+    <defs>
+      <linearGradient id="readyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#065f46"/>
+        <stop offset="100%" stop-color="#10b981"/>
+      </linearGradient>
+    </defs>
+  </g>
+
+  <!-- ── Metric Cards Row 2 ── -->
+
+  <!-- Weight -->
+  <g transform="translate(40,172)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">WEIGHT</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#fbbf24">74.2 <tspan font-size="14" fill="#6b7280">kg</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">Withings Body+</text>
+    <text x="14" y="90" font-family="Inter,system-ui" font-size="9" fill="#6b7280">BMI 23.1  ·  Fat 17.4%</text>
+  </g>
+
+  <!-- Blood Pressure -->
+  <g transform="translate(216,172)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#ec4899" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">BLOOD PRESSURE</text>
+    <text x="14" y="54" font-family="Inter,system-ui" font-size="26" font-weight="800" fill="#f472b6">118<tspan font-size="16" fill="#6b7280">/</tspan>76</text>
+    <text x="14" y="72" font-family="Inter,system-ui" font-size="10" fill="#4b5563">mmHg · Withings BPM</text>
+    <text x="14" y="88" font-family="Inter,system-ui" font-size="9" fill="#4ade80">Normal range</text>
+  </g>
+
+  <!-- Calories -->
+  <g transform="translate(392,172)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#f97316" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">CALORIES</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#fb923c">1,847 <tspan font-size="11" fill="#6b7280">kcal</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">active burn today</text>
+    <!-- Flame dots -->
+    <circle cx="20" cy="88" r="4" fill="#f97316" opacity="0.8"/>
+    <circle cx="32" cy="88" r="4" fill="#f97316" opacity="0.7"/>
+    <circle cx="44" cy="88" r="4" fill="#f97316" opacity="0.6"/>
+    <circle cx="56" cy="88" r="4" fill="#f97316" opacity="0.4"/>
+    <circle cx="68" cy="88" r="4" fill="#374151" opacity="0.5"/>
+    <text x="80" y="92" font-family="Inter,system-ui" font-size="9" fill="#6b7280">of 2200 goal</text>
+  </g>
+
+  <!-- Active Minutes -->
+  <g transform="translate(568,172)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#22c55e" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">ACTIVE MINUTES</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#4ade80">48 <tspan font-size="14" fill="#6b7280">min</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">vigorous + moderate</text>
+    <!-- Circular progress -->
+    <circle cx="130" cy="72" r="20" fill="none" stroke="#14532d" stroke-width="5"/>
+    <circle cx="130" cy="72" r="20" fill="none" stroke="#22c55e" stroke-width="5" stroke-dasharray="75 57" stroke-linecap="round" transform="rotate(-90 130 72)"/>
+    <text x="130" y="76" text-anchor="middle" font-family="Inter,system-ui" font-size="9" fill="#22c55e">80%</text>
+  </g>
+
+  <!-- Stress Score -->
+  <g transform="translate(744,172)">
+    <rect width="160" height="100" rx="10" fill="#0c1024" stroke="#a78bfa" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">STRESS</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#c4b5fd">24 <tspan font-size="14" fill="#6b7280">/ 100</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">Oura · Low stress</text>
+    <rect x="14" y="84" width="132" height="8" rx="4" fill="#1e1b4b"/>
+    <rect x="14" y="84" width="32" height="8" rx="4" fill="#7c3aed" opacity="0.8"/>
+  </g>
+
+  <!-- VO2 Max -->
+  <g transform="translate(920,172)">
+    <rect width="240" height="100" rx="10" fill="#0c1024" stroke="#0ea5e9" stroke-width="1" stroke-opacity="0.5"/>
+    <text x="14" y="26" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="500">VO2 MAX</text>
+    <text x="14" y="56" font-family="Inter,system-ui" font-size="30" font-weight="800" fill="#38bdf8">47.2 <tspan font-size="14" fill="#6b7280">mL/kg/min</tspan></text>
+    <text x="14" y="74" font-family="Inter,system-ui" font-size="10" fill="#4b5563">Garmin Forerunner · Above avg</text>
+    <!-- Level indicator -->
+    <rect x="14" y="84" width="210" height="8" rx="4" fill="#0c1a2e"/>
+    <rect x="14" y="84" width="120" height="8" rx="4" fill="#0ea5e9" opacity="0.7"/>
+    <text x="137" y="91" font-family="Inter,system-ui" font-size="8" fill="#38bdf8">Above avg</text>
+  </g>
+
+  <!-- ── Source platform badges row ── -->
+  <g transform="translate(40,288)">
+    <text x="0" y="14" font-family="Inter,system-ui" font-size="11" fill="#4b5563" font-weight="500">Data sources active</text>
+    <!-- Fitbit -->
+    <rect x="0" y="22" width="70" height="22" rx="6" fill="#00b0b9" fill-opacity="0.15" stroke="#00b0b9" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="35" y="37" text-anchor="middle" font-family="Inter,system-ui" font-size="10" font-weight="600" fill="#00b0b9">Fitbit</text>
+    <!-- Oura -->
+    <rect x="76" y="22" width="70" height="22" rx="6" fill="#d4a017" fill-opacity="0.15" stroke="#d4a017" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="111" y="37" text-anchor="middle" font-family="Inter,system-ui" font-size="10" font-weight="600" fill="#d4a017">Oura Ring</text>
+    <!-- Garmin -->
+    <rect x="152" y="22" width="70" height="22" rx="6" fill="#cf0a2c" fill-opacity="0.15" stroke="#cf0a2c" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="187" y="37" text-anchor="middle" font-family="Inter,system-ui" font-size="10" font-weight="600" fill="#cf0a2c">Garmin</text>
+    <!-- Withings -->
+    <rect x="228" y="22" width="70" height="22" rx="6" fill="#00c851" fill-opacity="0.15" stroke="#00c851" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="263" y="37" text-anchor="middle" font-family="Inter,system-ui" font-size="10" font-weight="600" fill="#00c851">Withings</text>
+  </g>
+
+  <!-- API reference block -->
+  <g transform="translate(40,336)">
+    <rect width="1120" height="64" rx="10" fill="#090616" stroke="#6d28d9" stroke-width="1" stroke-opacity="0.3"/>
+    <text x="20" y="20" font-family="Inter,system-ui" font-size="10" fill="#6b7280" font-weight="600" letter-spacing="2">QUERY EXAMPLES</text>
+    <text x="20" y="38" font-family="'JetBrains Mono',monospace,system-ui" font-size="10" fill="#a78bfa">GET /api/health/summary?date=2026-05-21</text>
+    <text x="20" y="52" font-family="'JetBrains Mono',monospace,system-ui" font-size="10" fill="#6b7280">GET /api/health/metrics?metric_type=heart_rate&amp;from=2026-05-01&amp;to=2026-05-21</text>
+    <text x="440" y="38" font-family="'JetBrains Mono',monospace,system-ui" font-size="10" fill="#a78bfa">POST /api/health/sync?platform=fitbit</text>
+    <text x="440" y="52" font-family="'JetBrains Mono',monospace,system-ui" font-size="10" fill="#6b7280">POST /api/health/webhook/apple   ← iOS Health Auto Export</text>
+    <text x="820" y="38" font-family="'JetBrains Mono',monospace,system-ui" font-size="10" fill="#a78bfa">GET /api/health/status</text>
+    <text x="820" y="52" font-family="'JetBrains Mono',monospace,system-ui" font-size="10" fill="#6b7280">GET /api/health/oauth/authorize/fitbit</text>
+  </g>
+</svg>

@@ -118,6 +118,39 @@ class Settings(BaseSettings):
     spotify_client_id: str = ""
     spotify_client_secret: str = ""
 
+    # ── Health Platforms (opt-in) ────────────────────────────────────────────
+    # Fitbit (OAuth2) — app.fitbit.com/oauth2/applications
+    fitbit_client_id: str = ""
+    fitbit_client_secret: str = ""
+    fitbit_access_token: str = ""
+    fitbit_refresh_token: str = ""
+
+    # Google Fit (OAuth2) — separate from Workspace; Google Cloud Console
+    google_fit_client_id: str = ""
+    google_fit_client_secret: str = ""
+    google_fit_access_token: str = ""
+    google_fit_refresh_token: str = ""
+
+    # Oura Ring (Personal Access Token) — cloud.ouraring.com/user/api-tokens
+    oura_api_key: str = ""
+
+    # Withings (OAuth2) — developer.withings.com
+    withings_client_id: str = ""
+    withings_client_secret: str = ""
+    withings_access_token: str = ""
+    withings_refresh_token: str = ""
+
+    # Garmin Connect (credentials for garth library)
+    garmin_email: str = ""
+    garmin_password: str = ""
+
+    # Apple Health / Samsung Health — these platforms have no public REST API.
+    # Use the "Health Auto Export" iOS app or a compatible Android exporter
+    # to push data to Luna's webhook endpoint: POST /api/health/webhook/apple
+    # or POST /api/health/webhook/samsung
+    # Set a shared secret to authenticate inbound webhooks.
+    health_webhook_secret: str = ""
+
     # ── Variant ───────────────────────────────────────────────────────────────
     # personal  — casual companion, voice, desktop automation, single user
     # business  — professional team assistant, multi-user JWT, rate limiting on
