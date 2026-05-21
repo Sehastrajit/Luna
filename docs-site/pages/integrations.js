@@ -5,6 +5,7 @@ const toc = [
   { id: 'variants',  label: 'Variants' },
   { id: 'llm',       label: 'LLM providers' },
   { id: 'channels',  label: 'Messaging channels' },
+  { id: 'github',    label: 'GitHub' },
   { id: 'voice',     label: 'Voice engines' },
   { id: 'apps',      label: 'Desktop apps' },
   { id: 'data',      label: 'Live data & APIs' },
@@ -270,6 +271,76 @@ slack_signing_secret=abc123...`}</code></pre>
           <pre><code>{`luna tunnel
 # → https://abc123.ngrok-free.app
 # Set this as your webhook URL in the respective platform dashboard`}</code></pre>
+        </Callout>
+      </section>
+
+      {/* ── GitHub ── */}
+      <section>
+        <h2 id="github">GitHub</h2>
+        <p>
+          GitHub integration has two parts: a <strong>webhook receiver</strong> that turns GitHub
+          events into Slack or Telegram notifications, and a set of <strong>Luna tools</strong>
+          that let the LLM interact with your repositories directly via natural language.
+        </p>
+
+        <h3>Webhook events</h3>
+        <Card
+          icon="🐙"
+          title="GitHub webhook"
+          subtitle="Receives push, pull request, issue, issue comment, and release events from any repo or organisation. HMAC-SHA256 signature verified on every request."
+          badges={[{ label: 'Both variants', color: 'purple' }]}
+          note="github_webhook_secret=…  ·  Endpoint: POST /api/channels/github"
+        />
+
+        <p>Point a GitHub webhook at <code>https://YOUR_HOST/api/channels/github</code> and
+        set the secret to the value of <code>github_webhook_secret</code> in your <code>.env</code>.
+        Luna acknowledges every event and optionally forwards a formatted summary to Slack or Telegram:</p>
+
+        <CodeFile label=".env">
+          <pre><code>{`github_token=ghp_...               # Personal Access Token (repo scope)
+github_webhook_secret=strong-secret  # Must match the secret in GitHub webhook settings
+
+# Forward event summaries to a notification channel (optional — pick one)
+github_notify_slack_channel=C0123ABCDEF    # Slack channel ID
+github_notify_telegram_chat_id=123456789   # Telegram chat ID`}</code></pre>
+        </CodeFile>
+
+        <CodeFile label="GitHub → Settings → Webhooks">
+          <pre><code>{`Payload URL:   https://YOUR_HOST/api/channels/github
+Content type:  application/json
+Secret:        <same as github_webhook_secret in .env>
+Events:        ✓ Pushes  ✓ Pull requests  ✓ Issues  ✓ Issue comments  ✓ Releases`}</code></pre>
+        </CodeFile>
+
+        <h3>GitHub tools (LLM actions)</h3>
+        <p>
+          Set <code>github_token</code> in <code>.env</code> and Luna can interact with GitHub
+          directly from chat. Set <code>github_default_repo</code> to avoid typing the repo
+          name every time.
+        </p>
+
+        <table>
+          <thead><tr><th>Tool</th><th>What it does</th><th>Permission</th></tr></thead>
+          <tbody>
+            <tr><td><code>github_list_repos</code></td><td>List your repos sorted by last update</td><td>allow</td></tr>
+            <tr><td><code>github_list_issues(repo)</code></td><td>List open issues in a repo</td><td>allow</td></tr>
+            <tr><td><code>github_list_prs(repo)</code></td><td>List open pull requests in a repo</td><td>allow</td></tr>
+            <tr><td><code>github_get_pr(repo, number)</code></td><td>Get diff stats and details for a PR</td><td>allow</td></tr>
+            <tr><td><code>github_create_issue(repo, title, body)</code></td><td>Open a new issue</td><td>confirm</td></tr>
+            <tr><td><code>github_comment(repo, number, body)</code></td><td>Post a comment on an issue or PR</td><td>confirm</td></tr>
+          </tbody>
+        </table>
+
+        <CodeFile label="chat examples">
+          <pre><code>{`"List open issues in myorg/myrepo"
+"Open an issue in myorg/myrepo: Add dark mode support"
+"What PRs are waiting for review in myrepo?"
+"Comment on issue #42 in myrepo: This is fixed in v2.1"`}</code></pre>
+        </CodeFile>
+
+        <Callout type="note" title="Token scopes">
+          <p>A fine-grained PAT with <strong>Contents</strong> (read), <strong>Issues</strong> (read/write),
+          and <strong>Pull requests</strong> (read) is sufficient. Classic tokens need the <code>repo</code> scope.</p>
         </Callout>
       </section>
 

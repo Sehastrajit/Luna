@@ -45,6 +45,13 @@ TOOL_REGISTRY: dict[str, ToolDef] = {
     "workspace_write": ToolDef("workspace_write", "Write a file inside Luna's controlled workspace", RiskLevel.RISKY, ["path", "content"], "Write {path} in Luna's workspace?"),
     "list_skills": ToolDef("list_skills", "List installed Luna skills", RiskLevel.SAFE),
     "create_agent_task": ToolDef("create_agent_task", "Create a persistent multi-step agent task", RiskLevel.SAFE, ["description"]),
+    # ── GitHub ──────────────────────────────────────────────────────────────────
+    "github_list_repos": ToolDef("github_list_repos", "List your GitHub repositories sorted by last updated", RiskLevel.SAFE),
+    "github_list_issues": ToolDef("github_list_issues", "List open issues in a GitHub repository", RiskLevel.SAFE, ["repo"]),
+    "github_create_issue": ToolDef("github_create_issue", "Create a new GitHub issue", RiskLevel.RISKY, ["repo", "title", "body"], "Create GitHub issue '{title}' in {repo}?"),
+    "github_comment": ToolDef("github_comment", "Post a comment on a GitHub issue or pull request", RiskLevel.RISKY, ["repo", "number", "body"], "Post comment on {repo}#{number}?"),
+    "github_list_prs": ToolDef("github_list_prs", "List open pull requests in a GitHub repository", RiskLevel.SAFE, ["repo"]),
+    "github_get_pr": ToolDef("github_get_pr", "Get details about a specific pull request", RiskLevel.SAFE, ["repo", "number"]),
 }
 
 
@@ -71,4 +78,5 @@ def get_tools_for_prompt() -> str:
     lines.append("IMPORTANT: When switching audio devices, you MUST emit a tool_call JSON. Do NOT just say you are switching.")
     lines.append("Web tools: use web_search for current information, recent news, prices, or anything that requires searching. Use web_fetch or browser_read to read a specific URL.")
     lines.append("Agent tools: use create_agent_task for multi-step work, workspace_write/read for files inside Luna's workspace, and list_skills to discover installed local skills.")
+    lines.append("GitHub tools: use github_list_repos, github_list_issues(repo), github_create_issue(repo,title,body), github_comment(repo,number,body), github_list_prs(repo), github_get_pr(repo,number). Requires github_token in .env.")
     return "\n".join(lines)

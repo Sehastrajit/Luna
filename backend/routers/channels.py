@@ -1,5 +1,5 @@
 """
-Messaging channel webhooks — Telegram, Discord, Slack, generic HTTP.
+Messaging channel webhooks — Telegram, Discord, Slack, GitHub, generic HTTP.
 
 Setup summary
 ─────────────
@@ -20,6 +20,16 @@ Slack
   2. In your Slack App config → Event Subscriptions → Request URL:
        https://YOUR_HOST/api/channels/slack
   3. Subscribe to  message.channels  (or  message.im  for DMs).
+
+GitHub
+  1. Set  github_token  (PAT with repo scope) and  github_webhook_secret  in .env
+  2. In your repo/org → Settings → Webhooks → Add webhook:
+       Payload URL: https://YOUR_HOST/api/channels/github
+       Content type: application/json
+       Secret: same value as github_webhook_secret
+  3. Tick push, pull_request, issues, issue_comment, release events.
+  4. Optionally set github_notify_slack_channel or github_notify_telegram_chat_id
+     in .env to forward event summaries to a notification channel.
 
 Generic webhook
   POST /api/channels/webhook
@@ -233,6 +243,115 @@ async def generic_webhook(request: Request):
     return {"reply": reply, "user_id": user_id}
 
 
+# ── GitHub ───────────────────────────────────────────────────────────────────
+
+def _verify_github_signature(body: bytes, signature: str) -> bool:
+    """Verify the X-Hub-Signature-256 header from GitHub."""
+    if not settings.github_webhook_secret:
+        return True
+    expected = "sha256=" + hmac.new(
+        settings.github_webhook_secret.encode(),
+        body,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+
+def _format_github_event(event_type: str, body: dict) -> str | None:
+    """Turn a GitHub webhook payload into a human-readable summary line."""
+    repo = body.get("repository", {}).get("full_name", "unknown/repo")
+
+    if event_type == "push":
+        pusher = body.get("pusher", {}).get("name", "someone")
+        ref = body.get("ref", "").replace("refs/heads/", "")
+        commits = body.get("commits", [])
+        if not commits:
+            return None
+        headline = commits[0].get("message", "").split("\n")[0]
+        n = len(commits)
+        return f"[GitHub] {pusher} pushed {n} commit{'s' if n != 1 else ''} to {repo}/{ref}: {headline}"
+
+    if event_type == "pull_request":
+        action = body.get("action", "")
+        if action not in ("opened", "closed", "reopened", "ready_for_review"):
+            return None
+        pr = body.get("pull_request", {})
+        number = pr.get("number")
+        title = pr.get("title", "")
+        user = pr.get("user", {}).get("login", "someone")
+        if action == "closed" and pr.get("merged"):
+            action = "merged"
+        return f"[GitHub] PR #{number} '{title}' {action} in {repo} by @{user}"
+
+    if event_type == "issues":
+        action = body.get("action", "")
+        if action not in ("opened", "closed", "reopened"):
+            return None
+        issue = body.get("issue", {})
+        number = issue.get("number")
+        title = issue.get("title", "")
+        user = issue.get("user", {}).get("login", "someone")
+        return f"[GitHub] Issue #{number} '{title}' {action} in {repo} by @{user}"
+
+    if event_type == "issue_comment":
+        if body.get("action") != "created":
+            return None
+        issue = body.get("issue", {})
+        comment = body.get("comment", {})
+        number = issue.get("number")
+        user = comment.get("user", {}).get("login", "someone")
+        snippet = comment.get("body", "")[:120].replace("\n", " ")
+        return f"[GitHub] @{user} commented on #{number} in {repo}: {snippet}"
+
+    if event_type == "release":
+        if body.get("action") != "published":
+            return None
+        release = body.get("release", {})
+        tag = release.get("tag_name", "")
+        name = release.get("name", tag) or tag
+        return f"[GitHub] Release {name} published in {repo}"
+
+    return None
+
+
+@router.post("/github")
+async def github_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    x_github_event: str = Header(default=""),
+    x_hub_signature_256: str = Header(default=""),
+):
+    """GitHub webhook — push, pull_request, issues, issue_comment, release."""
+    if not settings.github_token and not settings.github_webhook_secret:
+        raise HTTPException(503, "GitHub not configured")
+
+    raw = await request.body()
+
+    if settings.github_webhook_secret and not _verify_github_signature(raw, x_hub_signature_256):
+        raise HTTPException(401, "Invalid GitHub signature")
+
+    body = json.loads(raw)
+
+    # GitHub sends a ping on first registration — acknowledge it
+    if x_github_event == "ping":
+        return {"ok": True, "zen": body.get("zen", "")}
+
+    message = _format_github_event(x_github_event, body)
+    if not message:
+        return {"ok": True}
+
+    async def _notify():
+        # Forward to a Slack channel if configured
+        if settings.slack_bot_token and settings.github_notify_slack_channel:
+            await send_slack(settings.github_notify_slack_channel, message)
+        # Forward to a Telegram chat if configured
+        if settings.telegram_bot_token and settings.github_notify_telegram_chat_id:
+            await send_telegram(settings.github_notify_telegram_chat_id, message)
+
+    background_tasks.add_task(_notify)
+    return {"ok": True, "event": x_github_event, "summary": message}
+
+
 # ── Channel status ────────────────────────────────────────────────────────────
 
 @router.get("/status")
@@ -242,5 +361,6 @@ def channel_status():
         "telegram": bool(settings.telegram_bot_token),
         "discord":  bool(settings.discord_bot_token and settings.discord_public_key),
         "slack":    bool(settings.slack_bot_token and settings.slack_signing_secret),
+        "github":   bool(settings.github_token or settings.github_webhook_secret),
         "webhook":  True,
     }

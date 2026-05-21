@@ -7,6 +7,7 @@ const toc = [
   { id: 'embeddings',   label: 'Embeddings' },
   { id: 'auth',         label: 'Auth & rate limiting' },
   { id: 'channels',     label: 'Messaging channels' },
+  { id: 'github',       label: 'GitHub' },
   { id: 'lan',          label: 'LAN / network' },
   { id: 'spotify',      label: 'Spotify' },
   { id: 'data',         label: 'Data services' },
@@ -205,6 +206,7 @@ GET    /api/admin/llm/providers         All configured providers`}</code></pre>
         <h2 id="channels">Messaging channels</h2>
         <p>
           Luna can receive messages via Telegram, Discord, Slack, and a generic HTTP webhook.
+          GitHub event notifications are covered in the <a href="#github" style={{color:'#7c3aed'}}>GitHub</a> section below.
           Each channel maintains isolated per-user conversation history.
           Desktop features (voice, Spotify, maps) are automatically stripped from channel replies.
         </p>
@@ -249,6 +251,41 @@ slack_signing_secret=abc...`}</code></pre>
           <pre><code>{`# GET /api/channels/status returns which channels are configured
 # { "telegram": true, "discord": false, "slack": true, "webhook": true }`}</code></pre>
         </CodeFile>
+      </section>
+
+      {/* ── GitHub ── */}
+      <section>
+        <h2 id="github">GitHub</h2>
+        <p>
+          Set <code>github_token</code> to enable GitHub tools in chat (list issues, create issues,
+          comment on PRs). Set <code>github_webhook_secret</code> to receive push, PR, and issue
+          events via the <code>/api/channels/github</code> endpoint.
+        </p>
+        <CodeFile label=".env">
+          <pre><code>{`# Personal Access Token — needs repo, issues, pull_requests read/write
+github_token=ghp_...
+
+# Webhook — must match the secret set in GitHub repo/org settings
+github_webhook_secret=strong-random-secret
+
+# Default repo for tool calls (owner/repo format)
+github_default_repo=myorg/myrepo
+
+# Forward GitHub event summaries to a notification channel (optional)
+github_notify_slack_channel=C0123ABCDEF    # Slack channel ID
+github_notify_telegram_chat_id=123456789   # Telegram chat ID`}</code></pre>
+        </CodeFile>
+        <p>Register the webhook in GitHub under <strong>Settings → Webhooks → Add webhook</strong>:</p>
+        <CodeFile label="GitHub webhook settings">
+          <pre><code>{`Payload URL:   https://YOUR_HOST/api/channels/github
+Content type:  application/json
+Secret:        <same as github_webhook_secret>
+Events:        push, pull_request, issues, issue_comment, release`}</code></pre>
+        </CodeFile>
+        <Callout type="tip" title="Token scopes">
+          <p>A fine-grained PAT with <strong>Contents</strong> (read), <strong>Issues</strong> (read/write),
+          and <strong>Pull requests</strong> (read) is sufficient. Classic tokens need the <code>repo</code> scope.</p>
+        </Callout>
       </section>
 
       {/* ── LAN ── */}
@@ -325,6 +362,11 @@ spotify_client_secret=your_client_secret`}</code></pre>
             <tr><td><code>discord_public_key</code></td><td>—</td><td>Discord app public key for interaction signature verification.</td></tr>
             <tr><td><code>slack_bot_token</code></td><td>—</td><td>Slack bot OAuth token (<code>xoxb-...</code>).</td></tr>
             <tr><td><code>slack_signing_secret</code></td><td>—</td><td>Slack app signing secret for request verification.</td></tr>
+            <tr><td><code>github_token</code></td><td>—</td><td>GitHub Personal Access Token for API tools (list/create issues, PRs).</td></tr>
+            <tr><td><code>github_webhook_secret</code></td><td>—</td><td>HMAC secret for verifying GitHub webhook payloads.</td></tr>
+            <tr><td><code>github_default_repo</code></td><td>—</td><td>Default <code>owner/repo</code> for tool calls when no repo is specified.</td></tr>
+            <tr><td><code>github_notify_slack_channel</code></td><td>—</td><td>Slack channel ID to forward GitHub event summaries to.</td></tr>
+            <tr><td><code>github_notify_telegram_chat_id</code></td><td>—</td><td>Telegram chat ID to forward GitHub event summaries to.</td></tr>
             <tr><td><code>host</code></td><td><code>127.0.0.1</code></td><td>Backend bind address. <code>0.0.0.0</code> for LAN/Docker.</td></tr>
             <tr><td><code>port</code></td><td><code>8899</code></td><td>Backend HTTP port.</td></tr>
             <tr><td><code>user_name</code></td><td><code>friend</code></td><td>Your name — used in the personal variant system prompt.</td></tr>

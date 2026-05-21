@@ -99,7 +99,7 @@ def _channel_system_prompt(channel: str, user_display: str) -> str:
 
 # ── main entry point ──────────────────────────────────────────────────────────
 
-ChannelName = Literal["telegram", "discord", "slack", "webhook"]
+ChannelName = Literal["telegram", "discord", "slack", "webhook", "github"]
 
 
 async def handle_channel_message(

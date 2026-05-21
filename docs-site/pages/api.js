@@ -111,7 +111,7 @@ curl "http://localhost:8899/api/chat/stream?message=Tell+me+more&conversation_id
 ]`}</code></pre>
         </CodeFile>
 
-        <h3>Get conversation messages — <code>GET /api/chat/conversations/{id}/messages</code></h3>
+        <h3>Get conversation messages — <code>GET /api/chat/conversations/:id/messages</code></h3>
         <p>Returns all messages in a conversation, ordered oldest first.</p>
         <CodeFile label="response">
           <pre><code>{`[
@@ -124,7 +124,7 @@ curl "http://localhost:8899/api/chat/stream?message=Tell+me+more&conversation_id
 ]`}</code></pre>
         </CodeFile>
 
-        <h3>Delete a conversation — <code>DELETE /api/chat/conversations/{id}</code></h3>
+        <h3>Delete a conversation — <code>DELETE /api/chat/conversations/:id</code></h3>
         <p>Permanently deletes the conversation and all its messages. Returns <code>204 No Content</code>.</p>
 
         <h3>Get proactive message — <code>GET /api/chat/proactive</code></h3>
@@ -161,7 +161,7 @@ curl "http://localhost:8899/api/chat/stream?message=Tell+me+more&conversation_id
 }`}</code></pre>
         </CodeFile>
 
-        <h3>Delete a fact — <code>DELETE /api/memory/facts/{id}</code></h3>
+        <h3>Delete a fact — <code>DELETE /api/memory/facts/:id</code></h3>
         <p>Returns <code>204 No Content</code>.</p>
 
         <h3>Semantic search — <code>POST /api/memory/search</code></h3>
@@ -286,7 +286,7 @@ Body: file=<wav blob>`}</code></pre>
 }`}</code></pre>
         </CodeFile>
 
-        <h3>Update permission — <code>POST /api/agent/permissions/{tool_name}</code></h3>
+        <h3>Update permission — <code>POST /api/agent/permissions/:tool_name</code></h3>
         <CodeFile label="request body">
           <pre><code>{`{ "mode": "allow" | "confirm" | "block" }`}</code></pre>
         </CodeFile>
@@ -435,8 +435,8 @@ Body: file=<wav blob>`}</code></pre>
   "priority": "high"
 }`}</code></pre>
         </CodeFile>
-        <h3>Update task — <code>PUT /api/calendar/tasks/{id}</code></h3>
-        <h3>Delete task — <code>DELETE /api/calendar/tasks/{id}</code></h3>
+        <h3>Update task — <code>PUT /api/calendar/tasks/:id</code></h3>
+        <h3>Delete task — <code>DELETE /api/calendar/tasks/:id</code></h3>
 
         <h3>List events — <code>GET /api/calendar/events</code></h3>
         <h3>Create event — <code>POST /api/calendar/events</code></h3>
@@ -511,9 +511,20 @@ Body: file=<wav blob>`}</code></pre>
           <pre><code>{`{ "reply": "You have 2 tasks due today…", "user_id": "u1" }`}</code></pre>
         </CodeFile>
 
+        <h3>GitHub webhook — <code>POST /api/channels/github</code></h3>
+        <p>Receives GitHub webhook events. Verifies the <code>X-Hub-Signature-256</code> header
+        using <code>HMAC-SHA256</code> when <code>github_webhook_secret</code> is set. Handles
+        <code>push</code>, <code>pull_request</code>, <code>issues</code>, <code>issue_comment</code>,
+        and <code>release</code> events. Returns a <code>ping</code> response on first registration.</p>
+        <CodeFile label="response (event received)">
+          <pre><code>{`{ "ok": true, "event": "push", "summary": "[GitHub] alice pushed 2 commits to owner/repo/main: fix login bug" }`}</code></pre>
+        </CodeFile>
+        <p>If <code>github_notify_slack_channel</code> or <code>github_notify_telegram_chat_id</code> is
+        set in <code>.env</code>, Luna forwards the summary to that channel automatically.</p>
+
         <h3>Channel status — <code>GET /api/channels/status</code></h3>
         <CodeFile label="response">
-          <pre><code>{`{ "telegram": true, "discord": false, "slack": true, "webhook": true }`}</code></pre>
+          <pre><code>{`{ "telegram": true, "discord": false, "slack": true, "github": true, "webhook": true }`}</code></pre>
         </CodeFile>
       </section>
 
@@ -552,10 +563,10 @@ Body: file=<wav blob>`}</code></pre>
           <pre><code>{`{ "user_id": "uuid", "username": "alice", "token": "eyJhbGci..." }`}</code></pre>
         </CodeFile>
 
-        <h3>Delete user — <code>DELETE /api/admin/users/{id}</code></h3>
+        <h3>Delete user — <code>DELETE /api/admin/users/:id</code></h3>
         <p>Returns <code>204 No Content</code>. The user's JWT is immediately invalidated.</p>
 
-        <h3>Rotate token — <code>POST /api/admin/users/{id}/rotate-token</code></h3>
+        <h3>Rotate token — <code>POST /api/admin/users/:id/rotate-token</code></h3>
         <CodeFile label="response">
           <pre><code>{`{ "token": "eyJhbGci..." }`}</code></pre>
         </CodeFile>

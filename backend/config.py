@@ -90,6 +90,12 @@ class Settings(BaseSettings):
     # Slack: set bot token + signing secret; Events API → /api/channels/slack
     slack_bot_token: str = ""
     slack_signing_secret: str = ""
+    # GitHub: PAT for API calls, webhook secret for event signature verification
+    github_token: str = ""                  # Personal Access Token (repo scope)
+    github_webhook_secret: str = ""         # Secret set in GitHub webhook settings
+    github_default_repo: str = ""           # e.g. "owner/repo" — default for tool calls
+    github_notify_slack_channel: str = ""   # Slack channel ID for event notifications
+    github_notify_telegram_chat_id: str = "" # Telegram chat ID for event notifications
 
     # ── Variant ───────────────────────────────────────────────────────────────
     # personal  — casual companion, voice, desktop automation, single user
