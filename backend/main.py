@@ -11,8 +11,11 @@ from backend.models.database import init_db, Base, engine
 from backend.services.activity_tracker import Activity
 from backend.services.scheduler import luna_scheduler
 from backend.routers import chat, memory, calendar, system, voice as voice_router, spotify as spotify_router, state as state_router, train as train_router, sleep as sleep_router, vision as vision_router, luna as luna_router, agent as agent_router, channels as channels_router, admin as admin_router, workspace_integrations as workspace_integrations_router
+from backend.routers.observe import router as observe_router
 from backend.middleware.rate_limit import RateLimitMiddleware
 from backend.processes.registry import start_lifecycle_processes, stop_lifecycle_processes
+from backend.services.telemetry import tracer
+from backend.models.database import SessionLocal
 
 
 @asynccontextmanager
@@ -20,9 +23,11 @@ async def lifespan(app: FastAPI):
     # Init DB (creates all tables including Activity)
     Base.metadata.create_all(bind=engine)
     init_db()
+    tracer.init(SessionLocal)
     luna_scheduler.start()
     start_lifecycle_processes()
     yield
+    await tracer.flush()
     luna_scheduler.stop()
     stop_lifecycle_processes()
 
@@ -61,6 +66,7 @@ app.include_router(agent_router.router)
 app.include_router(channels_router.router)
 app.include_router(admin_router.router)
 app.include_router(workspace_integrations_router.router)
+app.include_router(observe_router)
 
 # Serve React frontend (production build)
 frontend_dist = Path(settings.frontend_dist)

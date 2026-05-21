@@ -166,6 +166,61 @@ class SleepLog(Base):
     created_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class Trace(Base):
+    """One span from the telemetry tracer."""
+    __tablename__ = "traces"
+    id              = Column(Integer, primary_key=True, index=True)
+    span_id         = Column(String, unique=True, nullable=False, index=True)
+    parent_id       = Column(String, nullable=True)
+    name            = Column(String, nullable=False)       # llm_call | memory_retrieve | tool_call | …
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=True)
+    start_time      = Column(Float, nullable=False)        # monotonic seconds
+    end_time        = Column(Float, nullable=True)
+    latency_ms      = Column(Float, nullable=True)
+    status          = Column(String, default="ok")         # ok | error
+    attributes      = Column(Text, nullable=True)          # JSON blob
+    cost_usd        = Column(Float, default=0.0)
+    created_at      = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class Episode(Base):
+    """Episodic memory: one row per completed conversation."""
+    __tablename__ = "episodes"
+    id              = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), unique=True, nullable=False, index=True)
+    summary         = Column(Text, nullable=False)
+    key_fact_ids    = Column(Text, nullable=True)          # JSON list of Fact IDs
+    key_entities    = Column(Text, nullable=True)          # JSON list of entity strings
+    importance      = Column(Float, default=0.5)
+    created_at      = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class BenchmarkResult(Base):
+    """Historical benchmark run result for one suite."""
+    __tablename__ = "benchmark_results"
+    id          = Column(Integer, primary_key=True, index=True)
+    suite       = Column(String, nullable=False, index=True)   # memory | llm | tools | planner
+    timestamp   = Column(Float, nullable=False)
+    metrics     = Column(Text, nullable=True)                  # JSON dict
+    errors      = Column(Text, nullable=True)                  # JSON list
+    duration_s  = Column(Float, nullable=True)
+    created_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class PlanRecord(Base):
+    """Persisted plan from the planner-executor-critic engine."""
+    __tablename__ = "plan_records"
+    id              = Column(Integer, primary_key=True, index=True)
+    plan_id         = Column(String, unique=True, nullable=False, index=True)
+    goal            = Column(Text, nullable=False)
+    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=True)
+    status          = Column(String, nullable=False)           # planning | running | done | failed | critiqued
+    steps_json      = Column(Text, nullable=True)              # JSON list of Step dataclass dicts
+    critique_json   = Column(Text, nullable=True)              # JSON CritiqueResult dict
+    created_at      = Column(Float, nullable=True)             # monotonic timestamp
+    completed_at    = Column(Float, nullable=True)
+
+
 def init_db():
     Base.metadata.create_all(bind=engine)
     # Add new columns to existing tables when they don't exist yet (SQLite ALTER TABLE)
