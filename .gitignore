@@ -70,7 +70,7 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Screenshot capture scripts (images committed separately in assets/screenshots/)
+# Screenshot capture scripts (images committed in docs-site/public/screenshots/)
 scripts/screenshots/
 
 
