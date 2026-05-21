@@ -12,8 +12,6 @@ import { ActivitiesView } from './components/Activities/ActivitiesView'
 import { api } from './api/client'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SpotifyPlayer } from './components/Spotify/SpotifyPlayer'
-import { LunaLogin } from './components/Auth/LunaLogin'
-import { getLunaKey } from './api/client'
 import { HologramMapOverlay } from './components/Map/HologramMapOverlay'
 import { TrainView } from './components/Train/TrainView'
 import { ExtractTrainView } from './components/ExtractTrain/ExtractTrainView'
@@ -60,8 +58,6 @@ function StartupSplash({ show }: { show: boolean }) {
 
 export default function App() {
   const { activeView, setOllamaOnline, setPersonality, addMessage, viewMode } = useStore()
-  const isElectron = !!window.electronAPI?.isElectron
-  const [authed, setAuthed] = useState<boolean | null>(null)
   useCamera()
   const [showSplash, setShowSplash] = useState(true)
 
@@ -71,15 +67,6 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (isElectron) { setAuthed(true); return }
-    fetch('/api/auth/check', { headers: getLunaKey() ? { 'X-Luna-Key': getLunaKey() } : {} })
-      .then(r => r.json())
-      .then(d => setAuthed(!d.auth_required || d.valid))
-      .catch(() => setAuthed(true))
-  }, [isElectron])
-
-  useEffect(() => {
-    if (!isElectron && authed !== true) return
 
     // Health check on load
     api.health().then(h => {
@@ -113,10 +100,7 @@ export default function App() {
       clearInterval(t)
       clearInterval(proactive)
     }
-  }, [isElectron, authed, setOllamaOnline, setPersonality, addMessage])
-
-  if (!isElectron && authed === null) return null
-  if (!isElectron && authed === false) return <LunaLogin onAuth={() => setAuthed(true)} />
+  }, [setOllamaOnline, setPersonality, addMessage])
 
   // ── Luna dashboard: full-screen HUD ─────────────────────────────────────────
   if (viewMode === 'luna') {

@@ -40,7 +40,7 @@ export default function Architecture() {
           <code>electron/main.js</code> is the desktop process owner. It starts the FastAPI backend as a
           child process, manages the health-check loop (exponential backoff restart on crash), creates the
           browser window, and wires up tray and IPC. The preload script (<code>electron/preload.js</code>)
-          exposes <code>electronAPI.apiBase</code> and <code>electronAPI.lunaKey</code> to the renderer
+          exposes <code>electronAPI.apiBase</code> and <code>electronAPI.isElectron</code> to the renderer
           without leaking Node.js APIs.
         </p>
 

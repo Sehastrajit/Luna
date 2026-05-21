@@ -4,8 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.responses import FileResponse
 
 from backend.config import settings
 from backend.models.database import init_db, Base, engine
@@ -35,50 +34,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-class APIKeyMiddleware(BaseHTTPMiddleware):
-    _SKIP = {"/api/system/health", "/api/auth/check", "/api/spotify/callback"}
-
-    async def dispatch(self, request: Request, call_next):
-        key = settings.luna_api_key
-        if not key:
-            return await call_next(request)
-        path = request.url.path
-        if request.method == "OPTIONS":
-            return await call_next(request)
-        # Always allow health check + static assets + the SPA shell
-        if path in self._SKIP or not path.startswith("/api/"):
-            return await call_next(request)
-        provided = (
-            request.headers.get("X-Luna-Key")
-            or request.query_params.get("key")
-        )
-        if provided != key:
-            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
-        return await call_next(request)
-
-
 app.add_middleware(RateLimitMiddleware)
-app.add_middleware(APIKeyMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*", "X-Luna-Key", "X-Voice-Emotion", "X-Volume", "X-Speech-Speed", "X-Speech-Duration"],
+    allow_headers=["*", "X-Voice-Emotion", "X-Volume", "X-Speech-Speed", "X-Speech-Duration"],
 )
-
-@app.get("/api/auth/check")
-def auth_check(request: Request):
-    """Returns whether auth is enabled and validates a key if provided."""
-    key = settings.luna_api_key
-    if not key:
-        return {"auth_required": False}
-    provided = (
-        request.headers.get("X-Luna-Key")
-        or request.query_params.get("key")
-    )
-    return {"auth_required": True, "valid": provided == key}
 
 
 # Routers

@@ -4,21 +4,14 @@ import { acquireCameraStream } from '../services/cameraStream'
 const CAPTURE_INTERVAL_MS = 30_000
 const JPEG_QUALITY = 0.5
 
-function getLunaKey(): string {
-  return localStorage.getItem('luna_key') || (window as any).electronAPI?.lunaKey || ''
-}
 function getBase(): string {
   return (window as any).electronAPI?.apiBase ?? ''
 }
 
 async function sendFrame(b64: string): Promise<void> {
-  const key = getLunaKey()
   await fetch(`${getBase()}/api/vision/frame`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(key ? { 'X-Luna-Key': key } : {}),
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: b64 }),
   })
 }

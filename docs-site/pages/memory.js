@@ -175,7 +175,7 @@ PUT /api/memory/personality
 {"humor": 0.8, "formality": 0.2}`}</code></pre>
         </CodeFile>
 
-        <p>All routes require the <code>X-Luna-Key</code> header when <code>luna_api_key</code> is set.</p>
+        <p>Business variant routes require <code>Authorization: Bearer &lt;user-jwt&gt;</code>.</p>
       </section>
 
       <section>

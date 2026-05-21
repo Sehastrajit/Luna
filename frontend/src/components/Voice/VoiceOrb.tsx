@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { authHeaders, getLunaKey } from '../../api/client'
+import { authHeaders } from '../../api/client'
 import { useStore } from '../../store'
 
 type VoiceState = 'idle' | 'listening' | 'followup' | 'active' | 'processing' | 'speaking'
@@ -54,9 +54,7 @@ export function VoiceOrb({ size = 36, showLabel = false, onToggle }: VoiceOrbPro
     syncState()
     const pollTimer = setInterval(syncState, 4000)
 
-    const key = getLunaKey()
-    const qs = key ? `?key=${encodeURIComponent(key)}` : ''
-    const es = new EventSource(`${base}/api/voice/events${qs}`)
+    const es = new EventSource(`${base}/api/voice/events`)
     esRef.current = es
     es.onmessage = e => {
       if (e.data === 'ping') return

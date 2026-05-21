@@ -63,8 +63,6 @@ class Settings(BaseSettings):
     fact_extraction_interval: int = 5
 
     # ── Auth & access ─────────────────────────────────────────────────────────
-    # Single shared key (personal / LAN use).  Leave empty to disable auth.
-    luna_api_key: str = ""
     # Production: set to a long random string; used to sign per-user JWT tokens.
     jwt_secret: str = ""
     jwt_expiry_hours: int = 720  # 30 days

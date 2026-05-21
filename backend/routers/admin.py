@@ -1,8 +1,8 @@
 """
-Admin API — production user and API key management.
+Admin API — production user and JWT token management.
 
-All endpoints require the master  luna_api_key  (X-Luna-Key header).
-Enabled only when  luna_api_key  is set and  jwt_secret  is non-empty.
+All endpoints require  Authorization: Bearer <jwt_secret>  header.
+Enabled only when  jwt_secret  is non-empty in .env.
 
 Usage
 ─────
@@ -89,11 +89,11 @@ def _save_users(users: dict):
 # ── auth guard ────────────────────────────────────────────────────────────────
 
 def _require_admin(request: Request):
-    key = settings.luna_api_key
-    if not key:
-        raise HTTPException(403, "Admin API requires luna_api_key to be set in .env")
-    provided = request.headers.get("X-Luna-Key") or request.query_params.get("key")
-    if provided != key:
+    secret = settings.jwt_secret
+    if not secret:
+        raise HTTPException(403, "Admin API requires jwt_secret to be set in .env")
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer ") or auth[7:] != secret:
         raise HTTPException(401, "Unauthorized")
 
 
@@ -106,7 +106,6 @@ def admin_info(request: Request):
     return {
         "provider": settings.llm_provider,
         "model": _current_model(),
-        "auth_enabled": bool(settings.luna_api_key),
         "jwt_enabled": bool(settings.jwt_secret),
         "rate_limit_enabled": settings.rate_limit_enabled,
         "rate_limit_per_minute": settings.rate_limit_per_minute,

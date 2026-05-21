@@ -21,7 +21,6 @@ declare global {
       awayEnter?:          () => Promise<void>
       awayExit?:           () => Promise<void>
       apiBase:             string
-      lunaKey:             string
       isElectron:          boolean
     }
   }

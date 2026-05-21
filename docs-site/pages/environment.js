@@ -163,16 +163,9 @@ openai_embed_model=text-embedding-3-small`}</code></pre>
       <section>
         <h2 id="auth">Auth &amp; rate limiting</h2>
 
-        <h3>Shared API key (personal / LAN)</h3>
-        <p>Set <code>luna_api_key</code> to enable auth on all <code>/api/*</code> routes.
-        Leave empty for local-only development.</p>
-        <CodeFile label=".env">
-          <pre><code>{`luna_api_key=replace-with-a-strong-random-key`}</code></pre>
-        </CodeFile>
-        <p>Clients pass the key via the <code>X-Luna-Key</code> header or <code>?key=</code> query param.</p>
-
         <h3>JWT (business / multi-user)</h3>
-        <p>When <code>jwt_secret</code> is set, use the admin API to create per-user tokens:</p>
+        <p>Set <code>jwt_secret</code> to enable per-user JWT tokens via the admin API.
+        Admin requests must include <code>Authorization: Bearer &lt;jwt_secret&gt;</code>.</p>
         <CodeFile label=".env">
           <pre><code>{`# Generate: openssl rand -hex 32
 jwt_secret=your-64-char-hex-string
@@ -181,7 +174,7 @@ jwt_expiry_hours=720`}</code></pre>
         <CodeFile label="terminal">
           <pre><code>{`# Create a user and get a JWT
 curl -X POST http://localhost:8899/api/admin/users \\
-  -H "X-Luna-Key: YOUR_MASTER_KEY" \\
+  -H "Authorization: Bearer YOUR_JWT_SECRET" \\
   -H "Content-Type: application/json" \\
   -d '{"username": "alice", "role": "user"}'
 
@@ -246,7 +239,6 @@ slack_signing_secret=abc...`}</code></pre>
         <p>Any system can post to Luna over HTTP:</p>
         <CodeFile label="terminal">
           <pre><code>{`curl -X POST http://localhost:8899/api/channels/webhook \\
-  -H "X-Luna-Key: YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"user_id": "u1", "user_name": "Bob", "text": "summarise this week"}'
 
@@ -263,11 +255,10 @@ slack_signing_secret=abc...`}</code></pre>
       <section>
         <h2 id="lan">LAN / network mode</h2>
         <CodeFile label=".env">
-          <pre><code>{`host=0.0.0.0
-luna_api_key=replace-with-a-strong-random-key`}</code></pre>
+          <pre><code>{`host=0.0.0.0`}</code></pre>
         </CodeFile>
         <p>Open <code>http://YOUR_LAN_IP:8899</code> on any device on your network.
-        Always set <code>luna_api_key</code> when binding to <code>0.0.0.0</code>.</p>
+        For the business variant, set <code>jwt_secret</code> to protect the admin API.</p>
       </section>
 
       {/* ── Spotify ── */}
@@ -324,8 +315,7 @@ spotify_client_secret=your_client_secret`}</code></pre>
             <tr><td><code>mistral_api_key</code></td><td>—</td><td>Mistral AI API key.</td></tr>
             <tr><td><code>mistral_model</code></td><td><code>mistral-large-latest</code></td><td>Mistral model ID.</td></tr>
             <tr><td><code>embedding_provider</code></td><td><code>ollama</code></td><td><code>ollama</code> or <code>openai-compatible</code>.</td></tr>
-            <tr><td><code>luna_api_key</code></td><td>—</td><td>Master API key. Required for all <code>/api/*</code> when set.</td></tr>
-            <tr><td><code>jwt_secret</code></td><td>—</td><td>Signs per-user JWT tokens. Required for <code>/api/admin/users</code>.</td></tr>
+            <tr><td><code>jwt_secret</code></td><td>—</td><td>Signs per-user JWT tokens. Admin API uses <code>Authorization: Bearer &lt;jwt_secret&gt;</code>.</td></tr>
             <tr><td><code>jwt_expiry_hours</code></td><td><code>720</code></td><td>JWT lifetime in hours (30 days default).</td></tr>
             <tr><td><code>rate_limit_enabled</code></td><td><code>false</code></td><td>Enable sliding-window rate limiting.</td></tr>
             <tr><td><code>rate_limit_per_minute</code></td><td><code>60</code></td><td>Max requests per user per 60-second window.</td></tr>

@@ -522,7 +522,6 @@ class VoiceService:
         from backend.config import settings
 
         payload: dict = {"message": text}
-        headers = {"X-Luna-Key": settings.luna_api_key} if settings.luna_api_key else {}
         parts: list[str] = []
 
         with httpx.Client(timeout=httpx.Timeout(connect=10.0, read=120.0, write=30.0, pool=5.0)) as client:
@@ -530,7 +529,6 @@ class VoiceService:
                 "POST",
                 "http://127.0.0.1:8899/api/chat/stream?voice=true",
                 json=payload,
-                headers=headers,
             ) as resp:
                 if resp.status_code != 200:
                     raise RuntimeError(f"chat stream returned {resp.status_code}")
@@ -581,9 +579,6 @@ class VoiceService:
                 from backend.config import settings
 
                 headers = {}
-                api_key = settings.luna_api_key
-                if api_key:
-                    headers["X-Luna-Key"] = api_key
                 if voice_emotion and voice_emotion != "neutral":
                     headers["X-Voice-Emotion"] = voice_emotion
                 if volume > 0:

@@ -181,7 +181,7 @@ luna chat "what time is it?"`}</code></pre>
         <h3>Starting the Business variant</h3>
         <CodeFile label="terminal">
           <pre><code>{`cp .env.business.example .env
-# Edit .env — set luna_api_key, jwt_secret, business_name, llm_provider
+# Edit .env — set jwt_secret, business_name, llm_provider
 luna docker:business
 
 # → http://localhost:8899

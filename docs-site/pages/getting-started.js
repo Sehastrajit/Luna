@@ -120,7 +120,7 @@ docker compose -f compose.cloud.yml up -d`}</code></pre>
         <h3>Business variant</h3>
         <CodeFile label="terminal">
           <pre><code>{`cp .env.business.example .env
-# Edit .env — set luna_api_key, jwt_secret, business_name, llm_provider
+# Edit .env — set jwt_secret, business_name, llm_provider
 docker compose -f compose.business.yml up -d`}</code></pre>
         </CodeFile>
 

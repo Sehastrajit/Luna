@@ -1,22 +1,14 @@
 // Electron: uses absolute base from preload. Browser: same-origin (FastAPI serves frontend).
 const BASE = window.electronAPI?.apiBase ?? ''
 
-export function getLunaKey(): string {
-  return window.electronAPI?.lunaKey || localStorage.getItem('luna_key') || ''
-}
-export function setLunaKey(key: string) {
-  localStorage.setItem('luna_key', key)
-}
-
 export function authHeaders(): Record<string, string> {
-  const key = getLunaKey()
-  return key ? { 'X-Luna-Key': key } : {}
+  return {}
 }
 
 async function request<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...opts.headers },
+    headers: { 'Content-Type': 'application/json', ...opts.headers },
   })
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
   return res.json()
@@ -110,7 +102,7 @@ export async function* streamChat(
 ): AsyncGenerator<{ type: string; [key: string]: any }> {
   const res = await fetch(`${BASE}/api/chat/stream`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message, conversation_id: conversationId }),
   })
 

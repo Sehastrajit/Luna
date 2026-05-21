@@ -25,7 +25,6 @@ Generic webhook
   POST /api/channels/webhook
   Body: { "user_id": "...", "user_name": "...", "text": "..." }
   Returns: { "reply": "..." }
-  Header X-Luna-Key required if luna_api_key is set.
 """
 import hashlib
 import hmac
@@ -221,14 +220,7 @@ async def generic_webhook(request: Request):
     Response:
       { "reply": "string" }
 
-    Requires X-Luna-Key header if luna_api_key is set in .env.
     """
-    key = settings.luna_api_key
-    if key:
-        provided = request.headers.get("X-Luna-Key", "")
-        if provided != key:
-            raise HTTPException(401, "Unauthorized")
-
     body = await request.json()
     user_id = str(body.get("user_id", "webhook_user"))
     user_name = str(body.get("user_name", user_id))

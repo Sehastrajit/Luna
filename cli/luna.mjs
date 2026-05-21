@@ -278,7 +278,7 @@ async function setup() {
     copyFileSync(src, envPath)
     ok(`Created .env from ${src.replace(root, '.')}`)
     if (variant === 'business') {
-      warn('Edit .env — set luna_api_key, jwt_secret, business_name, and your LLM provider key.')
+      warn('Edit .env — set jwt_secret, business_name, and your LLM provider key.')
     } else {
       warn('Edit .env — set your model name and location before running Luna.')
     }
@@ -339,7 +339,7 @@ async function setup() {
 
   if (variant === 'business') {
     console.log(`  ${c.bold}Next steps:${c.reset}`)
-    console.log(`    1. Edit ${c.cyan}.env${c.reset} — set ${c.bold}luna_api_key${c.reset}, ${c.bold}jwt_secret${c.reset}, ${c.bold}business_name${c.reset}`)
+    console.log(`    1. Edit ${c.cyan}.env${c.reset} — set ${c.bold}jwt_secret${c.reset}, ${c.bold}business_name${c.reset}`)
     console.log(`    2. Add your LLM API key (anthropic_api_key, groq_api_key, etc.)`)
     console.log(`    3. Configure Slack / Telegram tokens for team messaging`)
     console.log()

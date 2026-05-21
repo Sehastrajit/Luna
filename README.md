@@ -124,7 +124,7 @@ luna docker:cloud
 
 # Business variant
 cp .env.business.example .env
-# edit luna_api_key, jwt_secret, business_name, llm_provider
+# edit jwt_secret, business_name, llm_provider
 luna docker:business
 ```
 
@@ -326,8 +326,6 @@ luna_variant=personal          # personal | business
 
 # Identity
 user_name=friend
-luna_api_key=                  # leave empty for local-only dev
-
 # LLM — Ollama (default)
 llm_provider=ollama
 ollama_base_url=http://localhost:11434
@@ -377,7 +375,6 @@ npm run dev
 ```env
 # .env
 host=0.0.0.0
-luna_api_key=replace-with-a-strong-random-key
 ```
 
 ```powershell

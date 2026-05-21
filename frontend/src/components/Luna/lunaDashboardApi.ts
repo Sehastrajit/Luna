@@ -1,15 +1,11 @@
-import { authHeaders, getLunaKey } from '../../api/client'
-
 const baseUrl = () => window.electronAPI?.apiBase ?? ''
 
 export function lunaUrl(path: string) {
-  const key = getLunaKey()
-  const join = path.includes('?') ? '&' : '?'
-  return `${baseUrl()}${path}${key ? `${join}key=${encodeURIComponent(key)}` : ''}`
+  return `${baseUrl()}${path}`
 }
 
 export async function fetchLuna<T>(path: string): Promise<T> {
-  const response = await fetch(lunaUrl(path), { headers: authHeaders() })
+  const response = await fetch(lunaUrl(path))
   if (!response.ok) throw new Error(`${path} ${response.status} ${response.statusText}`)
   return response.json()
 }

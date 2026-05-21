@@ -1,26 +1,6 @@
 'use strict'
 
 const { contextBridge, ipcRenderer } = require('electron')
-const fs = require('fs')
-const path = require('path')
-
-function readLunaKey() {
-  const candidates = [
-    path.join(__dirname, '..', '.env'),
-    process.resourcesPath ? path.join(process.resourcesPath, '.env') : null,
-  ].filter(Boolean)
-
-  for (const file of candidates) {
-    try {
-      const env = fs.readFileSync(file, 'utf8')
-      for (const row of env.split(/\r?\n/)) {
-        const match = row.match(/^\s*luna_api_key\s*=\s*(.*?)\s*$/i)
-        if (match) return match[1].trim().replace(/^['"]|['"]$/g, '')
-      }
-    } catch {}
-  }
-  return ''
-}
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Window controls
@@ -70,6 +50,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // API base URL — Electron loads index.html directly, so relative paths won't work
   apiBase:    'http://127.0.0.1:8899',
-  lunaKey:    readLunaKey(),
   isElectron: true,
 })

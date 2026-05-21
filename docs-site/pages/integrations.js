@@ -459,7 +459,7 @@ slack_signing_secret=abc123...`}</code></pre>
         <h3>Admin API quick reference</h3>
         <CodeFile label="terminal — create a user and get a token">
           <pre><code>{`curl -X POST http://localhost:8899/api/admin/users \\
-  -H "Authorization: Bearer $LUNA_ADMIN_TOKEN" \\
+  -H "Authorization: Bearer $JWT_SECRET" \\
   -H "Content-Type: application/json" \\
   -d '{"name":"alice","email":"alice@example.com"}'
 # → {"id":"…","name":"alice","token":"eyJ…"}`}</code></pre>
@@ -467,12 +467,12 @@ slack_signing_secret=abc123...`}</code></pre>
 
         <CodeFile label="terminal — list all providers and their status">
           <pre><code>{`curl http://localhost:8899/api/admin/llm/providers \\
-  -H "Authorization: Bearer $LUNA_ADMIN_TOKEN"`}</code></pre>
+  -H "Authorization: Bearer $JWT_SECRET"`}</code></pre>
         </CodeFile>
 
         <Callout type="tip" title="Setting the admin token">
-          <p>Generate a strong secret and set it as <code>luna_api_key</code> in <code>.env</code>.
-          This is the Bearer token required by all <code>/api/admin/</code> endpoints.</p>
+          <p>Generate a strong secret with <code>openssl rand -hex 32</code> and set it as <code>jwt_secret</code> in <code>.env</code>.
+          Admin API calls use <code>Authorization: Bearer &lt;jwt_secret&gt;</code>.</p>
         </Callout>
       </section>
 
@@ -516,17 +516,16 @@ slack_signing_secret=abc123...`}</code></pre>
             icon="💻"
             name="Second computer"
             status="Partial"
-            detail="Any machine on your LAN can connect to the same Luna backend via browser. Set host=0.0.0.0 and luna_api_key in .env."
+            detail="Any machine on your LAN can connect to the same Luna backend via browser. Set host=0.0.0.0 in .env."
           />
         </Grid>
 
         <Callout type="info" title="LAN / multi-device access">
           <pre><code>{`# .env
-host=0.0.0.0
-luna_api_key=replace-with-a-strong-random-key`}</code></pre>
+host=0.0.0.0`}</code></pre>
           <p style={{ margin: '8px 0 0' }}>
-            Then open <code>http://YOUR-LAN-IP:8899</code> on any device. Set a strong{' '}
-            <code>luna_api_key</code> — without it, anyone on the network can access your Luna.
+            Then open <code>http://YOUR-LAN-IP:8899</code> on any device. For the business variant,
+            set <code>jwt_secret</code> to protect the admin API.
           </p>
         </Callout>
       </section>

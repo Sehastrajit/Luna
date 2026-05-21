@@ -12,6 +12,8 @@ const toc = [
   { id: 'luna',       label: 'Luna dashboard' },
   { id: 'calendar',   label: 'Calendar' },
   { id: 'spotify',    label: 'Spotify' },
+  { id: 'channels',   label: 'Channels' },
+  { id: 'admin',      label: 'Admin' },
   { id: 'errors',     label: 'Error format' },
 ];
 
@@ -25,16 +27,22 @@ export default function APIReference() {
       <section>
         <h2 id="auth">Authentication</h2>
         <p>
-          All routes are unauthenticated by default. If you set <code>luna_api_key</code> in your
-          <code>.env</code>, every request must include the header:
+          Personal variant routes are unauthenticated by default — run locally, no key required.
+          The Business variant uses JWT tokens issued by the admin API.
+        </p>
+
+        <h3>Personal — no auth</h3>
+        <p>All routes are open. Bind to <code>127.0.0.1</code> (default) to restrict to localhost only.</p>
+
+        <h3>Business — JWT per user</h3>
+        <p>
+          Set <code>jwt_secret</code> in <code>.env</code>. The admin creates users via the admin API
+          (authenticated with <code>Authorization: Bearer &lt;jwt_secret&gt;</code>). Each user receives
+          a JWT token they include in their own requests:
         </p>
         <CodeFile label="header">
-          <pre><code>{`X-Luna-Key: <your-api-key>`}</code></pre>
+          <pre><code>{`Authorization: Bearer <user-jwt-token>`}</code></pre>
         </CodeFile>
-        <p>
-          Requests missing the header return <code>401 Unauthorized</code>. The key is only checked
-          when <code>luna_api_key</code> is non-empty in config — omit it for local development.
-        </p>
 
         <Callout type="info" title="Base URL">
           <p>All routes are relative to <code>http://localhost:8899</code>. In Electron builds this
@@ -348,7 +356,7 @@ Body: file=<wav blob>`}</code></pre>
       <section>
         <h2 id="system">System</h2>
 
-        <h3>Health check — <code>GET /health</code></h3>
+        <h3>Health check — <code>GET /api/system/health</code></h3>
         <CodeFile label="response">
           <pre><code>{`{ "status": "ok", "version": "1.0.0", "uptime_seconds": 3620 }`}</code></pre>
         </CodeFile>
@@ -476,6 +484,87 @@ Body: file=<wav blob>`}</code></pre>
       </section>
 
       <section>
+        <h2 id="channels">Channels</h2>
+        <p>
+          Messaging channel webhooks for the Business variant. Each channel user gets an isolated
+          conversation thread. UI-specific commands are stripped from replies automatically.
+        </p>
+
+        <h3>Telegram webhook — <code>POST /api/channels/telegram</code></h3>
+        <p>Receives Telegram Bot API updates. Luna replies asynchronously via the Bot API.
+        Register with: <code>curl "https://api.telegram.org/bot&lt;TOKEN&gt;/setWebhook?url=https://HOST/api/channels/telegram"</code></p>
+
+        <h3>Discord interactions — <code>POST /api/channels/discord</code></h3>
+        <p>Receives Discord interaction payloads. Ed25519 signature verified on every request.
+        Handles type-1 PING automatically. Set as the Interactions Endpoint URL in the Discord Developer Portal.</p>
+
+        <h3>Slack events — <code>POST /api/channels/slack</code></h3>
+        <p>Receives Slack Events API payloads. HMAC-SHA256 signature verified. Handles the
+        <code>url_verification</code> challenge. Subscribe to <code>message.channels</code> and
+        <code>app_mention</code> events.</p>
+
+        <h3>Generic webhook — <code>POST /api/channels/webhook</code></h3>
+        <CodeFile label="request body">
+          <pre><code>{`{ "user_id": "u1", "user_name": "Alice", "text": "What's on my agenda today?" }`}</code></pre>
+        </CodeFile>
+        <CodeFile label="response">
+          <pre><code>{`{ "reply": "You have 2 tasks due today…", "user_id": "u1" }`}</code></pre>
+        </CodeFile>
+
+        <h3>Channel status — <code>GET /api/channels/status</code></h3>
+        <CodeFile label="response">
+          <pre><code>{`{ "telegram": true, "discord": false, "slack": true, "webhook": true }`}</code></pre>
+        </CodeFile>
+      </section>
+
+      <section>
+        <h2 id="admin">Admin</h2>
+        <p>
+          Business variant user and token management. All endpoints require
+          <code>Authorization: Bearer &lt;jwt_secret&gt;</code> (the <code>jwt_secret</code> value from <code>.env</code>).
+        </p>
+
+        <h3>System info — <code>GET /api/admin/info</code></h3>
+        <CodeFile label="response">
+          <pre><code>{`{
+  "provider": "anthropic",
+  "model": "claude-sonnet-4-5",
+  "jwt_enabled": true,
+  "rate_limit_enabled": true,
+  "rate_limit_per_minute": 60,
+  "user_count": 4,
+  "channels": { "telegram": true, "discord": false, "slack": true }
+}`}</code></pre>
+        </CodeFile>
+
+        <h3>List users — <code>GET /api/admin/users</code></h3>
+        <CodeFile label="response">
+          <pre><code>{`[
+  { "id": "uuid", "username": "alice", "role": "user", "created_at": "2024-01-15T10:00:00Z" }
+]`}</code></pre>
+        </CodeFile>
+
+        <h3>Create user — <code>POST /api/admin/users</code></h3>
+        <CodeFile label="request body">
+          <pre><code>{`{ "username": "alice", "role": "user" }`}</code></pre>
+        </CodeFile>
+        <CodeFile label="response">
+          <pre><code>{`{ "user_id": "uuid", "username": "alice", "token": "eyJhbGci..." }`}</code></pre>
+        </CodeFile>
+
+        <h3>Delete user — <code>DELETE /api/admin/users/{id}</code></h3>
+        <p>Returns <code>204 No Content</code>. The user's JWT is immediately invalidated.</p>
+
+        <h3>Rotate token — <code>POST /api/admin/users/{id}/rotate-token</code></h3>
+        <CodeFile label="response">
+          <pre><code>{`{ "token": "eyJhbGci..." }`}</code></pre>
+        </CodeFile>
+
+        <h3>LLM providers — <code>GET /api/admin/llm/providers</code></h3>
+        <p>Returns all 7 configured providers and which is currently active.</p>
+      </section>
+
+      <section>
         <h2 id="errors">Error format</h2>
         <p>All error responses use a consistent JSON envelope:</p>
         <CodeFile label="error response">
@@ -488,7 +577,8 @@ Body: file=<wav blob>`}</code></pre>
           <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
           <tbody>
             <tr><td><code>400</code></td><td>Bad request — missing or invalid parameter.</td></tr>
-            <tr><td><code>401</code></td><td>Unauthorized — missing or incorrect <code>X-Luna-Key</code> header.</td></tr>
+            <tr><td><code>401</code></td><td>Unauthorized — missing or invalid <code>Authorization: Bearer</code> token (business variant / admin API).</td></tr>
+            <tr><td><code>429</code></td><td>Too Many Requests — rate limit exceeded. See <code>Retry-After</code> header.</td></tr>
             <tr><td><code>403</code></td><td>Forbidden — tool is blocked by permission policy.</td></tr>
             <tr><td><code>404</code></td><td>Not found — resource does not exist.</td></tr>
             <tr><td><code>500</code></td><td>Internal server error — check the FastAPI logs.</td></tr>
