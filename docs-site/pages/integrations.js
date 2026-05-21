@@ -459,7 +459,7 @@ Events:        ✓ Pushes  ✓ Pull requests  ✓ Issues  ✓ Issue comments  �
         <Card
           icon="📋"
           title="Clipboard"
-          subtitle='Read and write the system clipboard. Windows: PowerShell Get/Set-Clipboard. macOS: pbpaste/pbcopy. Linux: xclip, xsel, or wl-paste/wl-copy. Say "copy this to clipboard" or "what\'s in my clipboard?"'
+          subtitle={`Read and write the system clipboard. Windows: PowerShell Get/Set-Clipboard. macOS: pbpaste/pbcopy. Linux: xclip, xsel, or wl-paste/wl-copy. Say "copy this to clipboard" or "what's in my clipboard?"`}
           badges={[{ label: 'Cross-platform', color: 'purple' }]}
           note="API: GET/POST /api/system/clipboard"
         />
