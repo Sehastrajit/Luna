@@ -2,18 +2,19 @@ import DocsLayout from '../components/DocsLayout';
 import { Callout, CodeFile, NextSteps } from '../components/Docs';
 
 const toc = [
+  { id: 'variants',  label: 'Variants' },
   { id: 'llm',       label: 'LLM providers' },
+  { id: 'channels',  label: 'Messaging channels' },
   { id: 'voice',     label: 'Voice engines' },
   { id: 'apps',      label: 'Desktop apps' },
   { id: 'data',      label: 'Live data & APIs' },
+  { id: 'production',label: 'Production' },
   { id: 'platforms', label: 'Platforms' },
 ];
 
-const Badge = ({ label, color = 'purple' }) => {
-  return (
-    <span className={`int-badge int-badge-${color}`}>{label}</span>
-  );
-};
+const Badge = ({ label, color = 'purple' }) => (
+  <span className={`int-badge int-badge-${color}`}>{label}</span>
+);
 
 const Card = ({ icon, title, subtitle, badges = [], note }) => (
   <div className="int-card">
@@ -48,81 +49,144 @@ export default function Integrations() {
   return (
     <DocsLayout
       title="Integrations"
-      description="Every LLM provider, desktop app, data service, voice engine, and platform that L.U.N.A. works with."
+      description="Every variant, LLM provider, messaging channel, voice engine, desktop app, data service, and platform that Luna works with."
       toc={toc}
     >
 
       <p>
-        Luna is built to plug into what you already use. Every integration is configured in
+        Luna is built to plug into what you already use. Every integration is configured in{' '}
         <code>.env</code> — no code changes needed. Local integrations require no API key;
         cloud ones are always opt-in.
       </p>
+
+      {/* ── Variants ── */}
+      <section>
+        <h2 id="variants">Variants</h2>
+        <p>
+          Luna ships as two distinct deployment modes. Set <code>luna_variant</code> in{' '}
+          <code>.env</code> to switch; no data is lost.
+        </p>
+
+        <Card
+          icon="🏠"
+          title="Personal"
+          subtitle="Local-first AI companion for daily individual use. Casual conversational tone. Voice, vision, Spotify, maps, app launcher, and desktop automation all enabled. No authentication required."
+          badges={[{ label: 'Default', color: 'purple' }, { label: 'Single user', color: 'green' }]}
+          note="luna_variant=personal  ·  Start with: luna dev"
+        />
+        <Card
+          icon="🏢"
+          title="Business"
+          subtitle="Professional team assistant. Multi-user JWT authentication, sliding-window rate limiting, Slack/Telegram/Discord messaging channels. No Spotify, no desktop launchers — focused on productivity and Q&A."
+          badges={[{ label: 'Multi-user', color: 'blue' }, { label: 'Production-ready', color: 'purple' }]}
+          note="luna_variant=business  ·  Start with: luna docker:business"
+        />
+
+        <Callout type="info" title="Switching variants">
+          <p>Change the <code>luna_variant</code> key in <code>.env</code> and restart. Personal and
+          Business mode share the same codebase — the variant controls which features are exposed,
+          which system prompt is used, and whether auth is enforced.</p>
+        </Callout>
+      </section>
 
       {/* ── LLM Providers ── */}
       <section>
         <h2 id="llm">LLM Providers</h2>
         <p>
-          Luna talks to any OpenAI-compatible endpoint. Switch models by changing two lines in
-          <code>.env</code> — no restart of anything else.
+          Luna supports 7 providers natively. Switch by changing <code>llm_provider</code> in{' '}
+          <code>.env</code> — no code changes, no restart of anything else.
         </p>
+
+        <h3>Local inference</h3>
 
         <Card
           icon="🦙"
           title="Ollama"
           subtitle="Runs models locally on your machine. The default provider. No API key, no internet required. Supports GPU acceleration via CUDA or Metal."
           badges={[{ label: 'Local', color: 'green' }, { label: 'Default', color: 'purple' }]}
-          note="ollama_base_url=http://localhost:11434  ·  llm_provider=ollama"
-        />
-        <Card
-          icon="⚡"
-          title="Groq"
-          subtitle="Fastest cloud inference available. LLaMA 3.3 70B at ~300 tok/s. Free tier available. OpenAI-compatible."
-          badges={[{ label: 'Cloud', color: 'blue' }, { label: 'Fast', color: 'purple' }]}
-          note="openai_base_url=https://api.groq.com/openai/v1  ·  openai_model=llama-3.3-70b-versatile"
-        />
-        <Card
-          icon="🌐"
-          title="OpenRouter"
-          subtitle="One API key for every major model: Claude, Gemini, GPT-4o, Mistral, Llama, Command R, and more. Pay-per-token, no subscriptions."
-          badges={[{ label: 'Cloud', color: 'blue' }, { label: 'Any model', color: 'purple' }]}
-          note="openai_base_url=https://openrouter.ai/api/v1"
-        />
-        <Card
-          icon="🤖"
-          title="OpenAI"
-          subtitle="GPT-4o, GPT-4o mini, o1, and future models. Official OpenAI API."
-          badges={[{ label: 'Cloud', color: 'blue' }]}
-          note="openai_base_url=https://api.openai.com/v1  ·  openai_model=gpt-4o"
+          note="llm_provider=ollama  ·  ollama_base_url=http://localhost:11434  ·  ollama_model=qwen2.5:7b"
         />
         <Card
           icon="🔬"
           title="LM Studio"
           subtitle="Local model server with a GUI. Exposes an OpenAI-compatible endpoint. Good for trying new GGUF models without configuring Ollama."
           badges={[{ label: 'Local', color: 'green' }]}
-          note="openai_base_url=http://localhost:1234/v1  ·  openai_api_key=lm-studio"
+          note="llm_provider=openai-compatible  ·  openai_base_url=http://localhost:1234/v1"
         />
         <Card
           icon="🦾"
           title="llama.cpp server"
-          subtitle="Minimal OpenAI-compatible server built from llama.cpp. Maximum control over quantization and hardware."
+          subtitle="Minimal OpenAI-compatible server. Maximum control over quantization and hardware utilisation."
           badges={[{ label: 'Local', color: 'green' }]}
-          note="openai_base_url=http://localhost:8080/v1"
+          note="llm_provider=openai-compatible  ·  openai_base_url=http://localhost:8080/v1"
         />
         <Card
           icon="🏠"
           title="Jan.ai"
           subtitle="Open-source local model manager with a desktop GUI. Exposes an OpenAI-compatible API on localhost."
           badges={[{ label: 'Local', color: 'green' }]}
-          note="openai_base_url=http://localhost:1337/v1"
+          note="llm_provider=openai-compatible  ·  openai_base_url=http://localhost:1337/v1"
         />
 
-        <Callout type="info" title="Setting the provider">
-          <p>All non-Ollama providers use the same two config keys:</p>
+        <h3>Cloud inference</h3>
+
+        <Card
+          icon="🧠"
+          title="Anthropic Claude"
+          subtitle="Native Anthropic Messages API. Claude Sonnet and Opus models. Recommended for the Business variant — strong instruction following, long context, and function calling."
+          badges={[{ label: 'Cloud', color: 'blue' }, { label: 'Business rec.', color: 'purple' }]}
+          note="llm_provider=anthropic  ·  anthropic_api_key=sk-ant-…  ·  anthropic_model=claude-sonnet-4-5"
+        />
+        <Card
+          icon="✨"
+          title="Google Gemini"
+          subtitle="Native Google AI REST API. Gemini 2.0 Flash by default. Exceptional long-context performance (1M tokens) and multimodal support."
+          badges={[{ label: 'Cloud', color: 'blue' }]}
+          note="llm_provider=google  ·  google_api_key=AIza…  ·  google_model=gemini-2.0-flash"
+        />
+        <Card
+          icon="⚡"
+          title="Groq"
+          subtitle="Purpose-built LPU inference — LLaMA 3.3 70B at ~300 tok/s. Free tier available. Best for low-latency chat where speed matters more than context length."
+          badges={[{ label: 'Cloud', color: 'blue' }, { label: 'Fast', color: 'purple' }]}
+          note="llm_provider=groq  ·  groq_api_key=gsk_…  ·  groq_model=llama-3.3-70b-versatile"
+        />
+        <Card
+          icon="🪸"
+          title="Cohere"
+          subtitle="Command R+ with native RAG tooling. European data residency option. Strong at retrieval-augmented tasks and long structured outputs."
+          badges={[{ label: 'Cloud', color: 'blue' }]}
+          note="llm_provider=cohere  ·  cohere_api_key=…  ·  cohere_model=command-r-plus"
+        />
+        <Card
+          icon="🌬"
+          title="Mistral AI"
+          subtitle="Mistral Large, European-hosted and GDPR-friendly. Strong at coding and multilingual tasks."
+          badges={[{ label: 'Cloud', color: 'blue' }, { label: 'GDPR', color: 'green' }]}
+          note="llm_provider=mistral  ·  mistral_api_key=…  ·  mistral_model=mistral-large-latest"
+        />
+        <Card
+          icon="🤖"
+          title="OpenAI"
+          subtitle="GPT-4o, GPT-4o mini, o1, and future models via the official OpenAI API."
+          badges={[{ label: 'Cloud', color: 'blue' }]}
+          note="llm_provider=openai-compatible  ·  openai_base_url=https://api.openai.com/v1  ·  openai_model=gpt-4o"
+        />
+        <Card
+          icon="🌐"
+          title="OpenRouter"
+          subtitle="One API key for every major model: Claude, Gemini, GPT-4o, Mistral, Llama, Command R, and hundreds more. Pay-per-token, no subscriptions."
+          badges={[{ label: 'Cloud', color: 'blue' }, { label: 'Any model', color: 'purple' }]}
+          note="llm_provider=openai-compatible  ·  openai_base_url=https://openrouter.ai/api/v1"
+        />
+
+        <Callout type="tip" title="OpenRouter — one key for everything">
+          <p>Use <code>openai-compatible</code> with OpenRouter to access Claude, Gemini, GPT-4o,
+          Mistral, and hundreds of other models through a single API key:</p>
           <pre><code>{`llm_provider=openai-compatible
-openai_base_url=https://...
-openai_api_key=sk-...
-openai_model=model-name-here`}</code></pre>
-          <p style={{ margin: '8px 0 0' }}>See the <a href="/environment#llm" style={{ color: '#7c3aed' }}>Environment</a> page for the full key reference.</p>
+openai_base_url=https://openrouter.ai/api/v1
+openai_api_key=sk-or-...
+openai_model=anthropic/claude-opus-4`}</code></pre>
         </Callout>
 
         <h3>Models known to work well</h3>
@@ -132,12 +196,81 @@ openai_model=model-name-here`}</code></pre>
             <tr><td><code>qwen2.5:7b</code></td><td>Ollama (local)</td><td>Daily driver — fast, tool-calling, 8 GB VRAM</td></tr>
             <tr><td><code>qwen2.5:14b</code></td><td>Ollama (local)</td><td>Better reasoning, 12 GB VRAM</td></tr>
             <tr><td><code>llama3.2:3b</code></td><td>Ollama (local)</td><td>Low-end hardware, 4 GB VRAM</td></tr>
-            <tr><td><code>llama-3.3-70b-versatile</code></td><td>Groq</td><td>Best quality + speed in cloud</td></tr>
-            <tr><td><code>anthropic/claude-opus-4</code></td><td>OpenRouter</td><td>Complex reasoning tasks</td></tr>
-            <tr><td><code>google/gemini-2.5-pro</code></td><td>OpenRouter</td><td>Long context, multimodal</td></tr>
+            <tr><td><code>claude-sonnet-4-5</code></td><td>Anthropic</td><td>Business variant — complex instructions, tools</td></tr>
+            <tr><td><code>gemini-2.0-flash</code></td><td>Google</td><td>Long context, multimodal, fast</td></tr>
+            <tr><td><code>llama-3.3-70b-versatile</code></td><td>Groq</td><td>Fastest cloud response times</td></tr>
+            <tr><td><code>command-r-plus</code></td><td>Cohere</td><td>RAG and structured retrieval tasks</td></tr>
+            <tr><td><code>mistral-large-latest</code></td><td>Mistral</td><td>GDPR workloads, multilingual, coding</td></tr>
             <tr><td><code>gpt-4o-mini</code></td><td>OpenAI</td><td>Budget cloud option</td></tr>
           </tbody>
         </table>
+      </section>
+
+      {/* ── Messaging channels ── */}
+      <section>
+        <h2 id="channels">Messaging Channels</h2>
+        <p>
+          The Business variant routes messages from Telegram, Discord, Slack, or a generic
+          webhook into Luna's chat engine. Each channel user gets a persistent conversation
+          thread. UI-only commands (widgets, maps, Spotify) are automatically stripped from
+          channel replies.
+        </p>
+
+        <Card
+          icon="✈️"
+          title="Telegram"
+          subtitle="Set up a bot via @BotFather, point the webhook at your Luna instance. Supports markdown replies and per-user conversation history."
+          badges={[{ label: 'Business', color: 'purple' }, { label: 'Personal', color: 'green' }]}
+          note="telegram_bot_token=…  ·  Endpoint: POST /api/channels/telegram"
+        />
+        <Card
+          icon="🎮"
+          title="Discord"
+          subtitle="Register a Discord application and set the Interactions Endpoint URL. Ed25519 signature verification built-in. Replies are capped at Discord's 2000-character limit."
+          badges={[{ label: 'Business', color: 'purple' }]}
+          note="discord_bot_token=…  ·  discord_public_key=…  ·  Endpoint: POST /api/channels/discord"
+        />
+        <Card
+          icon="💼"
+          title="Slack"
+          subtitle="Subscribe to the message.channels event in a Slack app. HMAC-SHA256 request signature verified on every inbound message."
+          badges={[{ label: 'Business', color: 'purple' }]}
+          note="slack_bot_token=xoxb-…  ·  slack_signing_secret=…  ·  Endpoint: POST /api/channels/slack"
+        />
+        <Card
+          icon="🔗"
+          title="Generic webhook"
+          subtitle='Post any JSON payload with user_id, user_name, and text fields — Luna replies with a plain-text reply field. Integrate with any platform.'
+          badges={[{ label: 'Any platform', color: 'blue' }]}
+          note='POST /api/channels/webhook  ·  {"user_id":"…","user_name":"…","text":"…"}'
+        />
+
+        <h3>Quick setup</h3>
+
+        <CodeFile label=".env">
+          <pre><code>{`# Telegram
+telegram_bot_token=7123456789:AAF...
+
+# Discord
+discord_bot_token=MTI3...
+discord_public_key=a1b2c3...
+
+# Slack
+slack_bot_token=xoxb-...
+slack_signing_secret=abc123...`}</code></pre>
+        </CodeFile>
+
+        <CodeFile label="terminal — check which channels are live">
+          <pre><code>{`curl http://localhost:8899/api/channels/status`}</code></pre>
+        </CodeFile>
+
+        <Callout type="info" title="Registering webhooks">
+          <p>Luna must be publicly reachable for Telegram, Discord, and Slack to deliver
+          messages. Use <code>luna tunnel</code> (ngrok) for local testing:</p>
+          <pre><code>{`luna tunnel
+# → https://abc123.ngrok-free.app
+# Set this as your webhook URL in the respective platform dashboard`}</code></pre>
+        </Callout>
       </section>
 
       {/* ── Voice engines ── */}
@@ -180,6 +313,7 @@ openai_model=model-name-here`}</code></pre>
         <p>
           For the full STT/TTS config options and model tradeoff table, see the{' '}
           <a href="/voice" style={{ color: '#7c3aed' }}>Voice</a> page.
+          Voice is a Personal variant feature and is disabled in Business mode.
         </p>
       </section>
 
@@ -189,13 +323,14 @@ openai_model=model-name-here`}</code></pre>
         <p>
           Luna can control these through natural language. Each action goes through the permission
           system — <code>allow</code>, <code>confirm</code>, or <code>block</code> per tool.
+          These features are available in the <strong>Personal</strong> variant only.
         </p>
 
         <Card
           icon="🎵"
           title="Spotify"
           subtitle='Playback control, queue management, search, and now-playing display. Trigger with phrases like "play something chill" or "skip this".'
-          badges={[{ label: 'Opt-in', color: 'blue' }]}
+          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Opt-in', color: 'blue' }]}
           note="Requires spotify_client_id and spotify_client_secret in .env. See Environment → Spotify."
         />
         <Card
@@ -208,32 +343,39 @@ openai_model=model-name-here`}</code></pre>
         <Card
           icon="🖥"
           title="App launcher"
-          subtitle='Launch any installed application by name. Luna resolves common app names to their executable paths on Windows, macOS, and Linux. Say "open calculator" or "launch VS Code".'
-          badges={[{ label: 'Built-in', color: 'purple' }]}
+          subtitle='Launch common apps by name across Windows, macOS, and Linux. Say "open calculator", "launch VS Code", or "open Sticky Notes".'
+          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Built-in', color: 'purple' }]}
+          note="Profiles include browsers, editors, terminals, file managers, notes, office apps, settings, camera, photos, maps, task manager, and screenshot tools."
+        />
+        <Card
+          icon="📝"
+          title="Sticky Notes / Notes"
+          subtitle="Opens the system notes app safely. Prefers Microsoft Sticky Notes on Windows, Stickies/Notes on macOS, and common sticky-note apps on Linux."
+          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Cross-platform', color: 'purple' }]}
         />
         <Card
           icon="📅"
           title="Calendar &amp; tasks"
-          subtitle="Create, list, update, and complete tasks stored in Luna's local SQLite database. Triggers proactive follow-up reminders when due."
-          badges={[{ label: 'Built-in', color: 'purple' }]}
+          subtitle="Create, list, update, and complete tasks stored in Luna's local SQLite database. Triggers proactive follow-up reminders when due. Available in both variants."
+          badges={[{ label: 'Both variants', color: 'purple' }]}
         />
         <Card
           icon="🔍"
           title="Web search"
-          subtitle="DuckDuckGo HTML search — no API key required. Luna fetches and parses results automatically when a model tool call requests live information."
-          badges={[{ label: 'Built-in', color: 'purple' }]}
+          subtitle="DuckDuckGo HTML search — no API key required. Luna fetches and parses results automatically when a model tool call requests live information. Available in both variants."
+          badges={[{ label: 'Both variants', color: 'purple' }]}
         />
         <Card
           icon="🔊"
           title="Audio device switcher"
           subtitle="Switch the default Windows audio output device by name. Useful for toggling between headphones, speakers, and virtual devices."
-          badges={[{ label: 'Windows only', color: 'gray' }]}
+          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Windows only', color: 'gray' }]}
         />
         <Card
           icon="🗺"
           title="Maps"
-          subtitle="Open interactive MapLibre map overlays with a location query. Geocoding via the map tile provider. Works in the browser and Electron UI."
-          badges={[{ label: 'Built-in', color: 'purple' }]}
+          subtitle="Open interactive MapLibre map overlays with a location query. Works in the browser and Electron UI."
+          badges={[{ label: 'Personal only', color: 'green' }, { label: 'Built-in', color: 'purple' }]}
         />
       </section>
 
@@ -245,7 +387,7 @@ openai_model=model-name-here`}</code></pre>
         <Card
           icon="⛅"
           title="Open-Meteo"
-          subtitle="Free, no-key weather API. Returns current conditions and forecasts for any coordinates. This is the default weather provider."
+          subtitle="Free, no-key weather API. Returns current conditions and forecasts for any coordinates. Default weather provider."
           badges={[{ label: 'Free', color: 'green' }, { label: 'No key', color: 'green' }]}
           note="Set weather_lat, weather_lon, weather_city, weather_timezone in .env."
         />
@@ -277,6 +419,63 @@ openai_model=model-name-here`}</code></pre>
         />
       </section>
 
+      {/* ── Production ── */}
+      <section>
+        <h2 id="production">Production</h2>
+        <p>
+          The Business variant includes production-grade features for team deployments. All
+          are configured in <code>.env</code>.
+        </p>
+
+        <Card
+          icon="🔐"
+          title="JWT Authentication"
+          subtitle="HS256 JSON Web Tokens for multi-user access. Issue per-user tokens with expiry, rotate them without downtime, and list active users via the admin API."
+          badges={[{ label: 'Business', color: 'purple' }]}
+          note="jwt_secret=…  ·  jwt_expiry_hours=720"
+        />
+        <Card
+          icon="🚦"
+          title="Rate limiting"
+          subtitle="Sliding-window in-memory rate limiter. Configurable per-minute limit and burst allowance. Returns 429 with Retry-After header when exceeded. No Redis required."
+          badges={[{ label: 'Business', color: 'purple' }]}
+          note="rate_limit_enabled=true  ·  rate_limit_per_minute=60  ·  rate_limit_burst=20"
+        />
+        <Card
+          icon="👥"
+          title="Admin user management API"
+          subtitle="Create, list, rotate tokens, and delete users via REST API. User store is a flat JSON file — no database migration needed."
+          badges={[{ label: 'Business', color: 'purple' }]}
+          note="GET/POST /api/admin/users  ·  DELETE /api/admin/users/{id}  ·  POST /api/admin/users/{id}/rotate-token"
+        />
+        <Card
+          icon="🔒"
+          title="HTTPS / reverse proxy"
+          subtitle="compose.business.yml includes a commented nginx block for TLS termination. Point a domain at the container and uncomment to enable HTTPS."
+          badges={[{ label: 'Business', color: 'purple' }]}
+          note="See the commented nginx service in compose.business.yml"
+        />
+
+        <h3>Admin API quick reference</h3>
+        <CodeFile label="terminal — create a user and get a token">
+          <pre><code>{`curl -X POST http://localhost:8899/api/admin/users \\
+  -H "Authorization: Bearer $LUNA_ADMIN_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{"name":"alice","email":"alice@example.com"}'
+# → {"id":"…","name":"alice","token":"eyJ…"}`}</code></pre>
+        </CodeFile>
+
+        <CodeFile label="terminal — list all providers and their status">
+          <pre><code>{`curl http://localhost:8899/api/admin/llm/providers \\
+  -H "Authorization: Bearer $LUNA_ADMIN_TOKEN"`}</code></pre>
+        </CodeFile>
+
+        <Callout type="tip" title="Setting the admin token">
+          <p>Generate a strong secret and set it as <code>luna_api_key</code> in <code>.env</code>.
+          This is the Bearer token required by all <code>/api/admin/</code> endpoints.</p>
+        </Callout>
+      </section>
+
       {/* ── Platforms ── */}
       <section>
         <h2 id="platforms">Platforms</h2>
@@ -293,7 +492,7 @@ openai_model=model-name-here`}</code></pre>
             icon="🍎"
             name="macOS"
             status="Full support"
-            detail="Electron desktop app, voice input/output, app launcher, Spotify. Audio switcher not available (Windows-only). Tested on Apple Silicon."
+            detail="Electron desktop app, voice input/output, app launcher, Spotify. Audio switcher not available. Tested on Apple Silicon."
           />
           <PlatformCard
             icon="🐧"
@@ -305,19 +504,19 @@ openai_model=model-name-here`}</code></pre>
             icon="🐳"
             name="Docker"
             status="Partial"
-            detail="Full chat, memory, tools, and API. Voice, Electron shell, and OS-level automation are desktop-only. Any device with Docker installed."
+            detail="Full chat, memory, tools, channels, admin API, and rate limiting. Voice, Electron shell, and OS-level automation are desktop-only. Any device with Docker installed."
           />
           <PlatformCard
             icon="📱"
             name="Phone / Tablet"
             status="Partial"
-            detail="Browser access via local network (LAN mode). Chat and dashboard work fully. Voice depends on browser microphone permissions."
+            detail="Browser access via local network (LAN mode) or via Telegram/Discord/Slack channels in the Business variant. Chat and dashboard work fully."
           />
           <PlatformCard
             icon="💻"
             name="Second computer"
             status="Partial"
-            detail="Any machine on your LAN can connect to the same Luna backend via browser. Set host=0.0.0.0 and a luna_api_key in .env."
+            detail="Any machine on your LAN can connect to the same Luna backend via browser. Set host=0.0.0.0 and luna_api_key in .env."
           />
         </Grid>
 
@@ -326,16 +525,16 @@ openai_model=model-name-here`}</code></pre>
 host=0.0.0.0
 luna_api_key=replace-with-a-strong-random-key`}</code></pre>
           <p style={{ margin: '8px 0 0' }}>
-            Then open <code>http://YOUR-LAN-IP:8899</code> on any device. Set a strong
+            Then open <code>http://YOUR-LAN-IP:8899</code> on any device. Set a strong{' '}
             <code>luna_api_key</code> — without it, anyone on the network can access your Luna.
           </p>
         </Callout>
       </section>
 
       <NextSteps items={[
-        { href: '/environment', label: 'Config', title: 'Environment', desc: 'Every .env key for all providers, with defaults and examples.' },
-        { href: '/voice',       label: 'Voice',  title: 'Voice',       desc: 'STT/TTS model details, wake word config, and tradeoff table.' },
-        { href: '/agent',       label: 'Agent',  title: 'Agent & Skills', desc: 'Permission system, tool registry, and custom skills.' },
+        { href: '/environment', label: 'Config',    title: 'Environment',    desc: 'Every .env key for all 7 LLM providers, channels, auth, and rate limiting.' },
+        { href: '/voice',       label: 'Voice',     title: 'Voice',          desc: 'STT/TTS model details, wake word config, and tradeoff table.' },
+        { href: '/agent',       label: 'Agent',     title: 'Agent & Skills', desc: 'Permission system, tool registry, and custom skills.' },
       ]} />
     </DocsLayout>
   );

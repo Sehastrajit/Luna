@@ -72,13 +72,19 @@ function hasNvidiaGpu() {
 }
 
 function detectMode(env) {
-  if (args.includes('--cloud')) return 'cloud';
-  if (args.includes('--gpu'))   return 'gpu';
-  if (args.includes('--cpu'))   return 'cpu';
+  if (args.includes('--business')) return 'business';
+  if (args.includes('--cloud'))    return 'cloud';
+  if (args.includes('--gpu'))      return 'gpu';
+  if (args.includes('--cpu'))      return 'cpu';
 
   // Auto-detect from .env
-  const provider = (env.llm_provider || '').trim().toLowerCase();
-  if (provider === 'openai-compatible') return 'cloud';
+  const variant  = (env.luna_variant  || '').trim().toLowerCase();
+  const provider = (env.llm_provider  || '').trim().toLowerCase();
+
+  if (variant === 'business') return 'business';
+
+  const cloudProviders = ['anthropic', 'google', 'groq', 'cohere', 'mistral', 'openai-compatible'];
+  if (cloudProviders.includes(provider)) return 'cloud';
 
   // Auto-detect GPU
   log('Checking for NVIDIA GPU...');
@@ -88,8 +94,9 @@ function detectMode(env) {
 }
 
 function composeArgs(mode) {
-  if (mode === 'cloud') return ['-f', 'compose.cloud.yml'];
-  if (mode === 'gpu')   return ['-f', 'compose.yml', '-f', 'compose.gpu.yml'];
+  if (mode === 'business') return ['-f', 'compose.business.yml'];
+  if (mode === 'cloud')    return ['-f', 'compose.cloud.yml'];
+  if (mode === 'gpu')      return ['-f', 'compose.yml', '-f', 'compose.gpu.yml'];
   return ['-f', 'compose.yml'];
 }
 
@@ -151,8 +158,7 @@ async function pullModels(mode, env) {
 
   // ── Shortcuts ─────────────────────────────────────────────────────────────
   if (args.includes('--down') || args[0] === 'down') {
-    // Try to bring down whichever compose is running
-    for (const f of ['compose.yml', 'compose.cloud.yml']) {
+    for (const f of ['compose.yml', 'compose.cloud.yml', 'compose.business.yml']) {
       if (existsSync(join(ROOT, f)))
         quiet(`docker compose -f ${f} down`);
     }

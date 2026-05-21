@@ -114,6 +114,11 @@ const COMMANDS = {
     summary: 'Re-pull Ollama models (run after changing ollama_model in .env)',
     run: () => node(['scripts/docker.mjs', '--pull']),
   },
+  'docker:business': {
+    group: 'Docker',
+    summary: 'Start business variant (rate limiting, JWT, professional mode)',
+    run: () => node(['scripts/docker.mjs', '--business', ...rest]),
+  },
 
   // ── Build ──
   build: {
@@ -243,26 +248,51 @@ async function setup() {
   console.log(`${c.bold}${c.purple}  ███████╗╚██████╔╝██║ ╚████║██║  ██║${c.reset}`)
   console.log(`  ${c.dim}Large Unified Nexus Mind AI — setup${c.reset}\n`)
 
-  // .env
+  const rl = createInterface({ input, output })
+
+  // ── Variant selection ────────────────────────────────────────────────────────
+  head('Choose your variant')
+  console.log()
+  console.log(`  ${c.bold}${c.cyan}1. Personal${c.reset}`)
+  console.log(`     ${c.dim}Voice, vision, desktop automation, Spotify, maps.${c.reset}`)
+  console.log(`     ${c.dim}Casual AI companion. Single user. No auth required.${c.reset}`)
+  console.log()
+  console.log(`  ${c.bold}${c.cyan}2. Business${c.reset}`)
+  console.log(`     ${c.dim}Professional team assistant. Multi-user JWT auth.${c.reset}`)
+  console.log(`     ${c.dim}Rate limiting, Slack/Telegram/Discord channels.${c.reset}`)
+  console.log()
+
+  const variantAnswer = await rl.question('  Enter 1 or 2 (default: 1): ')
+  const variant = variantAnswer.trim() === '2' ? 'business' : 'personal'
+  ok(`Variant: ${variant}`)
+
+  // ── .env ────────────────────────────────────────────────────────────────────
   head('Configuration...')
   const envPath = join(root, '.env')
   if (!existsSync(envPath)) {
-    const ex = join(root, '.env.example')
-    if (!existsSync(ex)) { err('.env.example not found.'); process.exit(1) }
-    copyFileSync(ex, envPath)
-    ok('Created .env from .env.example')
-    warn('Edit .env — set your model name and location before running Luna.')
+    const templateName = variant === 'business' ? '.env.business.example' : '.env.personal.example'
+    const ex = join(root, templateName)
+    const fallback = join(root, '.env.example')
+    const src = existsSync(ex) ? ex : fallback
+    if (!existsSync(src)) { err('.env example not found.'); rl.close(); process.exit(1) }
+    copyFileSync(src, envPath)
+    ok(`Created .env from ${src.replace(root, '.')}`)
+    if (variant === 'business') {
+      warn('Edit .env — set luna_api_key, jwt_secret, business_name, and your LLM provider key.')
+    } else {
+      warn('Edit .env — set your model name and location before running Luna.')
+    }
   } else {
     ok('.env exists')
   }
 
-  // Node deps
+  // ── Node deps ────────────────────────────────────────────────────────────────
   head('Installing Node dependencies...')
   runSync(isWin ? 'npm.cmd' : 'npm', ['install'])
   runSync(isWin ? 'npm.cmd' : 'npm', ['install', '--prefix', 'frontend'])
   ok('Node dependencies installed')
 
-  // Python venv
+  // ── Python venv ───────────────────────────────────────────────────────────────
   head('Setting up Python virtual environment...')
   const venvPath = join(root, '.venv')
   if (!existsSync(venvPath)) {
@@ -280,28 +310,49 @@ async function setup() {
   runSync(pip, ['install', '-r', 'backend/requirements.txt', '--quiet'])
   ok('Python dependencies installed')
 
-  // Ollama models
-  head('Pulling Ollama models...')
-  const env = readEnvFile()
-  const chatModel  = env.ollama_model       || 'qwen2.5:7b'
-  const embedModel = env.ollama_embed_model || 'nomic-embed-text'
+  // ── Ollama models (personal only — business typically uses cloud) ─────────────
+  const envVars = readEnvFile()
+  const llmProvider = envVars.llm_provider || 'ollama'
 
-  if (quiet('ollama --version')) {
-    for (const model of [chatModel, embedModel]) {
-      info(`Pulling ${model}...`)
-      runSync('ollama', ['pull', model])
-      ok(model)
+  if (llmProvider === 'ollama') {
+    head('Pulling Ollama models...')
+    const chatModel  = envVars.ollama_model       || 'qwen2.5:7b'
+    const embedModel = envVars.ollama_embed_model || 'nomic-embed-text'
+    if (quiet('ollama --version')) {
+      for (const model of [chatModel, embedModel]) {
+        info(`Pulling ${model}...`)
+        runSync('ollama', ['pull', model])
+        ok(model)
+      }
+    } else {
+      warn('Ollama not found — install it from https://ollama.com/ and pull models manually:')
+      warn(`  ollama pull ${chatModel}`)
+      warn(`  ollama pull ${embedModel}`)
     }
   } else {
-    warn('Ollama not found — install it from https://ollama.com/ and pull models manually:')
-    warn(`  ollama pull ${chatModel}`)
-    warn(`  ollama pull ${embedModel}`)
+    info(`LLM provider: ${llmProvider} — skipping Ollama model pull.`)
   }
 
-  console.log(`\n${c.bold}${c.green}  Setup complete!${c.reset}\n`)
-  console.log(`  Start Luna:  ${c.cyan}luna dev${c.reset}       (desktop with Electron)`)
-  console.log(`               ${c.cyan}luna docker${c.reset}    (any device via Docker)`)
-  console.log(`               ${c.cyan}luna backend${c.reset}   (API only)\n`)
+  rl.close()
+
+  console.log(`\n${c.bold}${c.green}  Setup complete! (${variant} variant)${c.reset}\n`)
+
+  if (variant === 'business') {
+    console.log(`  ${c.bold}Next steps:${c.reset}`)
+    console.log(`    1. Edit ${c.cyan}.env${c.reset} — set ${c.bold}luna_api_key${c.reset}, ${c.bold}jwt_secret${c.reset}, ${c.bold}business_name${c.reset}`)
+    console.log(`    2. Add your LLM API key (anthropic_api_key, groq_api_key, etc.)`)
+    console.log(`    3. Configure Slack / Telegram tokens for team messaging`)
+    console.log()
+    console.log(`  Start:  ${c.cyan}luna docker:business${c.reset}  (Docker, recommended)`)
+    console.log(`          ${c.cyan}luna backend${c.reset}           (local API only)`)
+    console.log()
+    console.log(`  Admin:  ${c.cyan}POST /api/admin/users${c.reset} to create per-user JWT tokens`)
+  } else {
+    console.log(`  Start Luna:  ${c.cyan}luna dev${c.reset}       (desktop with Electron)`)
+    console.log(`               ${c.cyan}luna docker${c.reset}    (any device via Docker)`)
+    console.log(`               ${c.cyan}luna backend${c.reset}   (API only)`)
+  }
+  console.log()
 }
 
 // ── Install (deps only) ───────────────────────────────────────────────────────
@@ -366,7 +417,22 @@ ${c.reset}  Large Unified Nexus Mind AI
     if (conversationId) body.conversation_id = conversationId
 
     let wrote = false
+    let waiting = true
+    let dotIndex = 0
     output.write(`${c.purple}Luna>${c.reset} `)
+    const dots = ['.', '..', '...']
+    const timer = setInterval(() => {
+      if (!waiting) return
+      output.write(`\r\x1b[2K${c.purple}Luna>${c.reset} ${c.dim}${dots[dotIndex]}${c.reset}`)
+      dotIndex = (dotIndex + 1) % dots.length
+    }, 350)
+
+    const stopWaiting = () => {
+      if (!waiting) return
+      waiting = false
+      clearInterval(timer)
+      output.write(`\r\x1b[2K${c.purple}Luna>${c.reset} `)
+    }
 
     try {
       const response = await fetch(`${baseUrl}/api/chat/stream?cli=true`, {
@@ -377,6 +443,7 @@ ${c.reset}  Large Unified Nexus Mind AI
 
       if (!response.ok) {
         const text = await response.text().catch(() => '')
+        stopWaiting()
         output.write('\n')
         err(`Chat failed ${response.status}: ${text || response.statusText}`)
         return
@@ -403,11 +470,14 @@ ${c.reset}  Large Unified Nexus Mind AI
             if (data.type === 'meta' && data.conversation_id) {
               conversationId = data.conversation_id
             } else if (data.type === 'message_part' && data.content) {
+              stopWaiting()
               output.write(data.content)
               wrote = true
             } else if (data.type === 'confirmation_required') {
+              stopWaiting()
               output.write(`\n${c.yellow}Confirmation required:${c.reset} ${data.message}\n`)
             } else if (data.type === 'error') {
+              stopWaiting()
               output.write('\n')
               err(data.message || 'Chat stream error')
             } else if (data.type === 'done' && data.conversation_id) {
@@ -417,12 +487,19 @@ ${c.reset}  Large Unified Nexus Mind AI
         }
       }
     } catch (e) {
+      stopWaiting()
       output.write('\n')
       err(`Not reachable: ${e.message}`)
       info('Start Luna first: npm run docker')
       return
+    } finally {
+      if (waiting) {
+        waiting = false
+        clearInterval(timer)
+      }
     }
 
+    if (!wrote) stopWaiting()
     output.write(wrote ? '\n\n' : '(no response)\n\n')
   }
 

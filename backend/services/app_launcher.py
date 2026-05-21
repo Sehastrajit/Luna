@@ -16,7 +16,165 @@ except ImportError:
 
 
 LUNA_APPS_DIR = Path("data/apps")
-IS_WINDOWS = platform.system() == "Windows"
+PLATFORM = platform.system()
+IS_WINDOWS = PLATFORM == "Windows"
+IS_MAC = PLATFORM == "Darwin"
+IS_LINUX = PLATFORM == "Linux"
+STICKY_NOTES_TARGET = "__sticky_notes__"
+
+
+APP_PROFILES = {
+    "chrome": {
+        "aliases": ["chrome", "google chrome"],
+        "windows": ["chrome"],
+        "mac": ["app:Google Chrome"],
+        "linux": ["google-chrome", "google-chrome-stable", "chromium", "chromium-browser"],
+    },
+    "firefox": {
+        "aliases": ["firefox", "mozilla firefox"],
+        "windows": ["firefox"],
+        "mac": ["app:Firefox"],
+        "linux": ["firefox"],
+    },
+    "edge": {
+        "aliases": ["edge", "microsoft edge"],
+        "windows": ["msedge"],
+        "mac": ["app:Microsoft Edge"],
+        "linux": ["microsoft-edge", "microsoft-edge-stable"],
+    },
+    "vscode": {
+        "aliases": ["vscode", "vs code", "visual studio code", "code"],
+        "windows": ["code"],
+        "mac": ["app:Visual Studio Code", "code"],
+        "linux": ["code", "codium"],
+    },
+    "spotify": {
+        "aliases": ["spotify"],
+        "windows": ["spotify"],
+        "mac": ["app:Spotify"],
+        "linux": ["spotify"],
+    },
+    "discord": {
+        "aliases": ["discord"],
+        "windows": ["discord"],
+        "mac": ["app:Discord"],
+        "linux": ["discord"],
+    },
+    "terminal": {
+        "aliases": ["terminal", "windows terminal", "cmd", "command prompt", "powershell"],
+        "windows": ["wt", "powershell", "cmd"],
+        "mac": ["app:Terminal", "app:iTerm"],
+        "linux": ["x-terminal-emulator", "gnome-terminal", "konsole", "xfce4-terminal", "alacritty"],
+    },
+    "file_manager": {
+        "aliases": ["explorer", "file explorer", "finder", "files", "file manager"],
+        "windows": ["explorer"],
+        "mac": ["app:Finder"],
+        "linux": ["xdg-open:~", "nautilus", "dolphin", "thunar", "nemo"],
+    },
+    "calculator": {
+        "aliases": ["calculator", "calc"],
+        "windows": ["calc"],
+        "mac": ["app:Calculator"],
+        "linux": ["gnome-calculator", "kcalc", "qalculate-gtk", "galculator"],
+    },
+    "notes": {
+        "aliases": ["sticky notes", "sticky note", "microsoft sticky notes", "windows sticky notes", "stickies", "notes"],
+        "windows": [STICKY_NOTES_TARGET],
+        "mac": ["app:Stickies", "app:Notes"],
+        "linux": ["xpad", "indicator-stickynotes", "gnote", "tomboy"],
+    },
+    "notepad": {
+        "aliases": ["notepad", "text editor", "editor"],
+        "windows": ["notepad"],
+        "mac": ["app:TextEdit"],
+        "linux": ["gedit", "kate", "mousepad", "xed", "leafpad"],
+    },
+    "settings": {
+        "aliases": ["settings", "system settings", "preferences"],
+        "windows": ["ms-settings:"],
+        "mac": ["app:System Settings", "app:System Preferences"],
+        "linux": ["gnome-control-center", "systemsettings", "xfce4-settings-manager"],
+    },
+    "paint": {
+        "aliases": ["paint", "mspaint", "drawing"],
+        "windows": ["mspaint"],
+        "mac": ["app:Preview"],
+        "linux": ["pinta", "kolourpaint", "drawing"],
+    },
+    "camera": {
+        "aliases": ["camera", "webcam"],
+        "windows": ["microsoft.windows.camera:"],
+        "mac": ["app:Photo Booth"],
+        "linux": ["cheese", "kamoso", "guvcview"],
+    },
+    "photos": {
+        "aliases": ["photos", "pictures", "image viewer"],
+        "windows": ["ms-photos:"],
+        "mac": ["app:Photos", "app:Preview"],
+        "linux": ["eog", "gwenview", "ristretto", "nomacs"],
+    },
+    "maps": {
+        "aliases": ["maps", "map"],
+        "windows": ["bingmaps:"],
+        "mac": ["app:Maps"],
+        "linux": ["xdg-open:https://maps.google.com"],
+    },
+    "office_word": {
+        "aliases": ["word", "microsoft word"],
+        "windows": ["winword"],
+        "mac": ["app:Microsoft Word"],
+        "linux": ["libreoffice --writer", "lowriter"],
+    },
+    "office_excel": {
+        "aliases": ["excel", "microsoft excel"],
+        "windows": ["excel"],
+        "mac": ["app:Microsoft Excel"],
+        "linux": ["libreoffice --calc", "localc"],
+    },
+    "office_powerpoint": {
+        "aliases": ["powerpoint", "microsoft powerpoint"],
+        "windows": ["powerpnt"],
+        "mac": ["app:Microsoft PowerPoint"],
+        "linux": ["libreoffice --impress", "loimpress"],
+    },
+    "outlook": {
+        "aliases": ["outlook", "microsoft outlook", "mail"],
+        "windows": ["outlook"],
+        "mac": ["app:Microsoft Outlook", "app:Mail"],
+        "linux": ["thunderbird", "evolution"],
+    },
+    "teams": {
+        "aliases": ["teams", "microsoft teams"],
+        "windows": ["teams", "ms-teams:"],
+        "mac": ["app:Microsoft Teams"],
+        "linux": ["teams-for-linux", "microsoft-teams"],
+    },
+    "store": {
+        "aliases": ["store", "microsoft store", "app store"],
+        "windows": ["ms-windows-store:"],
+        "mac": ["app:App Store"],
+        "linux": ["gnome-software", "plasma-discover"],
+    },
+    "task_manager": {
+        "aliases": ["task manager", "activity monitor", "system monitor"],
+        "windows": ["taskmgr"],
+        "mac": ["app:Activity Monitor"],
+        "linux": ["gnome-system-monitor", "ksysguard", "mate-system-monitor", "xfce4-taskmanager"],
+    },
+    "snipping": {
+        "aliases": ["snipping tool", "screenshot tool", "screenshots"],
+        "windows": ["SnippingTool", "ms-screenclip:"],
+        "mac": ["app:Screenshot"],
+        "linux": ["gnome-screenshot", "flameshot", "spectacle", "xfce4-screenshooter"],
+    },
+    "clock": {
+        "aliases": ["clock", "alarms", "alarms and clock"],
+        "windows": ["ms-clock:"],
+        "mac": ["app:Clock"],
+        "linux": ["gnome-clocks", "kclock"],
+    },
+}
 
 
 def _get_luna_apps() -> dict[str, str]:
@@ -63,7 +221,21 @@ COMMON_APP_ALIASES = {
     "camera": "microsoft.windows.camera:",
     "maps": "bingmaps:",
     "store": "ms-windows-store:",
+    "sticky notes": STICKY_NOTES_TARGET,
+    "sticky note": STICKY_NOTES_TARGET,
+    "microsoft sticky notes": STICKY_NOTES_TARGET,
+    "windows sticky notes": STICKY_NOTES_TARGET,
+    "stickies": STICKY_NOTES_TARGET,
+    "notes": STICKY_NOTES_TARGET,
 }
+
+STICKY_NOTES_APP_IDS = [
+    "Microsoft.MicrosoftStickyNotes_8wekyb3d8bbwe!App",
+]
+
+STICKY_NOTES_PROTOCOLS = [
+    "ms-sticky-notes:",
+]
 
 
 def _get_start_menu_apps() -> dict[str, str]:
@@ -148,6 +320,47 @@ def _normalize(name: str) -> str:
     return " ".join(name.lower().replace(".exe", "").split())
 
 
+def _platform_key() -> str:
+    if IS_WINDOWS:
+        return "windows"
+    if IS_MAC:
+        return "mac"
+    return "linux"
+
+
+def _profile_targets(query: str) -> list[str]:
+    for profile in APP_PROFILES.values():
+        aliases = {_normalize(alias) for alias in profile["aliases"]}
+        if query in aliases or any(query in alias or alias in query for alias in aliases):
+            return list(profile.get(_platform_key(), []))
+    return []
+
+
+def _first_available_target(targets: list[str]) -> str | None:
+    if not targets:
+        return None
+
+    if IS_MAC:
+        return targets[0]
+
+    if IS_WINDOWS:
+        for target in targets:
+            if target == STICKY_NOTES_TARGET or target.endswith(":") or target.startswith("ms-") or target.startswith("shell:"):
+                return target
+            executable = target.split()[0]
+            if shutil.which(executable):
+                return target
+        return targets[0]
+
+    for target in targets:
+        if target.startswith("xdg-open:"):
+            return target
+        executable = target.split()[0]
+        if shutil.which(executable):
+            return target
+    return targets[0]
+
+
 def _best_match(query: str, apps: dict[str, str]) -> str | None:
     if query in apps:
         return apps[query]
@@ -162,6 +375,91 @@ def _best_match(query: str, apps: dict[str, str]) -> str | None:
     return None
 
 
+def _sticky_notes_candidates() -> list[str]:
+    """
+    Return known launch targets for Windows Sticky Notes.
+
+    Sticky Notes has moved between classic Windows app, Microsoft Store UWP app,
+    and newer Microsoft 365/OneNote-backed entrypoints. Prefer Start menu data
+    from the current machine, then fall back to known package/protocol targets.
+    """
+    candidates: list[str] = []
+
+    for apps in (_get_store_apps(), _get_start_menu_apps(), _get_luna_apps()):
+        for app_name, target in apps.items():
+            normalized = _normalize(app_name)
+            if normalized in {"sticky notes", "microsoft sticky notes"}:
+                candidates.insert(0, target)
+            elif "sticky" in normalized and "note" in normalized:
+                candidates.append(target)
+
+    candidates.extend(f"shell:AppsFolder\\{app_id}" for app_id in STICKY_NOTES_APP_IDS)
+    candidates.extend(STICKY_NOTES_PROTOCOLS)
+
+    deduped = []
+    for candidate in candidates:
+        if candidate and candidate not in deduped:
+            deduped.append(candidate)
+    return deduped
+
+
+def _launch_target(target: str) -> None:
+    """Launch a resolved Windows target."""
+    if target.startswith("app:"):
+        app_name = target.split(":", 1)[1]
+        if IS_MAC:
+            subprocess.Popen(["open", "-a", app_name])
+            return
+        raise OSError(f"app target is only supported on macOS: {app_name}")
+
+    if target.startswith("xdg-open:"):
+        uri = target.split(":", 1)[1]
+        if uri == "~":
+            uri = str(Path.home())
+        if IS_LINUX:
+            subprocess.Popen(["xdg-open", uri], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return
+        raise OSError(f"xdg-open target is only supported on Linux: {uri}")
+
+    if target.endswith(":") or target.startswith("ms-") or target.startswith("shell:"):
+        os.startfile(target)
+        return
+
+    if target.endswith(".lnk"):
+        os.startfile(target)
+        return
+
+    if Path(target).exists():
+        os.startfile(target)
+        return
+
+    if IS_WINDOWS:
+        subprocess.Popen([target], shell=False, creationflags=subprocess.CREATE_NO_WINDOW)
+        return
+
+    subprocess.Popen(target.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def launch_sticky_notes() -> tuple[bool, str]:
+    """Open Microsoft Sticky Notes using the best available Windows entrypoint."""
+    if not IS_WINDOWS:
+        return False, "Sticky Notes is only available in the desktop Windows runtime."
+
+    errors = []
+    for target in _sticky_notes_candidates():
+        try:
+            _launch_target(target)
+            return True, "Opened Sticky Notes"
+        except Exception as e:
+            errors.append(f"{target}: {e}")
+
+    return (
+        False,
+        "Couldn't open Sticky Notes. Install Microsoft Sticky Notes from the Microsoft Store, "
+        "or create a shortcut in data/apps/ named Sticky Notes.lnk.",
+    )
+
+
 def find_app(name: str) -> tuple[bool, str]:
     """
     Try to find an application by name.
@@ -169,8 +467,15 @@ def find_app(name: str) -> tuple[bool, str]:
     """
     query = _normalize(name)
 
-    if not IS_WINDOWS:
-        return False, query
+    profile_target = _first_available_target(_profile_targets(query))
+    if profile_target:
+        return True, profile_target
+
+    if not IS_WINDOWS and shutil.which(query):
+        return True, query
+
+    if IS_MAC:
+        return True, f"app:{name}"
 
     # Direct alias lookup
     if query in COMMON_APP_ALIASES:
@@ -190,6 +495,9 @@ def find_app(name: str) -> tuple[bool, str]:
     if path_match:
         return True, path_match
 
+    if not IS_WINDOWS:
+        return False, query
+
     # Final fallback: Windows can resolve some app aliases through ShellExecute.
     return True, query
 
@@ -198,25 +506,13 @@ def launch_app(name: str) -> tuple[bool, str]:
     """Launch an application. Returns (success, message)."""
     found, target = find_app(name)
     if not found:
-        return False, "App launching is only available in the desktop Windows runtime."
+        return False, f"Couldn't find an app matching '{name}' on this platform."
+
+    if target == STICKY_NOTES_TARGET:
+        return launch_sticky_notes()
 
     try:
-        # Shell / ms-protocol URLs (Settings, Store, packaged apps, etc.)
-        if target.endswith(":") or target.startswith("ms-") or target.startswith("shell:"):
-            os.startfile(target)
-            return True, f"Opened {name}"
-
-        # .lnk shortcuts
-        if target.endswith(".lnk"):
-            os.startfile(target)
-            return True, f"Launched {name}"
-
-        if Path(target).exists():
-            os.startfile(target)
-            return True, f"Launched {name}"
-
-        # PATH executable or app execution alias.
-        subprocess.Popen([target], shell=False, creationflags=subprocess.CREATE_NO_WINDOW)
+        _launch_target(target)
         return True, f"Launched {name}"
 
     except Exception as e:
@@ -225,10 +521,36 @@ def launch_app(name: str) -> tuple[bool, str]:
 
 def list_known_apps() -> list[str]:
     """Return a combined list of findable app names."""
+    names = []
+    for profile in APP_PROFILES.values():
+        if profile.get(_platform_key()):
+            names += profile["aliases"]
+
     if not IS_WINDOWS:
-        return []
-    names = list(COMMON_APP_ALIASES.keys())
+        return sorted(set(names))
+
+    names += list(COMMON_APP_ALIASES.keys())
+    if _sticky_notes_candidates():
+        names += ["sticky notes", "microsoft sticky notes", "sticky note"]
     names += list(_get_registry_apps().keys())
     names += list(_get_start_menu_apps().keys())
     names += list(_get_store_apps().keys())
     return sorted(set(names))
+
+
+def list_app_profiles() -> dict:
+    """Return curated app profile metadata for UI/docs/debug views."""
+    platform_key = _platform_key()
+    profiles = []
+    for app_id, profile in APP_PROFILES.items():
+        profiles.append({
+            "id": app_id,
+            "aliases": profile["aliases"],
+            "platform": platform_key,
+            "targets": profile.get(platform_key, []),
+            "supported": bool(profile.get(platform_key)),
+        })
+    return {
+        "platform": PLATFORM,
+        "profiles": profiles,
+    }

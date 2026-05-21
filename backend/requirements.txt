@@ -21,3 +21,6 @@ pywin32==308
 pycaw
 comtypes
 spotipy==2.24.0
+# Production / channels (all optional — only needed when the feature is used)
+PyJWT>=2.8.0               # JWT auth for multi-user admin API
+PyNaCl>=1.5.0              # Discord interaction signature verification

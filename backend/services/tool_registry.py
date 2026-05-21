@@ -19,7 +19,8 @@ class ToolDef:
 
 
 TOOL_REGISTRY: dict[str, ToolDef] = {
-    "launch_app": ToolDef("launch_app", "Open an application on Windows", RiskLevel.SAFE, ["app"]),
+    "launch_app": ToolDef("launch_app", "Open an application on the current desktop platform", RiskLevel.SAFE, ["app"]),
+    "list_apps": ToolDef("list_apps", "List apps Luna can launch on this platform", RiskLevel.SAFE),
     "spotify_play": ToolDef("spotify_play", "Play music on Spotify", RiskLevel.SAFE, ["query"]),
     "spotify_pause": ToolDef("spotify_pause", "Pause Spotify playback", RiskLevel.SAFE),
     "spotify_next": ToolDef("spotify_next", "Skip to the next track", RiskLevel.SAFE),

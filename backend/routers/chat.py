@@ -286,6 +286,70 @@ Upcoming agenda:
 """
 
 
+def build_cli_system_prompt(user_name: str, recent_context: str) -> str:
+    now = datetime.now()
+    recent = recent_context.strip() if recent_context else "No recent context."
+    return f"""You are Luna, {user_name}'s local-first AI assistant.
+Current time: {now.strftime('%A, %B %d, %Y at %I:%M %p')}.
+
+Use this recent conversation context when helpful:
+{recent}
+
+Reply naturally and directly. Keep terminal chat responses short: usually 1-3 sentences.
+Do not mention widgets, UI cards, maps overlays, or visual elements unless the user asks.
+If the user asks for something that requires the Electron desktop UI or OS automation, say it needs the desktop UI.
+"""
+
+
+def build_business_system_prompt(
+    user_name: str,
+    recent_context: str,
+    agenda: str = "",
+    live_data: str = "",
+) -> str:
+    """System prompt for the business variant — professional, multi-user, no desktop fluff."""
+    from backend.config import settings as _s
+    now = datetime.now()
+    biz = _s.business_name or "the team"
+    desc = f"\nOrganization context: {_s.business_description}" if _s.business_description else ""
+    tone_map = {
+        "professional": "formal and professional — clear, precise, no filler",
+        "friendly":     "professional but warm and approachable",
+        "technical":    "technical and detailed — assume expert-level readers",
+        "concise":      "extremely brief — bullet points and one-liners preferred",
+    }
+    tone = tone_map.get(_s.business_tone, tone_map["professional"])
+
+    tools_section = get_tools_for_prompt()
+
+    return f"""You are an AI assistant for {biz}.{desc}
+Current date and time: {now.strftime('%A, %B %d, %Y — %I:%M %p')}.
+You are speaking with: {user_name}.
+
+## Tone
+Your tone is {tone}. Avoid casual greetings, filler phrases, and personal banter.
+Respond directly to the question or task. No "Great question!" or similar padding.
+
+## Capabilities
+{tools_section}
+- Create tasks and calendar events for the team.
+- Search the web and fetch page content.
+- Answer questions based on context and knowledge.
+
+## Rules
+- Never claim to be human or reveal your underlying model.
+- If you don't know something, say so directly rather than guessing.
+- Do not discuss personal topics, entertainment, music, or lifestyle.
+- Do not mention desktop automation, app launching, Spotify, or OS-specific features.
+- For sensitive decisions (delete, overwrite, send externally) ask for confirmation first.
+- Keep responses concise. Use bullet points for lists. Use code blocks for code.
+
+## Recent conversation context
+{recent_context or 'No prior context.'}
+{f'## Upcoming agenda{chr(10)}{agenda}' if agenda else ''}
+{f'## Live data{chr(10)}{live_data}' if live_data else ''}"""
+
+
 def parse_user_launch_request(message: str) -> str | None:
     """Detect direct app-launch requests without relying on the LLM."""
     text = " ".join(message.lower().strip().split())
@@ -667,7 +731,7 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
     tool_name = tc.get("tool", "")
     args = tc.get("args", {})
 
-    from backend.services.app_launcher import launch_app
+    from backend.services.app_launcher import launch_app, list_known_apps
     from backend.services.spotify import spotify_service
     from backend.services.screen_perception import execute_screen_tool
     from backend.models.database import Task, CalendarEvent
@@ -676,6 +740,10 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
         if tool_name == "launch_app":
             success, msg = launch_app(args.get("app", ""))
             return "opened successfully" if success else f"failed: {msg}"
+
+        elif tool_name == "list_apps":
+            apps = list_known_apps()
+            return json.dumps({"apps": apps[:200], "count": len(apps)})
 
         elif tool_name == "spotify_play":
             ok = spotify_service.play(args.get("query") or None)
@@ -1052,6 +1120,8 @@ async def chat_stream(
     _src = "voice" if voice else "cli" if cli else "text"
     _chat_print(f"\n[chat] {settings.user_name} ({_src}): {req.message}")
 
+    _is_business = settings.luna_variant == "business"
+
     memory = MemoryManager(db)
     personality = PersonalityEngine(db)
     activity_tracker = ActivityTracker(db)
@@ -1070,14 +1140,14 @@ async def chat_stream(
     )
     state_context = state_engine.build_state_context(current_state)
 
-    direct_launch_app = parse_user_launch_request(req.message)
+    direct_launch_app = None if _is_business else parse_user_launch_request(req.message)
 
     # Retrieve relevant memories only when the message has real semantic content
     _SKIP_RETRIEVAL = {"hi", "hey", "hello", "heyy", "yo", "sup", "what's up",
                        "whats up", "good morning", "morning", "good night", "night",
                        "bye", "goodbye", "ok", "okay", "yep", "yup", "mm", "hmm"}
     _msg_lower = req.message.lower().strip(" .,!?")
-    _skip = voice or (len(_msg_lower.split()) < 4 and _msg_lower in _SKIP_RETRIEVAL)
+    _skip = cli or voice or (len(_msg_lower.split()) < 4 and _msg_lower in _SKIP_RETRIEVAL)
     if _skip:
         relevant_memories: dict[str, list[str]] = {"short_term": [], "long_term": []}
     else:
@@ -1086,19 +1156,32 @@ async def chat_stream(
     recent_context = memory.get_conversation_context(conv.id, settings.max_conversation_history)
     watching_context = get_watching_context().as_prompt_text()
 
-    from backend.services.spotify import spotify_service
-    spotify_track = spotify_service.get_current()
-    direct_spotify_cmd = parse_user_spotify_request(req.message, spotify_track)
+    _is_business = settings.luna_variant == "business"
 
-    # Build system prompt
+    from backend.services.spotify import spotify_service
+    spotify_track = None if (cli or _is_business) else spotify_service.get_current()
+    direct_spotify_cmd = None if _is_business else parse_user_spotify_request(req.message, spotify_track)
+
+    # Build system prompt — branch on variant and mode
     user_name = settings.user_name
-    _visual = get_visual_context()
-    system_prompt = build_system_prompt(
-        memory, personality, activity_tracker, relevant_memories,
-        user_name, recent_context, watching_context, spotify_track,
-        state_context=state_context,
-        visual_context=_visual.as_prompt_text() if _visual else "",
-    )
+
+    if cli:
+        system_prompt = build_cli_system_prompt(user_name, recent_context)
+    elif _is_business:
+        system_prompt = build_business_system_prompt(
+            user_name,
+            recent_context,
+            agenda=memory.get_upcoming_agenda(),
+            live_data=_get_live_data_section(),
+        )
+    else:
+        _visual = get_visual_context()
+        system_prompt = build_system_prompt(
+            memory, personality, activity_tracker, relevant_memories,
+            user_name, recent_context, watching_context, spotify_track,
+            state_context=state_context,
+            visual_context=_visual.as_prompt_text() if _visual else "",
+        )
 
     # Inject any pending contradiction/memory-update notes from the previous turn
     _contradiction_notes = _pop_contradiction_notes(conv.id)
@@ -1108,7 +1191,8 @@ async def chat_stream(
         )
 
     # Get conversation history (recent messages)
-    history = memory.get_recent_conversation(conv.id, settings.max_conversation_history)
+    history_limit = min(settings.max_conversation_history, 6) if cli else settings.max_conversation_history
+    history = memory.get_recent_conversation(conv.id, history_limit)
     # Remove last user message (it's sent separately as the current turn)
     if history and history[-1]["role"] == "user":
         history = history[:-1]
@@ -1202,7 +1286,13 @@ async def chat_stream(
 
             # ── LLM generation ───────────────────────────────────────────────
             try:
-                async for token in ollama.stream_chat(step_messages, system_prompt):
+                async for token in ollama.stream_chat(
+                    step_messages,
+                    system_prompt,
+                    num_ctx=2048 if cli else None,
+                    num_predict=192 if cli else None,
+                    temperature=0.5 if cli else 0.7,
+                ):
                     full_response_parts.append(token)
                     if voice or cli:
                         clean = re.sub(r'<think>.*?</think>', '', token, flags=re.DOTALL)

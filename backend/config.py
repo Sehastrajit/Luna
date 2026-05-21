@@ -14,33 +14,67 @@ class Settings(BaseSettings):
     port: int = 8899
     debug: bool = False
 
-    # Ollama
-    llm_provider: str = "ollama"  # ollama | openai-compatible
+    # ── LLM — provider selection ──────────────────────────────────────────────
+    # Values: ollama | openai-compatible | anthropic | google | groq | cohere | mistral
+    llm_provider: str = "ollama"
+
+    # Ollama (local, default)
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "qcwind/qwen3-8b-instruct-Q4-K-M:latest"
+    ollama_model: str = "qwen2.5:7b"
     ollama_embed_model: str = "nomic-embed-text"
 
-    # OpenAI-compatible cloud/local APIs
+    # OpenAI / OpenAI-compatible (LM Studio, Jan.ai, llama.cpp, OpenRouter, etc.)
     openai_base_url: str = "https://api.openai.com/v1"
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     openai_embed_model: str = "text-embedding-3-small"
-    embedding_provider: str = "ollama"  # ollama | openai-compatible
 
-    # Paths
+    # Anthropic Claude (native)
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-sonnet-4-5"
+
+    # Google Gemini (native)
+    google_api_key: str = ""
+    google_model: str = "gemini-2.0-flash"
+
+    # Groq (ultra-fast cloud inference, native)
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
+
+    # Cohere (native)
+    cohere_api_key: str = ""
+    cohere_model: str = "command-r-plus"
+
+    # Mistral AI (native)
+    mistral_api_key: str = ""
+    mistral_model: str = "mistral-large-latest"
+
+    # Embedding provider: ollama | openai-compatible
+    embedding_provider: str = "ollama"
+
+    # ── Paths ─────────────────────────────────────────────────────────────────
     db_path: str = str(DATA_DIR / "luna.db")
     chroma_path: str = str(DATA_DIR / "chroma")
     frontend_dist: str = str(BASE_DIR / "frontend" / "dist")
 
-    # Memory
+    # ── Memory ────────────────────────────────────────────────────────────────
     max_conversation_history: int = 30
     memory_retrieval_count: int = 6
-    fact_extraction_interval: int = 5  # extract facts every N messages
+    fact_extraction_interval: int = 5
 
-    # Remote access — set a strong random string to enable auth
+    # ── Auth & access ─────────────────────────────────────────────────────────
+    # Single shared key (personal / LAN use).  Leave empty to disable auth.
     luna_api_key: str = ""
+    # Production: set to a long random string; used to sign per-user JWT tokens.
+    jwt_secret: str = ""
+    jwt_expiry_hours: int = 720  # 30 days
 
-    # External data APIs
+    # ── Rate limiting (production) ────────────────────────────────────────────
+    rate_limit_enabled: bool = False
+    rate_limit_per_minute: int = 60        # requests per user per minute
+    rate_limit_burst: int = 20             # additional burst allowance
+
+    # ── External data APIs ────────────────────────────────────────────────────
     the_news_api: str = ""
     open_weather: str = ""
     alpha_vantage: str = ""
@@ -49,13 +83,33 @@ class Settings(BaseSettings):
     weather_city: str = "New York"
     weather_timezone: str = "America/New_York"
 
-    # Luna persona
-    luna_name: str = "L.U.N.A."
-    user_name: str = "friend"  # updated once learned
+    # ── Messaging channels (OpenClaw-style) ───────────────────────────────────
+    # Telegram: set bot token + run  /setwebhook  to point at /api/channels/telegram
+    telegram_bot_token: str = ""
+    # Discord: set bot token + configure interactions endpoint /api/channels/discord
+    discord_bot_token: str = ""
+    discord_public_key: str = ""           # for signature verification
+    # Slack: set bot token + signing secret; Events API → /api/channels/slack
+    slack_bot_token: str = ""
+    slack_signing_secret: str = ""
 
-    # RL
+    # ── Variant ───────────────────────────────────────────────────────────────
+    # personal  — casual companion, voice, desktop automation, single user
+    # business  — professional team assistant, multi-user JWT, rate limiting on
+    luna_variant: str = "personal"
+
+    # ── Luna persona ──────────────────────────────────────────────────────────
+    luna_name: str = "L.U.N.A."
+    user_name: str = "friend"
+
+    # Business variant config
+    business_name: str = ""        # e.g. "Acme Corp"
+    business_description: str = "" # e.g. "a SaaS company building developer tools"
+    business_tone: str = "professional"  # professional | friendly | technical | concise
+
+    # ── RL ────────────────────────────────────────────────────────────────────
     rl_learning_rate: float = 0.08
-    rl_decay: float = 0.995  # daily decay toward neutral
+    rl_decay: float = 0.995
 
     @field_validator("debug", mode="before")
     @classmethod

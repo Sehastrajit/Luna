@@ -35,7 +35,8 @@
     "docker:cloud":"node scripts/docker.mjs --cloud",
     "docker:pull": "node scripts/docker.mjs --pull",
     "chat":        "node cli/luna.mjs chat",
-    "health":      "node cli/luna.mjs health"
+    "health":      "node cli/luna.mjs health",
+    "postinstall": "node scripts/ensure-global-path.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.0.0"

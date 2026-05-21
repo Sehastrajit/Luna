@@ -2,191 +2,359 @@ import DocsLayout from '../components/DocsLayout';
 import { Callout, CodeFile, NextSteps } from '../components/Docs';
 
 const toc = [
-  { id: 'setup',         label: 'Setup' },
-  { id: 'llm',           label: 'LLM provider' },
-  { id: 'embeddings',    label: 'Embeddings' },
-  { id: 'lan',           label: 'LAN / network mode' },
-  { id: 'spotify',       label: 'Spotify' },
-  { id: 'data-services', label: 'Data services' },
-  { id: 'reference',     label: 'Full reference' },
+  { id: 'variant',      label: 'Variant' },
+  { id: 'llm',          label: 'LLM providers' },
+  { id: 'embeddings',   label: 'Embeddings' },
+  { id: 'auth',         label: 'Auth & rate limiting' },
+  { id: 'channels',     label: 'Messaging channels' },
+  { id: 'lan',          label: 'LAN / network' },
+  { id: 'spotify',      label: 'Spotify' },
+  { id: 'data',         label: 'Data services' },
+  { id: 'reference',    label: 'Full reference' },
 ];
 
 export default function Environment() {
   return (
     <DocsLayout
       title="Environment"
-      description="Every .env key explained — LLM providers, embeddings, LAN mode, Spotify, news, weather, and markets."
+      description="Every .env key explained — variants, 7 LLM providers, messaging channels, auth, rate limiting, and live data services."
       toc={toc}
     >
       <section>
-        <h2 id="setup">Setup</h2>
-        <p>Create your local environment file by copying the example:</p>
-
+        <p>
+          Create your local environment file from one of the variant templates, then edit as needed.
+          The file is gitignored — never commit it.
+        </p>
         <CodeFile label="terminal">
-          <pre><code>{`copy .env.example .env   # Windows
-cp .env.example .env     # macOS / Linux`}</code></pre>
-        </CodeFile>
+          <pre><code>{`# Personal variant
+cp .env.personal.example .env
 
+# Business variant
+cp .env.business.example .env`}</code></pre>
+        </CodeFile>
         <Callout type="warn" title="Never commit .env">
-          <p>The <code>.env</code> file is gitignored. Do not commit it — it may contain API keys,
-          your name, and local paths.</p>
+          <p><code>.env</code> may contain API keys, your name, and local paths. It is gitignored by default.</p>
         </Callout>
       </section>
 
+      {/* ── Variant ── */}
       <section>
-        <h2 id="llm">LLM provider</h2>
-        <p>Luna supports two LLM backends. Set <code>llm_provider</code> to switch between them.</p>
+        <h2 id="variant">Variant</h2>
+        <CodeFile label=".env">
+          <pre><code>{`luna_variant=personal   # personal | business`}</code></pre>
+        </CodeFile>
 
-        <h3>Local Ollama (default)</h3>
+        <table>
+          <thead><tr><th>Value</th><th>Behaviour</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>personal</code></td>
+              <td>Casual companion. Voice, vision, Spotify, desktop automation. Single user. No auth required by default.</td>
+            </tr>
+            <tr>
+              <td><code>business</code></td>
+              <td>Professional team assistant. Multi-user JWT. Rate limiting. No personal features. Channels emphasised.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Business-specific identity keys:</p>
+        <CodeFile label=".env">
+          <pre><code>{`business_name=Acme Corp
+business_description=a SaaS company building developer tools
+# professional | friendly | technical | concise
+business_tone=professional`}</code></pre>
+        </CodeFile>
+      </section>
+
+      {/* ── LLM ── */}
+      <section>
+        <h2 id="llm">LLM providers</h2>
+        <p>
+          Set <code>llm_provider</code> to one of the seven supported values, then fill in the
+          matching key block. All providers stream tokens via the same interface — no other code changes needed.
+        </p>
+
+        <h3>Ollama (local, default)</h3>
         <CodeFile label=".env">
           <pre><code>{`llm_provider=ollama
 ollama_base_url=http://localhost:11434
 ollama_model=qwen2.5:7b`}</code></pre>
         </CodeFile>
+        <p>Any model in <code>ollama list</code> can be used. Tested with <code>qwen2.5:7b</code>,
+        <code>qwen2.5:14b</code>, and <code>llama3.2:3b</code> on low-end hardware.</p>
 
-        <p>Any model available via <code>ollama list</code> can be used. Luna was primarily tested
-        with <code>qwen2.5</code> (7B and 14B) and <code>qcwind/qwen3-8b-instruct-Q4-K-M</code>. For
-        best results use a model with at least 8B parameters and 8K context support.</p>
-
-        <h3>OpenAI-compatible API (cloud or self-hosted)</h3>
+        <h3>OpenAI / OpenAI-compatible</h3>
         <CodeFile label=".env">
           <pre><code>{`llm_provider=openai-compatible
 openai_base_url=https://api.openai.com/v1
 openai_api_key=sk-...
 openai_model=gpt-4o-mini`}</code></pre>
         </CodeFile>
+        <p>Works with any OpenAI-compatible endpoint: LM Studio, Jan.ai, llama.cpp server, vLLM, Together AI, and
+        OpenRouter (which gives you access to every major model through one key).</p>
 
-        <p>Works with any endpoint that implements the OpenAI chat completions API — including
-        LM Studio, vLLM, Together AI, Groq, and self-hosted Mistral/Llama deployments.</p>
+        <h3>Anthropic Claude (native)</h3>
+        <CodeFile label=".env">
+          <pre><code>{`llm_provider=anthropic
+anthropic_api_key=sk-ant-...
+anthropic_model=claude-sonnet-4-5`}</code></pre>
+        </CodeFile>
+        <p>Uses the Anthropic Messages API directly — no proxy needed. Recommended for the business variant.</p>
 
-        <Callout type="info" title="Context window">
-          <p>Luna defaults to <code>num_ctx: 8192</code> and <code>num_predict: 1024</code>.
-          These are set in <code>backend/services/llm.py</code> and can be adjusted for models
-          that support longer contexts.</p>
+        <h3>Google Gemini (native)</h3>
+        <CodeFile label=".env">
+          <pre><code>{`llm_provider=google
+google_api_key=AIza...
+google_model=gemini-2.0-flash`}</code></pre>
+        </CodeFile>
+        <p>Uses the Gemini REST API. Flash is fast and cheap; Pro gives longer context and stronger reasoning.</p>
+
+        <h3>Groq (native — fastest cloud)</h3>
+        <CodeFile label=".env">
+          <pre><code>{`llm_provider=groq
+groq_api_key=gsk_...
+groq_model=llama-3.3-70b-versatile`}</code></pre>
+        </CodeFile>
+        <p>Groq runs inference on custom LPU chips at ~300 tokens/second. Free tier available.
+        Best speed/quality ratio for cloud inference.</p>
+
+        <h3>Cohere Command R (native)</h3>
+        <CodeFile label=".env">
+          <pre><code>{`llm_provider=cohere
+cohere_api_key=...
+cohere_model=command-r-plus`}</code></pre>
+        </CodeFile>
+
+        <h3>Mistral AI (native)</h3>
+        <CodeFile label=".env">
+          <pre><code>{`llm_provider=mistral
+mistral_api_key=...
+mistral_model=mistral-large-latest`}</code></pre>
+        </CodeFile>
+        <p>European-hosted. GDPR-compliant. Strong coding and reasoning performance.</p>
+
+        <Callout type="info" title="OpenRouter — one key, every model">
+          <p>Use <code>openai-compatible</code> with OpenRouter to access Claude, Gemini, GPT-4o,
+          Mistral, Llama, and more through a single key and pay-per-token billing:</p>
+          <pre><code>{`llm_provider=openai-compatible
+openai_base_url=https://openrouter.ai/api/v1
+openai_api_key=sk-or-...
+openai_model=anthropic/claude-opus-4`}</code></pre>
         </Callout>
       </section>
 
+      {/* ── Embeddings ── */}
       <section>
         <h2 id="embeddings">Embeddings</h2>
-        <p>Embeddings power Luna's memory search — finding semantically similar facts when building context.</p>
-
+        <p>Embeddings power memory search — finding semantically similar facts when building context.</p>
         <CodeFile label=".env">
-          <pre><code>{`# Use Ollama for embeddings (default — no extra cost)
+          <pre><code>{`# Ollama (default — pull nomic-embed-text once)
 embedding_provider=ollama
-embedding_model=nomic-embed-text
+ollama_embed_model=nomic-embed-text
 
-# Use OpenAI-compatible embeddings API instead
+# OpenAI-compatible (uses same base_url and api_key as LLM)
 embedding_provider=openai-compatible
-# Uses the same openai_base_url and openai_api_key as the LLM`}</code></pre>
+openai_embed_model=text-embedding-3-small`}</code></pre>
+        </CodeFile>
+      </section>
+
+      {/* ── Auth ── */}
+      <section>
+        <h2 id="auth">Auth &amp; rate limiting</h2>
+
+        <h3>Shared API key (personal / LAN)</h3>
+        <p>Set <code>luna_api_key</code> to enable auth on all <code>/api/*</code> routes.
+        Leave empty for local-only development.</p>
+        <CodeFile label=".env">
+          <pre><code>{`luna_api_key=replace-with-a-strong-random-key`}</code></pre>
+        </CodeFile>
+        <p>Clients pass the key via the <code>X-Luna-Key</code> header or <code>?key=</code> query param.</p>
+
+        <h3>JWT (business / multi-user)</h3>
+        <p>When <code>jwt_secret</code> is set, use the admin API to create per-user tokens:</p>
+        <CodeFile label=".env">
+          <pre><code>{`# Generate: openssl rand -hex 32
+jwt_secret=your-64-char-hex-string
+jwt_expiry_hours=720`}</code></pre>
+        </CodeFile>
+        <CodeFile label="terminal">
+          <pre><code>{`# Create a user and get a JWT
+curl -X POST http://localhost:8899/api/admin/users \\
+  -H "X-Luna-Key: YOUR_MASTER_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"username": "alice", "role": "user"}'
+
+# → { "user_id": "...", "token": "eyJ..." }`}</code></pre>
         </CodeFile>
 
-        <Callout type="tip" title="nomic-embed-text">
-          <p>Pull it once with <code>ollama pull nomic-embed-text</code>. It's small (~275 MB),
-          fast, and produces high-quality 768-dimension embeddings. Required for memory to work.</p>
+        <h3>Rate limiting</h3>
+        <CodeFile label=".env">
+          <pre><code>{`rate_limit_enabled=true
+rate_limit_per_minute=60   # requests per user per window
+rate_limit_burst=20        # extra burst allowance`}</code></pre>
+        </CodeFile>
+        <p>The sliding-window rate limiter runs in-memory (no Redis required). The business Docker
+        compose file enables rate limiting automatically.</p>
+
+        <Callout type="info" title="Admin API endpoints">
+          <pre><code>{`GET    /api/admin/info                  System info + provider status
+GET    /api/admin/users                 List users
+POST   /api/admin/users                 Create user (returns JWT)
+DELETE /api/admin/users/{id}            Revoke user
+POST   /api/admin/users/{id}/rotate-token  Rotate JWT
+GET    /api/admin/llm/providers         All configured providers`}</code></pre>
         </Callout>
       </section>
 
+      {/* ── Channels ── */}
+      <section>
+        <h2 id="channels">Messaging channels</h2>
+        <p>
+          Luna can receive messages via Telegram, Discord, Slack, and a generic HTTP webhook.
+          Each channel maintains isolated per-user conversation history.
+          Desktop features (voice, Spotify, maps) are automatically stripped from channel replies.
+        </p>
+
+        <h3>Telegram</h3>
+        <CodeFile label=".env">
+          <pre><code>{`telegram_bot_token=123456:ABC-...`}</code></pre>
+        </CodeFile>
+        <p>Register the webhook after Luna is running at a public URL:</p>
+        <CodeFile label="terminal">
+          <pre><code>{`curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://YOUR_HOST/api/channels/telegram"`}</code></pre>
+        </CodeFile>
+
+        <h3>Discord</h3>
+        <CodeFile label=".env">
+          <pre><code>{`discord_bot_token=MTI...
+discord_public_key=abc123...  # from Discord Developer Portal`}</code></pre>
+        </CodeFile>
+        <p>In the Discord Developer Portal, set the Interactions Endpoint URL to
+        <code>https://YOUR_HOST/api/channels/discord</code>. Luna handles the Ed25519 ping verification automatically.</p>
+
+        <h3>Slack</h3>
+        <CodeFile label=".env">
+          <pre><code>{`slack_bot_token=xoxb-...
+slack_signing_secret=abc...`}</code></pre>
+        </CodeFile>
+        <p>In your Slack App config, set the Events API Request URL to
+        <code>https://YOUR_HOST/api/channels/slack</code> and subscribe to
+        <code>message.channels</code> and <code>app_mention</code>.</p>
+
+        <h3>Generic webhook</h3>
+        <p>Any system can post to Luna over HTTP:</p>
+        <CodeFile label="terminal">
+          <pre><code>{`curl -X POST http://localhost:8899/api/channels/webhook \\
+  -H "X-Luna-Key: YOUR_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"user_id": "u1", "user_name": "Bob", "text": "summarise this week"}'
+
+# → { "reply": "Here is this week's summary..." }`}</code></pre>
+        </CodeFile>
+
+        <CodeFile label=".env (status check)">
+          <pre><code>{`# GET /api/channels/status returns which channels are configured
+# { "telegram": true, "discord": false, "slack": true, "webhook": true }`}</code></pre>
+        </CodeFile>
+      </section>
+
+      {/* ── LAN ── */}
       <section>
         <h2 id="lan">LAN / network mode</h2>
-        <p>
-          Luna can serve its frontend to other devices on your local network — phones, tablets,
-          other laptops. You need a strong API key when you do this.
-        </p>
-
         <CodeFile label=".env">
-          <pre><code>{`# Bind to all interfaces instead of loopback only
-host=0.0.0.0
-
-# Set a strong random key — all remote requests must include this
-luna_api_key=replace-with-a-64-char-random-string`}</code></pre>
+          <pre><code>{`host=0.0.0.0
+luna_api_key=replace-with-a-strong-random-key`}</code></pre>
         </CodeFile>
-
-        <p>Then start the frontend with LAN binding:</p>
-
-        <CodeFile label="terminal">
-          <pre><code>{`npm run luna -- dev:lan`}</code></pre>
-        </CodeFile>
-
-        <p>Open <code>http://YOUR_LAN_IP:5173</code> on any device on your network. Enter the
-        <code>luna_api_key</code> when prompted. Voice, camera, and some OS-level features are
-        desktop-only — they may be unavailable on mobile browsers.</p>
-
-        <Callout type="warn" title="Security">
-          <p>Never set <code>host=0.0.0.0</code> without also setting <code>luna_api_key</code>.
-          Without a key, anyone on your network can query the backend.</p>
-        </Callout>
+        <p>Open <code>http://YOUR_LAN_IP:8899</code> on any device on your network.
+        Always set <code>luna_api_key</code> when binding to <code>0.0.0.0</code>.</p>
       </section>
 
+      {/* ── Spotify ── */}
       <section>
-        <h2 id="spotify">Spotify</h2>
-        <p>
-          Luna can control Spotify playback — play, pause, skip, queue tracks, and respond to voice
-          commands like <em>"play something chill"</em>.
-        </p>
-        <p>Create a Spotify Developer app at <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: '#7c3aed' }}>developer.spotify.com/dashboard</a> and
-        add <code>http://localhost:8899/api/spotify/callback</code> as a redirect URI. Then:</p>
-
+        <h2 id="spotify">Spotify (personal variant only)</h2>
+        <p>Create a Spotify Developer app at <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer" style={{ color: '#7c3aed' }}>developer.spotify.com</a> and
+        add <code>http://localhost:8899/api/spotify/callback</code> as a redirect URI.</p>
         <CodeFile label=".env">
           <pre><code>{`spotify_client_id=your_client_id
 spotify_client_secret=your_client_secret`}</code></pre>
         </CodeFile>
-
-        <p>Trigger the OAuth flow from the Agent page in the Luna UI. The access token is stored
-        locally in <code>data/spotify_token.json</code>.</p>
       </section>
 
+      {/* ── Data ── */}
       <section>
-        <h2 id="data-services">Data services</h2>
-        <p>These keys are optional. Luna works without them — it falls back gracefully when a service is unconfigured.</p>
-
-        <h3>News</h3>
-        <CodeFile label=".env">
-          <pre><code>{`the_news_api=your_key   # https://thenewsapi.com`}</code></pre>
-        </CodeFile>
-        <p>Without this key the news widget is disabled. Luna will tell you news is unavailable.</p>
-
-        <h3>Weather</h3>
-        <p>Weather uses <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer" style={{ color: '#7c3aed' }}>Open-Meteo</a> by
-        default — no API key required. A legacy <code>open_weather</code> key exists for older flows
-        but is not needed.</p>
-
-        <h3>Markets</h3>
-        <CodeFile label=".env">
-          <pre><code>{`alpha_vantage=your_key   # https://alphavantage.co`}</code></pre>
-        </CodeFile>
-        <p>Without this, Luna falls back to Yahoo Finance and CoinGecko for market data, which have
-        rate limits but no key requirement.</p>
+        <h2 id="data">Data services</h2>
+        <table>
+          <thead><tr><th>Key</th><th>Service</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>the_news_api</code></td><td>TheNewsAPI</td><td>Live news headlines. Dashboard widget. Free tier available.</td></tr>
+            <tr><td><code>alpha_vantage</code></td><td>Alpha Vantage</td><td>Extended market data. Falls back to Yahoo Finance without this.</td></tr>
+            <tr><td><code>weather_lat/lon</code></td><td>Open-Meteo</td><td>Free, no key. Set your coordinates for accurate weather.</td></tr>
+            <tr><td><code>weather_city</code></td><td>—</td><td>Display name for the weather widget.</td></tr>
+            <tr><td><code>weather_timezone</code></td><td>—</td><td>IANA timezone string, e.g. <code>America/New_York</code>.</td></tr>
+          </tbody>
+        </table>
       </section>
 
+      {/* ── Reference ── */}
       <section>
         <h2 id="reference">Full reference</h2>
         <table>
           <thead><tr><th>Key</th><th>Default</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td><code>user_name</code></td><td><code>friend</code></td><td>Luna uses this name when addressing you.</td></tr>
-            <tr><td><code>luna_api_key</code></td><td><em>empty</em></td><td>Auth key for remote access. Leave empty for local-only use.</td></tr>
-            <tr><td><code>llm_provider</code></td><td><code>ollama</code></td><td><code>ollama</code> or <code>openai-compatible</code>.</td></tr>
+            <tr><td><code>luna_variant</code></td><td><code>personal</code></td><td><code>personal</code> or <code>business</code>.</td></tr>
+            <tr><td><code>business_name</code></td><td>—</td><td>Company name injected into business system prompt.</td></tr>
+            <tr><td><code>business_description</code></td><td>—</td><td>One-line description of the organisation.</td></tr>
+            <tr><td><code>business_tone</code></td><td><code>professional</code></td><td><code>professional</code> | <code>friendly</code> | <code>technical</code> | <code>concise</code>.</td></tr>
+            <tr><td><code>llm_provider</code></td><td><code>ollama</code></td><td><code>ollama</code> | <code>openai-compatible</code> | <code>anthropic</code> | <code>google</code> | <code>groq</code> | <code>cohere</code> | <code>mistral</code>.</td></tr>
             <tr><td><code>ollama_base_url</code></td><td><code>http://localhost:11434</code></td><td>Ollama server URL.</td></tr>
-            <tr><td><code>ollama_model</code></td><td><code>qwen2.5:7b</code></td><td>Chat model name as shown by <code>ollama list</code>.</td></tr>
-            <tr><td><code>openai_base_url</code></td><td><em>empty</em></td><td>OpenAI-compatible API base URL.</td></tr>
-            <tr><td><code>openai_api_key</code></td><td><em>empty</em></td><td>API key for the OpenAI-compatible provider.</td></tr>
-            <tr><td><code>openai_model</code></td><td><em>empty</em></td><td>Model name for the OpenAI-compatible provider.</td></tr>
+            <tr><td><code>ollama_model</code></td><td><code>qwen2.5:7b</code></td><td>Ollama chat model.</td></tr>
+            <tr><td><code>ollama_embed_model</code></td><td><code>nomic-embed-text</code></td><td>Ollama embedding model.</td></tr>
+            <tr><td><code>openai_base_url</code></td><td><code>https://api.openai.com/v1</code></td><td>OpenAI-compatible base URL.</td></tr>
+            <tr><td><code>openai_api_key</code></td><td>—</td><td>API key for OpenAI-compatible provider.</td></tr>
+            <tr><td><code>openai_model</code></td><td><code>gpt-4o-mini</code></td><td>Model name.</td></tr>
+            <tr><td><code>anthropic_api_key</code></td><td>—</td><td>Anthropic API key.</td></tr>
+            <tr><td><code>anthropic_model</code></td><td><code>claude-sonnet-4-5</code></td><td>Anthropic model ID.</td></tr>
+            <tr><td><code>google_api_key</code></td><td>—</td><td>Google AI Studio API key.</td></tr>
+            <tr><td><code>google_model</code></td><td><code>gemini-2.0-flash</code></td><td>Gemini model ID.</td></tr>
+            <tr><td><code>groq_api_key</code></td><td>—</td><td>Groq API key.</td></tr>
+            <tr><td><code>groq_model</code></td><td><code>llama-3.3-70b-versatile</code></td><td>Groq model ID.</td></tr>
+            <tr><td><code>cohere_api_key</code></td><td>—</td><td>Cohere API key.</td></tr>
+            <tr><td><code>cohere_model</code></td><td><code>command-r-plus</code></td><td>Cohere model ID.</td></tr>
+            <tr><td><code>mistral_api_key</code></td><td>—</td><td>Mistral AI API key.</td></tr>
+            <tr><td><code>mistral_model</code></td><td><code>mistral-large-latest</code></td><td>Mistral model ID.</td></tr>
             <tr><td><code>embedding_provider</code></td><td><code>ollama</code></td><td><code>ollama</code> or <code>openai-compatible</code>.</td></tr>
-            <tr><td><code>embedding_model</code></td><td><code>nomic-embed-text</code></td><td>Embedding model. Must be available via your provider.</td></tr>
-            <tr><td><code>host</code></td><td><code>127.0.0.1</code></td><td>Backend bind address. Set to <code>0.0.0.0</code> for LAN access.</td></tr>
+            <tr><td><code>luna_api_key</code></td><td>—</td><td>Master API key. Required for all <code>/api/*</code> when set.</td></tr>
+            <tr><td><code>jwt_secret</code></td><td>—</td><td>Signs per-user JWT tokens. Required for <code>/api/admin/users</code>.</td></tr>
+            <tr><td><code>jwt_expiry_hours</code></td><td><code>720</code></td><td>JWT lifetime in hours (30 days default).</td></tr>
+            <tr><td><code>rate_limit_enabled</code></td><td><code>false</code></td><td>Enable sliding-window rate limiting.</td></tr>
+            <tr><td><code>rate_limit_per_minute</code></td><td><code>60</code></td><td>Max requests per user per 60-second window.</td></tr>
+            <tr><td><code>rate_limit_burst</code></td><td><code>20</code></td><td>Extra burst allowance on top of the per-minute limit.</td></tr>
+            <tr><td><code>telegram_bot_token</code></td><td>—</td><td>Telegram Bot API token from @BotFather.</td></tr>
+            <tr><td><code>discord_bot_token</code></td><td>—</td><td>Discord bot token.</td></tr>
+            <tr><td><code>discord_public_key</code></td><td>—</td><td>Discord app public key for interaction signature verification.</td></tr>
+            <tr><td><code>slack_bot_token</code></td><td>—</td><td>Slack bot OAuth token (<code>xoxb-...</code>).</td></tr>
+            <tr><td><code>slack_signing_secret</code></td><td>—</td><td>Slack app signing secret for request verification.</td></tr>
+            <tr><td><code>host</code></td><td><code>127.0.0.1</code></td><td>Backend bind address. <code>0.0.0.0</code> for LAN/Docker.</td></tr>
             <tr><td><code>port</code></td><td><code>8899</code></td><td>Backend HTTP port.</td></tr>
-            <tr><td><code>spotify_client_id</code></td><td><em>empty</em></td><td>Spotify Developer app client ID.</td></tr>
-            <tr><td><code>spotify_client_secret</code></td><td><em>empty</em></td><td>Spotify Developer app client secret.</td></tr>
-            <tr><td><code>the_news_api</code></td><td><em>empty</em></td><td>TheNewsAPI key for live news widget.</td></tr>
-            <tr><td><code>alpha_vantage</code></td><td><em>empty</em></td><td>Alpha Vantage key for market data.</td></tr>
+            <tr><td><code>user_name</code></td><td><code>friend</code></td><td>Your name — used in the personal variant system prompt.</td></tr>
+            <tr><td><code>luna_name</code></td><td><code>L.U.N.A.</code></td><td>Assistant display name.</td></tr>
+            <tr><td><code>spotify_client_id</code></td><td>—</td><td>Spotify Developer app client ID.</td></tr>
+            <tr><td><code>spotify_client_secret</code></td><td>—</td><td>Spotify Developer app client secret.</td></tr>
+            <tr><td><code>the_news_api</code></td><td>—</td><td>TheNewsAPI key for live news widget.</td></tr>
+            <tr><td><code>alpha_vantage</code></td><td>—</td><td>Alpha Vantage key for extended market data.</td></tr>
+            <tr><td><code>weather_lat</code></td><td><code>40.7128</code></td><td>Latitude for Open-Meteo weather.</td></tr>
+            <tr><td><code>weather_lon</code></td><td><code>-74.0060</code></td><td>Longitude for Open-Meteo weather.</td></tr>
+            <tr><td><code>weather_city</code></td><td><code>New York</code></td><td>Display name for the weather widget.</td></tr>
+            <tr><td><code>weather_timezone</code></td><td><code>America/New_York</code></td><td>IANA timezone string.</td></tr>
           </tbody>
         </table>
       </section>
 
       <NextSteps items={[
-        { href: '/getting-started', label: 'Setup',    title: 'Getting started',  desc: 'Full install walkthrough if you haven\'t set up the repo yet.' },
-        { href: '/voice',           label: 'Feature',  title: 'Voice setup',      desc: 'Voice-specific config keys for STT model, TTS rate, and wake word.' },
-        { href: '/troubleshooting', label: 'Support',  title: 'Troubleshooting',  desc: 'Common environment and connection issues with fixes.' },
+        { href: '/integrations', label: 'Integrate', title: 'Integrations',  desc: 'All supported providers, messaging channels, and platforms in one place.' },
+        { href: '/voice',        label: 'Feature',   title: 'Voice setup',   desc: 'Voice-specific config: STT model, TTS voice, wake word.' },
+        { href: '/troubleshooting', label: 'Support', title: 'Troubleshooting', desc: 'Common setup and connection issues with fixes.' },
       ]} />
     </DocsLayout>
   );

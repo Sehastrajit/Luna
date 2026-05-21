@@ -2,7 +2,7 @@ import json
 import re
 from fastapi import APIRouter, Request
 from backend.models.schemas import AppLaunchRequest, StatusResponse
-from backend.services.app_launcher import launch_app, list_known_apps
+from backend.services.app_launcher import launch_app, list_app_profiles, list_known_apps
 from backend.services.media_context import get_watching_context
 from backend.services.scheduler import proactive_queue
 
@@ -18,6 +18,11 @@ def launch_application(req: AppLaunchRequest):
 @router.get("/apps")
 def get_apps():
     return {"apps": list_known_apps()}
+
+
+@router.get("/apps/profiles")
+def get_app_profiles():
+    return list_app_profiles()
 
 
 @router.get("/watching")

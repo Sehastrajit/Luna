@@ -44,12 +44,13 @@
 
 ---
 
-L.U.N.A. is an open-source, local-first AI companion. Chat, memory, voice, vision, and automation can run locally through Ollama, or through an opt-in OpenAI-compatible cloud/self-hosted provider. The browser UI works on desktop, phone, tablet, and other computers on your LAN.
+L.U.N.A. is an open-source AI platform that ships as two variants: a **Personal** local-first companion (voice, vision, Spotify, desktop automation) and a **Business** team assistant (multi-user JWT auth, rate limiting, Telegram/Discord/Slack channels). Both support 7 LLM providers — Ollama, Anthropic, Google, Groq, Cohere, Mistral, and any OpenAI-compatible endpoint.
 
 ---
 
 ## Table of Contents
 
+- [Variants](#variants)
 - [Features](#features)
 - [Install — one line](#install--one-line)
 - [Docker](#docker)
@@ -67,13 +68,34 @@ L.U.N.A. is an open-source, local-first AI companion. Chat, memory, voice, visio
 
 ---
 
+## Variants
+
+| | **Personal** | **Business** |
+|---|---|---|
+| **Best for** | Individual daily use | Teams & companies |
+| **Tone** | Casual companion | Professional |
+| **Auth** | None required | Multi-user JWT |
+| **Rate limiting** | Off | Sliding-window, configurable |
+| **Messaging channels** | — | Telegram, Discord, Slack, Webhook |
+| **Voice / vision** | ✓ | — |
+| **Spotify / app launcher** | ✓ | — |
+| **Calendar & web search** | ✓ | ✓ |
+| **Docker** | `luna docker` | `luna docker:business` |
+
+Switch at any time by changing `luna_variant=personal` or `luna_variant=business` in `.env` and restarting. No data is lost.
+
+---
+
 ## Install — one line
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/luna-ai-project/Luna/main/install.sh | bash
+git clone https://github.com/luna-ai-project/Luna.git
+cd Luna
+npm install
+npm run luna -- setup
 ```
 
-The script checks for Docker, clones the repo, copies `.env.example → .env`, asks CPU / GPU / cloud, and runs `docker compose up`. Luna opens on **http://localhost:8899**.
+The interactive wizard selects your variant (Personal or Business), configures your LLM provider, installs all dependencies, and pulls Ollama models. Luna opens on **http://localhost:8899**.
 
 > Voice, Electron shell, and OS-level automation require the [desktop install](#quick-start-desktop).
 
@@ -81,65 +103,80 @@ The script checks for Docker, clones the repo, copies `.env.example → .env`, a
 
 ## Docker
 
-Three compose files cover every scenario:
+The CLI auto-detects the right compose file from your `.env`:
 
-| File | Use case | Command |
+| Command | When | Compose file |
 |---|---|---|
-| `compose.yml` | Local Ollama (CPU) | `docker compose up -d` |
-| `compose.yml` + `compose.gpu.yml` | Local Ollama + NVIDIA GPU | `docker compose -f compose.yml -f compose.gpu.yml up -d` |
-| `compose.cloud.yml` | Cloud API (no Ollama) | `docker compose -f compose.cloud.yml up -d` |
-
-**Manual steps:**
+| `luna docker` | auto-detect | picks one of the below |
+| `luna docker:business` | Business variant | `compose.business.yml` |
+| `luna docker:gpu` | NVIDIA GPU | `compose.yml + compose.gpu.yml` |
+| `luna docker:cloud` | Cloud LLM (no Ollama) | `compose.cloud.yml` |
 
 ```bash
-git clone https://github.com/luna-ai-project/Luna.git && cd Luna
-cp .env.example .env        # edit model / API keys
-docker compose up -d        # CPU local
-# or
-docker compose -f compose.yml -f compose.gpu.yml up -d   # GPU
-# or
-docker compose -f compose.cloud.yml up -d                # cloud key in .env
+# Personal — Ollama CPU (default)
+luna docker
+
+# Personal — NVIDIA GPU
+luna docker:gpu
+
+# Personal — cloud LLM (set llm_provider in .env first)
+luna docker:cloud
+
+# Business variant
+cp .env.business.example .env
+# edit luna_api_key, jwt_secret, business_name, llm_provider
+luna docker:business
 ```
 
-Data is persisted in named Docker volumes (`luna_data`, `ollama_data`). Upgrading is:
+Data is persisted in named Docker volumes (`luna_data`, `ollama_data`). Upgrading:
 
 ```bash
-git pull
-docker compose up -d --build
+git pull && luna docker
 ```
 
 ---
 
 ## Any Model
 
-Luna treats every LLM as a drop-in. Set two keys in `.env`:
+Luna supports 7 providers natively. Change `llm_provider` in `.env` — no code changes, no restart of anything else.
 
-| Provider | `.env` |
-|---|---|
-| **Ollama** (local, default) | `llm_provider=ollama` · `ollama_model=qwen2.5:7b` |
-| **OpenAI** | `llm_provider=openai-compatible` · `openai_base_url=https://api.openai.com/v1` · `openai_api_key=sk-…` · `openai_model=gpt-4o` |
-| **Groq** (fast inference) | `openai_base_url=https://api.groq.com/openai/v1` · `openai_model=llama-3.3-70b-versatile` |
-| **Anthropic Claude** (via OpenRouter) | `openai_base_url=https://openrouter.ai/api/v1` · `openai_model=anthropic/claude-opus-4` |
-| **Google Gemini** (via OpenRouter) | `openai_base_url=https://openrouter.ai/api/v1` · `openai_model=google/gemini-2.5-pro` |
-| **LM Studio / Jan.ai** | `openai_base_url=http://localhost:1234/v1` · `openai_api_key=lm-studio` |
-| **llama.cpp server** | `openai_base_url=http://localhost:8080/v1` |
+| Provider | `llm_provider` | Key needed |
+|---|---|---|
+| **Ollama** (local, default) | `ollama` | None |
+| **Anthropic Claude** | `anthropic` | `anthropic_api_key` |
+| **Google Gemini** | `google` | `google_api_key` |
+| **Groq** | `groq` | `groq_api_key` |
+| **Cohere** | `cohere` | `cohere_api_key` |
+| **Mistral AI** | `mistral` | `mistral_api_key` |
+| **OpenAI / OpenRouter / LM Studio / llama.cpp** | `openai-compatible` | `openai_api_key` (optional for local) |
 
-**OpenRouter** (`openrouter.ai`) is the easiest cloud path - one API key, every major model, pay-as-you-go.
+**OpenRouter** is the easiest cloud path — one key, every major model, pay-as-you-go:
+
+```env
+llm_provider=openai-compatible
+openai_base_url=https://openrouter.ai/api/v1
+openai_api_key=sk-or-...
+openai_model=anthropic/claude-opus-4
+```
 
 ---
 
 ## Features
 
-| Capability | Description |
-|---|---|
-| 🎙 **Voice** | Wake-word detection and push-to-talk. Local STT with faster-whisper, local TTS with pyttsx3. |
-| 🧠 **Memory** | Persistent fact storage, personality state, and conversation summaries in SQLite + ChromaDB. |
-| 👁 **Vision** | Screen and camera awareness. Temporal visual context without storing raw frames. |
-| ⚡ **Automation** | Launch apps, control Spotify, manage calendar tasks, and execute approved desktop actions. |
-| 📊 **Dashboard** | Live news, weather, markets, and maps in a heads-up display widget layer. |
-| 🔒 **Private** | Inference runs locally via Ollama. Zero telemetry. No data leaves unless you opt into cloud features. |
-| 🧩 **Dynamic Widgets** | Visual explanations with steps, comparisons, tabs, code blocks, timelines, and live 3D scenes (Three.js). |
-| 🌐 **Web Tools** | DuckDuckGo search and page fetch when the model asks for live information. |
+| Capability | Personal | Business |
+|---|---|---|
+| 🎙 **Voice** — wake-word, push-to-talk, faster-whisper STT, edge-tts / pyttsx3 TTS | ✓ | — |
+| 🧠 **Memory** — persistent facts, personality state, conversation summaries (SQLite + ChromaDB) | ✓ | ✓ |
+| 👁 **Vision** — screen and camera awareness without storing raw frames | ✓ | — |
+| ⚡ **Automation** — app launcher, Spotify control, audio device switcher | ✓ | — |
+| 📅 **Calendar & Tasks** — create, list, update tasks with proactive reminders | ✓ | ✓ |
+| 📊 **Dashboard** — live news, weather, markets, and maps widget layer | ✓ | ✓ |
+| 🌐 **Web Tools** — DuckDuckGo search and page fetch | ✓ | ✓ |
+| 🧩 **Dynamic Widgets** — steps, timelines, code blocks, 3D scenes (Three.js) | ✓ | ✓ |
+| ✈️ **Messaging Channels** — Telegram, Discord, Slack, generic webhook | — | ✓ |
+| 🔐 **JWT Auth** — multi-user tokens, admin user management API | — | ✓ |
+| 🚦 **Rate Limiting** — sliding-window per-IP, configurable burst | — | ✓ |
+| 🔒 **Private** — inference runs locally via Ollama by default, zero telemetry | ✓ | ✓ |
 
 ---
 
@@ -147,61 +184,30 @@ Luna treats every LLM as a drop-in. Set two keys in `.env`:
 
 **Prerequisites:** Node.js 18+, Python 3.10+, [Ollama](https://ollama.com/) installed and running.
 
-### 1 — Clone
+### 1 — Clone and run the setup wizard
 
 ```bash
 git clone https://github.com/luna-ai-project/Luna.git
 cd Luna
-```
-
-### 2 — Install dependencies
-
-```bash
 npm install
-cd frontend && npm install && cd ..
-python -m venv .venv
+npm run luna -- setup
 ```
 
-```powershell
-# Windows
-.venv\Scripts\activate
-```
+The wizard selects your variant, configures your LLM provider, installs all Node and Python dependencies, and pulls Ollama models. Takes about 2 minutes on a fast connection.
+
+### 2 — Start Luna
 
 ```bash
-# macOS / Linux
-source .venv/bin/activate
-```
-
-```bash
-pip install -r backend/requirements.txt
-```
-
-### 3 — Pull your models
-
-```bash
-ollama pull qwen2.5:7b          # or any chat model
-ollama pull nomic-embed-text    # for memory embeddings
-ollama pull moondream           # optional — for vision
-```
-
-### 4 — Configure
-
-```bash
-cp .env.example .env
-# Edit .env — set ollama_model to match what you pulled
-```
-
-### 5 — Run
-
-```bash
-npm run dev          # desktop (Electron + Vite + FastAPI)
+luna dev         # Electron + Vite + FastAPI (full desktop)
 # or
-npm run luna -- web  # browser UI + FastAPI only (no Electron)
+luna web         # FastAPI + browser UI, no Electron
+# or
+luna backend     # FastAPI only (use any HTTP client)
 ```
 
 Open `http://localhost:5173` in your browser, or use the Electron window.
 
-> **Tip:** Run `npm run luna -- doctor` first if something doesn't start — it checks your Node, Python, and Ollama versions in one shot.
+> **Tip:** Run `luna doctor` if something doesn't start — it checks Node, Python, Ollama, and Docker in one shot.
 
 ---
 
@@ -226,19 +232,15 @@ npm run docs:start
 
 ## CLI Chat
 
-After Luna is running through Docker or the desktop backend, start an interactive terminal chat:
+After Luna is running, start an interactive terminal chat:
 
 ```bash
-npm run chat
-# or
-npm run luna -- chat
+luna chat
+# or — one-shot
+luna chat "what time is it?"
 ```
 
-Inside chat, use `/new` to start a fresh conversation and `/exit` to quit. One-shot messages also work:
-
-```bash
-npm run luna -- chat "summarize today's setup"
-```
+Inside chat, use `/new` to start a fresh conversation and `/exit` to quit.
 
 ---
 
@@ -263,7 +265,7 @@ npm run luna -- chat "summarize today's setup"
 | API | FastAPI + Uvicorn |
 | Database | SQLite |
 | Vector store | ChromaDB |
-| LLM | Ollama (local) or any OpenAI-compatible endpoint |
+| LLM | Ollama, Anthropic, Google, Groq, Cohere, Mistral, or any OpenAI-compatible endpoint |
 | STT | faster-whisper |
 | TTS | pyttsx3 |
 | HTTP | httpx / requests |
@@ -284,18 +286,21 @@ Luna has three layers:
 
 1. **Electron** — starts the desktop shell, launches the FastAPI backend, and hosts the React renderer.
 2. **React** — renders chat, voice controls, Luna dashboard, maps, dynamic widgets, and 3D scenes.
-3. **FastAPI** — owns chat streaming, voice, memory, vision, tool execution, live data, Spotify, scheduling, and all LLM calls.
+3. **FastAPI** — owns chat streaming, voice, memory, vision, tool execution, live data, Spotify, scheduling, messaging channels, auth, rate limiting, and all LLM calls.
 
 Chat is streamed over **Server-Sent Events**. A typical stream includes metadata, token chunks, command events, and a `done` event. Commands can open widgets, show maps, trigger Spotify controls, run web searches, generate 3D scenes, or execute desktop automation.
 
 ```
-User input
+User input (browser · Electron · Telegram · Discord · Slack · webhook)
+    │
+    ▼
+Variant check (personal | business)
     │
     ▼
 Context assembly (memory + personality + calendar + vision + conversation)
     │
     ▼
-LLM inference  ←────── Ollama / OpenAI-compatible
+LLM inference  ←────── Ollama / Anthropic / Google / Groq / Cohere / Mistral / OpenAI-compatible
     │
     ▼
 Tool execution (web_search · web_fetch · Spotify · calendar · widgets · maps)
@@ -304,7 +309,7 @@ Tool execution (web_search · web_fetch · Spotify · calendar · widgets · map
 Memory update  (fact extraction · personality update · conversation compaction)
     │
     ▼
-Response streamed to UI
+Response streamed to UI  (or plain-text reply to channel)
 ```
 
 Full diagrams: [architecture.svg](architecture.svg) · [architecture_ai.svg](architecture_ai.svg)
@@ -316,29 +321,46 @@ Full diagrams: [architecture.svg](architecture.svg) · [architecture_ai.svg](arc
 Copy `.env.example` to `.env`. Never commit `.env`.
 
 ```env
+# Variant
+luna_variant=personal          # personal | business
+
 # Identity
 user_name=friend
-luna_api_key=                        # leave empty for local-only dev
+luna_api_key=                  # leave empty for local-only dev
 
 # LLM — Ollama (default)
 llm_provider=ollama
 ollama_base_url=http://localhost:11434
 ollama_model=qwen2.5:7b
 
-# LLM — OpenAI-compatible cloud / self-hosted
-# llm_provider=openai-compatible
-# openai_base_url=https://api.openai.com/v1
-# openai_api_key=sk-...
-# openai_model=gpt-4o
+# LLM — Anthropic Claude (recommended for business)
+# llm_provider=anthropic
+# anthropic_api_key=sk-ant-...
+# anthropic_model=claude-sonnet-4-5
 
-# Optional cloud features (all opt-in)
+# LLM — any OpenAI-compatible (OpenRouter, OpenAI, LM Studio, ...)
+# llm_provider=openai-compatible
+# openai_base_url=https://openrouter.ai/api/v1
+# openai_api_key=sk-or-...
+# openai_model=anthropic/claude-opus-4
+
+# Business — auth & rate limiting
+# jwt_secret=change-me
+# rate_limit_enabled=true
+# rate_limit_per_minute=60
+
+# Messaging channels (business)
+# telegram_bot_token=
+# discord_bot_token=
+# slack_bot_token=
+
+# Optional personal features
 the_news_api=
-alpha_vantage=
 spotify_client_id=
 spotify_client_secret=
 ```
 
-Full reference is in `docs-site/pages/environment.js`.
+Full reference: `docs-site/pages/environment.js` or run `luna setup` for guided configuration.
 
 ---
 
@@ -372,6 +394,8 @@ Then open `http://YOUR-LAN-IP:5173` on any device. Use `npm run luna -- dev:lan`
 Luna/
 ├── backend/
 │   ├── main.py
+│   ├── middleware/
+│   │   └── rate_limit.py         # sliding-window rate limiter
 │   ├── processes/
 │   │   ├── registry.py
 │   │   ├── calendar_reminders/
@@ -379,6 +403,8 @@ Luna/
 │   │   ├── proactive_followups/
 │   │   └── voice_runtime/
 │   ├── routers/
+│   │   ├── admin.py              # user management, JWT tokens
+│   │   ├── channels.py           # Telegram / Discord / Slack / webhook
 │   │   ├── chat.py
 │   │   ├── luna.py
 │   │   ├── system.py
@@ -386,11 +412,13 @@ Luna/
 │   │   ├── voice.py
 │   │   └── spotify.py
 │   └── services/
+│       ├── channel_bridge.py     # channel session & reply routing
 │       ├── dashboard/
 │       │   ├── articles.py
 │       │   ├── markets.py
 │       │   ├── news.py
 │       │   └── weather.py
+│       ├── llm.py                # 7-provider LLM client
 │       ├── memory.py
 │       ├── personality.py
 │       ├── scheduler.py
