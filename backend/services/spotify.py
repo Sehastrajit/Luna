@@ -39,8 +39,15 @@ def _pick_original(items: list[dict]) -> dict:
 
 
 def _load_creds() -> dict[str, str]:
+    from backend.config import settings
     creds: dict[str, str] = {}
-    if CREDS_FILE.exists():
+    # Primary: main .env via Settings
+    if settings.spotify_client_id:
+        creds["spotify_client_id"] = settings.spotify_client_id
+    if settings.spotify_client_secret:
+        creds["spotify_client_secret"] = settings.spotify_client_secret
+    # Fallback: data/integrations/.env (legacy path)
+    if not creds.get("spotify_client_id") and CREDS_FILE.exists():
         for line in CREDS_FILE.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if "=" in line and not line.startswith("#"):
@@ -104,6 +111,11 @@ class SpotifyService:
     @property
     def is_connected(self) -> bool:
         return self._get_token() is not None
+
+    @property
+    def needs_auth(self) -> bool:
+        """Credentials are configured but OAuth has not been completed yet."""
+        return self._ready and not self.is_connected
 
     # ── playback ──────────────────────────────────────────────────────────────
 

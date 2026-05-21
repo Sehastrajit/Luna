@@ -241,7 +241,7 @@ GET /api/agent/audit`}</code></pre>
       <NextSteps items={[
         { href: '/architecture', label: 'Deep dive', title: 'Architecture',   desc: 'How tool calls flow through the SSE stream and permission system.' },
         { href: '/contributing', label: 'Community', title: 'Contributing',   desc: 'How to write and submit a new skill or tool for the repo.' },
-        { href: '/api',          label: 'Platform',  title: 'API reference',  desc: 'Full agent API endpoint documentation.' },
+        { href: '/api-reference', label: 'Platform',  title: 'API reference',  desc: 'Full agent API endpoint documentation.' },
       ]} />
     </DocsLayout>
   );

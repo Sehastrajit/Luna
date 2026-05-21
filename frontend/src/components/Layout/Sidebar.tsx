@@ -51,8 +51,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 py-5 border-b border-luna-border">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-glow">
-            <span className="text-white font-bold text-sm">L</span>
+          <div className="w-9 h-9 rounded-xl bg-luna-card border border-luna-border flex items-center justify-center shadow-glow">
+            <img src="/images/logo.svg" alt="" className="w-7 h-7" draggable={false} />
           </div>
           <div>
             <h1 className="text-luna-text font-semibold text-sm">Luna</h1>

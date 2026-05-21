@@ -747,7 +747,17 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
 
         elif tool_name == "spotify_play":
             ok = spotify_service.play(args.get("query") or None)
-            return "playing" if ok else "Spotify not available"
+            if ok:
+                return "playing"
+            if spotify_service.needs_auth:
+                auth_url = spotify_service.get_auth_url()
+                if auth_url:
+                    import webbrowser
+                    webbrowser.open(auth_url)
+                return "Spotify needs authorization. The auth page was opened in the browser. Tell the user to log in, allow access, then try again."
+            if not spotify_service._ready:
+                return "Spotify is not configured. Tell the user to add spotify_client_id and spotify_client_secret to .env."
+            return "Spotify playback is not available. Tell the user to open Spotify on this computer or another active device, then try again."
 
         elif tool_name == "spotify_pause":
             ok = spotify_service.pause()
@@ -872,6 +882,54 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
             task = create_agent_task(args.get("description", ""))
             record_audit("tool_call", tool=tool_name, args=args, result=task["id"], conversation_id=conversation_id)
             return f"agent task created: {task['id']}"
+
+        elif tool_name in (
+            "get_volume", "set_volume", "mute_audio", "unmute_audio",
+            "get_brightness", "set_brightness", "lock_screen",
+            "turn_off_display", "sleep_system", "get_clipboard",
+            "set_clipboard", "get_system_info",
+        ):
+            from backend.services import system_controls
+            dispatch = {
+                "get_volume": lambda: system_controls.get_volume(),
+                "set_volume": lambda: system_controls.set_volume(int(args.get("level", 50))),
+                "mute_audio": lambda: system_controls.mute_audio(),
+                "unmute_audio": lambda: system_controls.unmute_audio(),
+                "get_brightness": lambda: system_controls.get_brightness(),
+                "set_brightness": lambda: system_controls.set_brightness(int(args.get("level", 50))),
+                "lock_screen": lambda: system_controls.lock_screen(),
+                "turn_off_display": lambda: system_controls.turn_off_display(),
+                "sleep_system": lambda: system_controls.sleep_system(),
+                "get_clipboard": lambda: system_controls.get_clipboard(),
+                "set_clipboard": lambda: system_controls.set_clipboard(args.get("text", "")),
+                "get_system_info": lambda: system_controls.get_system_info(),
+            }
+            result = dispatch[tool_name]()
+            return json.dumps(result)[:4000] if isinstance(result, dict) else str(result)
+
+        elif tool_name.startswith("github_"):
+            from backend.services import github
+            if tool_name == "github_list_repos":
+                return json.dumps(await github.list_repos())[:4000]
+            if tool_name == "github_list_issues":
+                return json.dumps(await github.list_issues(args.get("repo", "")))[:4000]
+            if tool_name == "github_create_issue":
+                return json.dumps(await github.create_issue(
+                    args.get("repo", ""),
+                    args.get("title", ""),
+                    args.get("body", ""),
+                    args.get("labels"),
+                ))[:4000]
+            if tool_name == "github_comment":
+                return json.dumps(await github.comment_on_issue(
+                    args.get("repo", ""),
+                    int(args.get("number", 0)),
+                    args.get("body", ""),
+                ))[:4000]
+            if tool_name == "github_list_prs":
+                return json.dumps(await github.list_prs(args.get("repo", "")))[:4000]
+            if tool_name == "github_get_pr":
+                return json.dumps(await github.get_pr(args.get("repo", ""), int(args.get("number", 0))))[:4000]
 
         else:
             return f"unknown tool {tool_name}"
@@ -1140,8 +1198,6 @@ async def chat_stream(
     )
     state_context = state_engine.build_state_context(current_state)
 
-    direct_launch_app = None if _is_business else parse_user_launch_request(req.message)
-
     # Retrieve relevant memories only when the message has real semantic content
     _SKIP_RETRIEVAL = {"hi", "hey", "hello", "heyy", "yo", "sup", "what's up",
                        "whats up", "good morning", "morning", "good night", "night",
@@ -1156,7 +1212,7 @@ async def chat_stream(
     recent_context = memory.get_conversation_context(conv.id, settings.max_conversation_history)
     watching_context = get_watching_context().as_prompt_text()
 
-    _is_business = settings.luna_variant == "business"
+    direct_launch_app = None if _is_business else parse_user_launch_request(req.message)
 
     from backend.services.spotify import spotify_service
     spotify_track = None if (cli or _is_business) else spotify_service.get_current()
@@ -1231,7 +1287,18 @@ async def chat_stream(
             action = direct_spotify_cmd["action"]
             if action == "play":
                 ok = spotify_service.play(direct_spotify_cmd.get("query"))
-                full_response = "Playing." if ok else "I couldn't start Spotify."
+                if ok:
+                    full_response = "Playing."
+                elif spotify_service.needs_auth:
+                    auth_url = spotify_service.get_auth_url()
+                    if auth_url:
+                        import webbrowser
+                        webbrowser.open(auth_url)
+                    full_response = "Spotify needs to be connected first. I opened the authorization page in your browser. Log in, allow access, then try again."
+                elif not spotify_service._ready:
+                    full_response = "Spotify isn't configured. Add spotify_client_id and spotify_client_secret to your .env file."
+                else:
+                    full_response = "Spotify is configured, but playback is not available. Open Spotify on this computer or another active device, then try again."
                 _tool_succeeded = ok
             elif action == "queue":
                 ok = spotify_service.queue(direct_spotify_cmd.get("query") or "")

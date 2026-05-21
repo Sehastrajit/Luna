@@ -3,7 +3,7 @@ import { useStore } from '../../store'
 import { VoiceOrb } from '../Voice/VoiceOrb'
 import { SpeakerPicker } from './SpeakerPicker'
 import { LunaDashboardToggle } from '../Luna/LunaDashboardToggle'
-import { Minus, Square, X, Maximize2, Minimize2 } from 'lucide-react'
+import { Minus, Square, X, Maximize2, Minimize2, Settings } from 'lucide-react'
 
 function TrafficLights({ maximized, fullscreen }: { maximized: boolean; fullscreen: boolean }) {
   const stopDrag = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -80,11 +80,20 @@ export function TitleBar() {
           </span>
         </div>
         <div className="flex items-center h-full" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-          <LunaDashboardToggle />
-          <div className="w-px h-4 bg-luna-border mx-1" />
-          <SpeakerPicker />
-          <div className="w-px h-4 bg-luna-border mx-1" />
-          <TrafficLights maximized={maximized} fullscreen={fullscreen} />
+        <LunaDashboardToggle />
+        <div className="w-px h-4 bg-luna-border mx-1" />
+        <SpeakerPicker />
+        <div className="w-px h-4 bg-luna-border mx-1" />
+        <button
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => window.electronAPI?.openSettings?.()}
+          className="h-full w-10 flex items-center justify-center text-luna-dim hover:bg-white/10 hover:text-luna-text transition-colors"
+          title="Settings"
+        >
+          <Settings size={14} strokeWidth={2} />
+        </button>
+        <div className="w-px h-4 bg-luna-border mx-1" />
+        <TrafficLights maximized={maximized} fullscreen={fullscreen} />
         </div>
       </div>
     )
@@ -108,6 +117,15 @@ export function TitleBar() {
         <LunaDashboardToggle />
         <div className="w-px h-4 bg-luna-border" />
         <SpeakerPicker />
+        <div className="w-px h-4 bg-luna-border" />
+        <button
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={() => window.electronAPI?.openSettings?.()}
+          className="h-full w-10 flex items-center justify-center text-luna-dim hover:bg-white/10 hover:text-luna-text transition-colors"
+          title="Settings"
+        >
+          <Settings size={14} strokeWidth={2} />
+        </button>
         <div className="w-px h-4 bg-luna-border" />
         <TrafficLights maximized={maximized} fullscreen={fullscreen} />
       </div>

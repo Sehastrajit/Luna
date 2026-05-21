@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+import inspect
+import unittest
+
+from tests.tools import _bootstrap  # noqa: F401
+
+
+class RegistryToolTests(unittest.TestCase):
+    def test_every_registered_tool_has_a_dispatch_handler(self) -> None:
+        from backend.routers.chat import execute_tool_call
+        from backend.services.tool_registry import TOOL_REGISTRY
+
+        source = inspect.getsource(execute_tool_call)
+        missing = [
+            name for name in TOOL_REGISTRY
+            if f'"{name}"' not in source and not (
+                name.startswith("github_") and 'tool_name.startswith("github_")' in source
+            )
+        ]
+        self.assertEqual(missing, [])
+
+    def test_every_registered_tool_has_a_dedicated_tester_or_skip_reason(self) -> None:
+        from backend.services.tool_registry import TOOL_REGISTRY
+
+        covered = {
+            "launch_app", "list_apps",
+            "spotify_play", "spotify_pause", "spotify_next", "spotify_prev", "spotify_queue",
+            "switch_audio",
+            "create_task", "create_event",
+            "take_screenshot", "find_text_on_screen", "get_active_window", "click_at", "type_text",
+            "browse_url", "web_search", "web_fetch", "browser_open", "browser_read",
+            "workspace_read", "workspace_write",
+            "list_skills", "create_agent_task",
+            "get_volume", "set_volume", "mute_audio", "unmute_audio",
+            "get_brightness", "set_brightness", "lock_screen", "turn_off_display", "sleep_system",
+            "get_clipboard", "set_clipboard", "get_system_info",
+            "github_list_repos", "github_list_issues", "github_create_issue", "github_comment",
+            "github_list_prs", "github_get_pr",
+        }
+        self.assertEqual(set(TOOL_REGISTRY) - covered, set())
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

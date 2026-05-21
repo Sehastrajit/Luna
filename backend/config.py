@@ -1,9 +1,10 @@
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent.parent
-DATA_DIR = BASE_DIR / "data"
+DATA_DIR = Path(os.getenv("LUNA_DATA_DIR", str(BASE_DIR / "data")))
 DATA_DIR.mkdir(exist_ok=True)
 (DATA_DIR / "backups").mkdir(exist_ok=True)
 
@@ -97,6 +98,10 @@ class Settings(BaseSettings):
     github_notify_slack_channel: str = ""   # Slack channel ID for event notifications
     github_notify_telegram_chat_id: str = "" # Telegram chat ID for event notifications
 
+    # ── Spotify (personal variant — opt-in) ──────────────────────────────────
+    spotify_client_id: str = ""
+    spotify_client_secret: str = ""
+
     # ── Variant ───────────────────────────────────────────────────────────────
     # personal  — casual companion, voice, desktop automation, single user
     # business  — professional team assistant, multi-user JWT, rate limiting on
@@ -127,7 +132,7 @@ class Settings(BaseSettings):
         return value
 
     class Config:
-        env_file = ".env"
+        env_file = os.getenv("LUNA_ENV_FILE", ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
 

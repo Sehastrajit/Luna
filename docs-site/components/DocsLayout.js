@@ -52,7 +52,7 @@ const navGroups = [
       { href: '/cli',               label: 'CLI' },
       { href: '/environment',       label: 'Environment' },
       { href: '/project-structure', label: 'Project Structure' },
-      { href: '/api',               label: 'API Reference' },
+      { href: '/api-reference',      label: 'API Reference' },
     ],
   },
   {

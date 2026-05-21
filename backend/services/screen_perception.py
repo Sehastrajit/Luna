@@ -58,8 +58,8 @@ def find_text_on_screen(query: str) -> dict[str, Any]:
         import pytesseract
         from PIL import Image
 
-        img = Image.open(ss["path"])
-        data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
+        with Image.open(ss["path"]) as img:
+            data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
         matches = []
         for i, word in enumerate(data["text"]):
             if query.lower() in word.lower():

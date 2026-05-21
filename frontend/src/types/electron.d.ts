@@ -18,6 +18,10 @@ declare global {
       spotifyOpenAuth?:    (authUrl: string) => Promise<null>
       onSpotifyConnected?: (cb: () => void) => (() => void)
       copyText?:           (text: string) => Promise<void>
+      openSettings?:       () => Promise<void>
+      checkForUpdates?:    () => Promise<{ ok: boolean; reason?: string; error?: string }>
+      installUpdate?:      () => Promise<void>
+      onUpdateStatus?:     (cb: (status: { status: string; version?: string; message?: string }) => void) => (() => void)
       awayEnter?:          () => Promise<void>
       awayExit?:           () => Promise<void>
       apiBase:             string

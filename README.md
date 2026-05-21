@@ -62,6 +62,7 @@ L.U.N.A. is an open-source AI platform that ships as two variants: a **Personal*
 - [Configuration](#configuration)
 - [Device Support](#device-support)
 - [Project Layout](#project-layout)
+- [Automated Testing](#automated-testing)
 - [Contributing](#contributing)
 - [Privacy](#privacy)
 - [License](#license)
@@ -208,6 +209,16 @@ luna backend     # FastAPI only (use any HTTP client)
 Open `http://localhost:5173` in your browser, or use the Electron window.
 
 > **Tip:** Run `luna doctor` if something doesn't start — it checks Node, Python, Ollama, and Docker in one shot.
+
+### Desktop installer
+
+Build the Windows installer with:
+
+```powershell
+npm run installer
+```
+
+The Electron installer uses an assisted NSIS flow. On first launch, Luna opens a setup window before starting the backend so the user can choose **Personal** or **Business**, select the LLM provider, and enter required credentials. The same settings window is available later from the gear button in the Electron title bar or the tray menu.
 
 ---
 
@@ -475,11 +486,43 @@ GET  /api/agent/audit
 
 ---
 
+## Automated Testing
+
+Run the smoke suite before opening a PR:
+
+```powershell
+npm run test:smoke
+```
+
+This runs backend syntax checks, validates the CLI entrypoint, and executes the separated tool smoke tests under `tests/tools/`. The tool tests cover:
+
+- Spotify command parsing and auth-state readability
+- App launcher discovery without opening apps
+- Tool registry coverage and risk labels
+- CLI syntax checks
+- Screen, browser/web, workspace, task/calendar, system, GitHub, skill, and agent-task tool wiring
+
+For only the tool smoke tests:
+
+```powershell
+npm run test:tools
+```
+
+For frontend changes, also run:
+
+```powershell
+npm run build
+```
+
+The smoke tests intentionally do not click, type, lock the screen, switch audio devices, launch apps, or start playback. Tests that need persistence use an in-memory database or write a temporary workspace/agent-task record and clean it up.
+
+---
+
 ## Contributing
 
 1. Fork the repo and create a branch from `main`.
-2. Make your changes. Run `npm run luna -- check` to verify the backend compiles.
-3. Run `cd frontend && npm run build` to verify no TypeScript errors.
+2. Make your changes. Run `npm run test:smoke` for backend, CLI, and tool wiring checks.
+3. Run `npm run build` for frontend changes.
 4. Open a pull request with a clear description of what changed and why.
 
 Please avoid non-ASCII characters in backend log messages (Windows `cp1252` compatibility). See the troubleshooting docs for details.

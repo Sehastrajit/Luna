@@ -16,15 +16,27 @@
   },
   "build": {
     "appId": "com.luna.companion",
-    "productName": "L.U.N.A.",
+    "productName": "Luna",
     "copyright": "Copyright (c) 2026 L.U.N.A. contributors",
     "directories": {
       "buildResources": "assets",
       "output": "../dist-electron"
     },
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Sehastrajit",
+        "repo": "Luna"
+      }
+    ],
     "files": [
       "main.js",
       "preload.js",
+      "settings.js",
+      "settingsPreload.js",
       "assets/**"
     ],
     "extraResources": [
@@ -46,6 +58,7 @@
       }
     ],
     "win": {
+      "artifactName": "Luna-Setup-${version}.${ext}",
       "target": [
         {
           "target": "nsis",
@@ -57,8 +70,9 @@
       "icon": "assets/icon.ico"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "deleteAppDataOnUninstall": false,
@@ -67,5 +81,8 @@
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico"
     }
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
   }
 }

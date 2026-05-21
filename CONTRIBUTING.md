@@ -33,10 +33,29 @@ npm run luna -- dev
 - Use `docs/CLI.md` and `docs/VSCODE.md` for common local workflows.
 - Keep runtime data, logs, local databases, generated builds, and secrets out of commits.
 - Prefer focused changes with a clear description of behavior and testing.
-- Run relevant frontend or backend checks before opening a pull request.
+- Run `npm run test:smoke` before opening a pull request.
+- Run `npm run build` when changing the frontend.
 - Keep routers thin. Put provider logic in `backend/services/`.
 - Add background/runtime work as a process under `backend/processes/`.
 - Keep large UI features split by feature folder under `frontend/src/components/`.
+
+## Automated testing
+
+Use the smoke suite for the common contributor path:
+
+```powershell
+npm run test:smoke
+```
+
+It runs backend syntax checks, CLI syntax checks, and the separated tool tests in `tests/tools/`.
+
+Use the tool-only suite when changing tool routing, app launcher profiles, Spotify commands, or the tool registry:
+
+```powershell
+npm run test:tools
+```
+
+The tool smoke tests are intentionally non-destructive. They do not launch apps, click, type, lock the screen, switch audio devices, or start playback. Tests that need persistence use an in-memory database or write a temporary workspace/agent-task record and clean it up.
 
 ## Privacy
 

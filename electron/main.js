@@ -8,9 +8,21 @@ const { spawn } = require('child_process')
 const path    = require('path')
 const http    = require('http')
 const fs      = require('fs')
+const {
+  envPath,
+  envForBackend,
+  needsFirstRunConfig,
+  openSettingsWindow,
+  waitForSettingsClosed,
+} = require('./settings')
+let autoUpdater = null
+try {
+  autoUpdater = require('electron-updater').autoUpdater
+} catch {}
 
 const isDev = !app.isPackaged
 const ROOT  = isDev ? path.join(__dirname, '..') : process.resourcesPath
+const USER_DATA = app.getPath('userData')
 const startHidden = process.argv.includes('--hidden')
 
 let mainWindow     = null
@@ -36,10 +48,26 @@ app.on('second-instance', () => {
 
 // ── Backend process manager ────────────────────────────────────────────────────
 const BACKEND_URL   = 'http://127.0.0.1:8899'
-const PID_FILE      = path.join(ROOT, 'data', 'backend.pid')
+const PID_FILE      = path.join(USER_DATA, 'data', 'backend.pid')
+const ENV_FILE      = envPath(app, ROOT, isDev)
+const DATA_DIR      = isDev ? path.join(ROOT, 'data') : path.join(USER_DATA, 'data')
+const LOG_DIR       = path.join(USER_DATA, 'logs')
 const MAX_RESTARTS  = 5
 const RESTART_DELAY = [1000, 2000, 4000, 8000, 16000]  // exponential backoff
 const HEALTH_INTERVAL = 10_000  // check every 10 s
+fs.mkdirSync(DATA_DIR, { recursive: true })
+fs.mkdirSync(LOG_DIR, { recursive: true })
+
+function logLine(line) {
+  const text = `[${new Date().toISOString()}] ${line}\n`
+  try { fs.appendFileSync(path.join(LOG_DIR, 'luna.log'), text) } catch {}
+  console.log(line)
+}
+
+function backendLogLine(line) {
+  const text = `[${new Date().toISOString()}] ${line}\n`
+  try { fs.appendFileSync(path.join(LOG_DIR, 'backend.log'), text) } catch {}
+}
 
 function healthCheck() {
   return new Promise(resolve => {
@@ -135,28 +163,48 @@ async function killStaleBackend() {
 }
 
 function spawnBackend() {
+  const packagedBackend = process.platform === 'win32'
+    ? path.join(ROOT, 'backend-bin', 'luna-backend.exe')
+    : path.join(ROOT, 'backend-bin', 'luna-backend')
   const script = path.join(ROOT, 'backend', 'server.py')
+  const usePackagedBackend = !isDev && fs.existsSync(packagedBackend)
   const python = process.platform === 'win32' ? 'python' : 'python3'
+  const runtimeEnv = envForBackend(ENV_FILE)
 
-  const proc = spawn(python, [script], {
+  const proc = spawn(usePackagedBackend ? packagedBackend : python, usePackagedBackend ? [] : [script], {
     cwd: ROOT,
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' },
+    env: {
+      ...process.env,
+      ...runtimeEnv,
+      LUNA_ENV_FILE: ENV_FILE,
+      LUNA_DATA_DIR: DATA_DIR,
+      PYTHONUNBUFFERED: '1',
+      PYTHONIOENCODING: 'utf-8',
+    },
     windowsHide: true,
   })
 
-  proc.stdout.on('data', d => process.stdout.write('[api] ' + d))
-  proc.stderr.on('data', d => process.stderr.write('[api] ' + d))
+  proc.stdout.on('data', d => {
+    const text = String(d)
+    backendLogLine(text.trimEnd())
+    process.stdout.write('[api] ' + text)
+  })
+  proc.stderr.on('data', d => {
+    const text = String(d)
+    backendLogLine(text.trimEnd())
+    process.stderr.write('[api] ' + text)
+  })
 
   proc.on('exit', (code, signal) => {
     if (isQuitting) return
     const delay = RESTART_DELAY[Math.min(_backendRestarts, RESTART_DELAY.length - 1)]
     _backendRestarts++
     if (_backendRestarts > MAX_RESTARTS) {
-      console.error(`[Luna] Backend crashed ${_backendRestarts} times — giving up`)
+      logLine(`[Luna] Backend crashed ${_backendRestarts} times - giving up`)
       return
     }
-    console.warn(`[Luna] Backend exited (code=${code} signal=${signal}) — restarting in ${delay}ms (attempt ${_backendRestarts}/${MAX_RESTARTS})`)
+    logLine(`[Luna] Backend exited (code=${code} signal=${signal}) - restarting in ${delay}ms (attempt ${_backendRestarts}/${MAX_RESTARTS})`)
     setTimeout(() => {
       backendProcess = spawnBackend()
     }, delay)
@@ -177,7 +225,7 @@ function startHealthMonitor() {
     if (isQuitting || !backendProcess) return
     const ok = await healthCheck()
     if (!ok) {
-      console.warn('[Luna] Health check failed — backend may be unresponsive')
+      logLine('[Luna] Health check failed - backend may be unresponsive')
       // The exit handler on spawnBackend will auto-restart on crash.
       // If the process is hung (not exited), nudge it.
       if (backendProcess && !backendProcess.killed) {
@@ -192,6 +240,26 @@ function startHealthMonitor() {
 }
 
 // ── Window ─────────────────────────────────────────────────────────────────────
+function loadBackendErrorWindow(reason = 'Backend did not start') {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  const logPath = path.join(LOG_DIR, 'backend.log')
+  const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+    *{box-sizing:border-box} body{margin:0;background:#09090f;color:#eef2ff;font-family:Segoe UI,Arial,sans-serif}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}
+    .panel{width:min(680px,100%);border:1px solid #303049;background:#12121c;border-radius:10px;padding:28px}
+    h1{font-size:22px;margin:0 0 10px} p{color:#a1a1aa;line-height:1.5}
+    code{display:block;background:#09090f;border:1px solid #27273a;border-radius:8px;padding:12px;color:#c4b5fd;word-break:break-all}
+  </style></head><body><div class="wrap"><div class="panel">
+    <h1>Luna could not start the local backend</h1>
+    <p>${reason}</p>
+    <p>Check the backend log here:</p>
+    <code>${logPath}</code>
+    <p>For this installer build, Python and Luna's backend Python dependencies must be installed on this PC.</p>
+  </div></div></body></html>`
+  mainWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+  if (!startHidden) mainWindow.show()
+}
+
 async function createWindow() {
   const iconPath = path.join(__dirname, 'assets', 'icon.png')
 
@@ -214,14 +282,24 @@ async function createWindow() {
     },
   })
 
+  mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    logLine(`[renderer:${level}] ${message} (${sourceId}:${line})`)
+  })
+  mainWindow.webContents.on('did-fail-load', (_event, code, description, url) => {
+    logLine(`[renderer] did-fail-load ${code} ${description} ${url}`)
+  })
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    logLine(`[renderer] process gone ${JSON.stringify(details)}`)
+  })
+
   mainWindow.on('maximize',   () => mainWindow.webContents.send('window:maximized', true))
   mainWindow.on('unmaximize', () => mainWindow.webContents.send('window:maximized', false))
 
   console.log('[Luna] Waiting for backend...')
   const ready = await waitForBackend()
   if (!ready) {
-    console.error('[Luna] Backend failed to start within 30s')
-    app.quit()
+    logLine('[Luna] Backend failed to start within 30s')
+    loadBackendErrorWindow('The local API did not become ready within 30 seconds.')
     return
   }
   console.log('[Luna] Backend ready.')
@@ -256,6 +334,8 @@ function createTray() {
   tray.setToolTip('Luna')
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Open Luna',  click: () => { mainWindow?.show(); mainWindow?.focus() } },
+    { label: 'Settings',   click: () => openSettingsWindow({ BrowserWindow, ipcMain, app, root: ROOT, isDev, parent: mainWindow, mode: 'settings' }) },
+    { label: 'Check for Updates', click: () => checkForUpdates() },
     { type: 'separator' },
     { label: 'Quit Luna',  click: () => { isQuitting = true; app.quit() } },
   ]))
@@ -270,6 +350,49 @@ function showMainWindow() {
 }
 
 // ── IPC ────────────────────────────────────────────────────────────────────────
+function setupAutoUpdater() {
+  if (isDev || !autoUpdater) return
+  autoUpdater.autoDownload = true
+  autoUpdater.on('checking-for-update', () => logLine('[update] checking for update'))
+  autoUpdater.on('update-available', info => {
+    logLine(`[update] available ${info?.version || ''}`)
+    mainWindow?.webContents.send('update:status', { status: 'available', version: info?.version || '' })
+  })
+  autoUpdater.on('update-not-available', () => {
+    logLine('[update] not available')
+    mainWindow?.webContents.send('update:status', { status: 'not-available' })
+  })
+  autoUpdater.on('error', error => {
+    logLine(`[update] error ${error?.message || error}`)
+    mainWindow?.webContents.send('update:status', { status: 'error', message: String(error?.message || error) })
+  })
+  autoUpdater.on('update-downloaded', info => {
+    logLine(`[update] downloaded ${info?.version || ''}`)
+    mainWindow?.webContents.send('update:status', { status: 'downloaded', version: info?.version || '' })
+    if (Notification.isSupported()) {
+      new Notification({
+        title: 'Luna update ready',
+        body: 'Restart Luna to install the update.',
+      }).show()
+    }
+  })
+}
+
+function checkForUpdates() {
+  if (isDev || !autoUpdater) {
+    return Promise.resolve({ ok: false, reason: 'updates unavailable in development' })
+  }
+  return autoUpdater.checkForUpdatesAndNotify()
+    .then(() => ({ ok: true }))
+    .catch(error => ({ ok: false, error: String(error?.message || error) }))
+}
+
+function installDownloadedUpdate() {
+  if (!autoUpdater) return
+  isQuitting = true
+  autoUpdater.quitAndInstall(false, true)
+}
+
 function registerIPC() {
   ipcMain.handle('window:minimize',     () => mainWindow?.minimize())
   ipcMain.handle('window:maximize',     () => {
@@ -286,6 +409,11 @@ function registerIPC() {
   ipcMain.handle('app:quit',            () => { isQuitting = true; app.quit() })
   ipcMain.handle('window:is-maximized', () => mainWindow?.isMaximized() ?? false)
   ipcMain.handle('clipboard:write', (_, text) => { clipboard.writeText(String(text)) })
+  ipcMain.handle('settings:open', () => {
+    openSettingsWindow({ BrowserWindow, ipcMain, app, root: ROOT, isDev, parent: mainWindow, mode: 'settings' })
+  })
+  ipcMain.handle('update:check', () => checkForUpdates())
+  ipcMain.handle('update:install', () => installDownloadedUpdate())
 
   ipcMain.handle('away:enter', () => {
     if (!mainWindow || mainWindow.isDestroyed()) return
@@ -420,10 +548,20 @@ app.whenReady().then(async () => {
     })
   }
   registerIPC()
+  setupAutoUpdater()
+  if (needsFirstRunConfig(ENV_FILE)) {
+    const setupWin = openSettingsWindow({ BrowserWindow, ipcMain, app, root: ROOT, isDev, mode: 'first-run' })
+    await waitForSettingsClosed(setupWin)
+    if (needsFirstRunConfig(ENV_FILE)) {
+      app.quit()
+      return
+    }
+  }
   await startBackend()
   createWindow()
   createTray()
   globalShortcut.register('Control+Alt+L', showMainWindow)
+  if (!isDev) setTimeout(() => checkForUpdates(), 15_000)
 })
 
 app.on('activate', () => { mainWindow?.show(); mainWindow?.focus() })

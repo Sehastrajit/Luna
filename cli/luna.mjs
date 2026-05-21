@@ -412,6 +412,71 @@ ${c.reset}  Large Unified Nexus Mind AI
   console.log(`  ${c.dim}${baseUrl}${c.reset}`)
   console.log(`  ${c.dim}Type /exit or press Ctrl+C to quit. Type /new for a new conversation.${c.reset}\n`)
 
+  // ── Start a local backend unless an existing one could not be stopped ───────
+  let _backendProc = null
+  let _usingExistingBackend = false
+  const isBackendUp = async () => {
+    try {
+      const r = await fetch(`${baseUrl}/api/system/health`, { signal: AbortSignal.timeout(1500) })
+      return r.ok
+    } catch { return false }
+  }
+
+  // Kill any running backend on this port so we always load the latest code
+  if (await isBackendUp()) {
+    try {
+      await fetch(`${baseUrl}/api/system/shutdown`, { method: 'POST', signal: AbortSignal.timeout(1000) })
+    } catch {}
+    // Give it a moment to die, then force-kill via port if still up
+    await new Promise(r => setTimeout(r, 800))
+    if (await isBackendUp()) {
+      if (isWin) {
+        spawnSync('cmd', ['/c', `for /f "tokens=5" %a in ('netstat -ano ^| findstr :${port} ^| findstr LISTENING') do taskkill /F /PID %a`], { shell: false })
+      } else {
+        spawnSync('sh', ['-c', `lsof -ti:${port} | xargs kill -9 2>/dev/null`], { shell: false })
+      }
+      await new Promise(r => setTimeout(r, 400))
+    }
+    if (await isBackendUp()) {
+      warn(`A Luna backend is already running on ${baseUrl}; using it instead of starting another one.`)
+      warn('If this is Docker and you need desktop controls, run `npm run docker:down` first, then `luna chat`.')
+      _usingExistingBackend = true
+    }
+  }
+
+  if (!_usingExistingBackend) {
+    info('Starting backend...')
+    const py = isWin ? 'python' : 'python3'
+    _backendProc = spawn(py, ['backend/server.py'], {
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+      detached: false,
+    })
+    _backendProc.on('error', e => { err(`Backend failed to start: ${e.message}`); process.exit(1) })
+    // Wait up to 20 s for the backend to be ready
+    let attempts = 0
+    while (attempts < 40) {
+      await new Promise(r => setTimeout(r, 500))
+      if (await isBackendUp()) break
+      attempts++
+      if (attempts % 6 === 0) process.stdout.write('.')
+    }
+    process.stdout.write('\n')
+    if (!(await isBackendUp())) {
+      err('Backend did not start in time. Run `luna backend` to see error output.')
+      process.exit(1)
+    }
+    ok('Backend ready')
+
+    // Kill backend when chat exits
+    const cleanup = () => { try { _backendProc.kill() } catch {} }
+    process.on('exit', cleanup)
+    process.on('SIGINT', () => { cleanup(); process.exit(0) })
+    process.on('SIGTERM', () => { cleanup(); process.exit(0) })
+  }
+
   async function sendMessage(message) {
     const body = { message }
     if (conversationId) body.conversation_id = conversationId
@@ -490,7 +555,7 @@ ${c.reset}  Large Unified Nexus Mind AI
       stopWaiting()
       output.write('\n')
       err(`Not reachable: ${e.message}`)
-      info('Start Luna first: npm run docker')
+      info('Restart with: luna chat')
       return
     } finally {
       if (waiting) {
@@ -505,7 +570,10 @@ ${c.reset}  Large Unified Nexus Mind AI
 
   if (firstMessage) {
     await sendMessage(firstMessage)
-    return
+    if (_backendProc) {
+      try { _backendProc.kill() } catch {}
+    }
+    process.exit(0)
   }
 
   const rl = createInterface({ input, output })

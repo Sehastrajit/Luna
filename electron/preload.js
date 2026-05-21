@@ -40,6 +40,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Clipboard (navigator.clipboard fails silently in Electron without focus)
   copyText: text => ipcRenderer.invoke('clipboard:write', text),
+  openSettings: () => ipcRenderer.invoke('settings:open'),
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  onUpdateStatus: cb => {
+    const handler = (_, status) => cb(status)
+    ipcRenderer.on('update:status', handler)
+    return () => ipcRenderer.removeListener('update:status', handler)
+  },
 
   // Away mode — fullscreen on all displays
   awayEnter: () => ipcRenderer.invoke('away:enter'),
