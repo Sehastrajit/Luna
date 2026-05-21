@@ -603,7 +603,7 @@ Body: file=<wav blob>`}</code></pre>
         </CodeFile>
 
         <h3>LLM providers — <code>GET /api/admin/llm/providers</code></h3>
-        <p>Returns all 7 configured providers and which is currently active.</p>
+        <p>Returns all 8 configured providers and which is currently active.</p>
       </section>
 
       <section>

@@ -46,7 +46,7 @@ def _get_session(channel: str, user_id: str) -> ChannelSession:
 # ── command stripping ─────────────────────────────────────────────────────────
 
 _UI_CMD_RE = re.compile(
-    r"\[(?:LAUNCH|TASK|EVENT|SPOTIFY|BROWSE|MAP|WIDGET|WEB_SEARCH|WEB_FETCH|AWAY):[^\]]*\]",
+    r"\[(?:LAUNCH|TASK|EVENT|SPOTIFY|BROWSE|MAP|WIDGET|WEB_SEARCH|WEB_RESEARCH|WEB_FETCH|AWAY):[^\]]*\]",
     re.IGNORECASE,
 )
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)

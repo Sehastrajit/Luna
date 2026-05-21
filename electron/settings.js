@@ -20,6 +20,9 @@ const PUBLIC_KEYS = [
   'openai_api_key',
   'openai_model',
   'openai_embed_model',
+  'nvidia_nim_base_url',
+  'nvidia_nim_api_key',
+  'nvidia_nim_model',
   'embedding_provider',
   'anthropic_api_key',
   'anthropic_model',
@@ -93,7 +96,7 @@ function serializeEnv(config) {
     'debug=false',
     `luna_variant=${variant}`,
     '',
-    '# LLM provider: ollama, openai-compatible, anthropic, google, groq, cohere, mistral',
+    '# LLM provider: ollama, openai-compatible, nvidia-nim, anthropic, google, groq, cohere, mistral',
     `llm_provider=${config.llm_provider || 'ollama'}`,
     `embedding_provider=${config.embedding_provider || 'ollama'}`,
     '',
@@ -107,6 +110,9 @@ function serializeEnv(config) {
     `openai_api_key=${config.openai_api_key || ''}`,
     `openai_model=${config.openai_model || 'gpt-4o-mini'}`,
     `openai_embed_model=${config.openai_embed_model || 'text-embedding-3-small'}`,
+    `nvidia_nim_base_url=${config.nvidia_nim_base_url || 'https://integrate.api.nvidia.com/v1'}`,
+    `nvidia_nim_api_key=${config.nvidia_nim_api_key || ''}`,
+    `nvidia_nim_model=${config.nvidia_nim_model || 'meta/llama-3.1-8b-instruct'}`,
     '',
     '# Native cloud providers',
     `anthropic_api_key=${config.anthropic_api_key || ''}`,
@@ -244,6 +250,7 @@ function html(mode) {
         <div class="field"><label>Model provider</label><select id="llm_provider">
           <option value="ollama">Ollama local</option>
           <option value="openai-compatible">OpenAI-compatible</option>
+          <option value="nvidia-nim">NVIDIA NIM</option>
           <option value="anthropic">Anthropic</option>
           <option value="google">Google Gemini</option>
           <option value="groq">Groq</option>
@@ -267,6 +274,9 @@ function html(mode) {
         <div class="field provider-field" data-provider="openai-compatible"><label>API key</label><input id="openai_api_key" type="password"></div>
         <div class="field provider-field" data-provider="openai-compatible"><label>Model</label><input id="openai_model" placeholder="gpt-4o-mini"></div>
         <div class="field settings-only"><label>OpenAI embed model</label><input id="openai_embed_model" placeholder="text-embedding-3-small"></div>
+        <div class="field provider-field" data-provider="nvidia-nim"><label>NVIDIA NIM base URL</label><input id="nvidia_nim_base_url" placeholder="https://integrate.api.nvidia.com/v1"></div>
+        <div class="field provider-field" data-provider="nvidia-nim"><label>NVIDIA NIM API key</label><input id="nvidia_nim_api_key" type="password"></div>
+        <div class="field provider-field" data-provider="nvidia-nim"><label>NVIDIA NIM model</label><input id="nvidia_nim_model" placeholder="meta/llama-3.1-8b-instruct"></div>
         <div class="field provider-field" data-provider="anthropic"><label>Anthropic key</label><input id="anthropic_api_key" type="password"></div>
         <div class="field provider-field" data-provider="anthropic"><label>Anthropic model</label><input id="anthropic_model" placeholder="claude-sonnet-4-5"></div>
         <div class="field provider-field" data-provider="google"><label>Google key</label><input id="google_api_key" type="password"></div>
@@ -334,6 +344,7 @@ function html(mode) {
     const providerKeys = {
       'ollama': ['ollama_base_url', 'ollama_model', 'embedding_provider', 'ollama_embed_model'],
       'openai-compatible': ['openai_base_url', 'openai_api_key', 'openai_model', 'embedding_provider', 'openai_embed_model'],
+      'nvidia-nim': ['nvidia_nim_base_url', 'nvidia_nim_api_key', 'nvidia_nim_model', 'embedding_provider'],
       'anthropic': ['anthropic_api_key', 'anthropic_model'],
       'google': ['google_api_key', 'google_model'],
       'groq': ['groq_api_key', 'groq_model'],

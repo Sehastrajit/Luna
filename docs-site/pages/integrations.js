@@ -94,7 +94,7 @@ export default function Integrations() {
       <section>
         <h2 id="llm">LLM Providers</h2>
         <p>
-          Luna supports 7 providers natively. Switch by changing <code>llm_provider</code> in{' '}
+          Luna supports 8 providers natively. Switch by changing <code>llm_provider</code> in{' '}
           <code>.env</code> — no code changes, no restart of anything else.
         </p>
 
@@ -168,6 +168,13 @@ export default function Integrations() {
         />
         <Card
           icon="🤖"
+          title="NVIDIA NIM"
+          subtitle="NVIDIA-hosted or self-hosted NIM endpoints using the OpenAI-compatible chat completions API."
+          badges={[{ label: 'Cloud', color: 'blue' }, { label: 'OpenAI-compatible', color: 'green' }]}
+          note="llm_provider=nvidia-nim / nvidia_nim_base_url=https://integrate.api.nvidia.com/v1"
+        />
+        <Card
+          icon="ðŸ¤–"
           title="OpenAI"
           subtitle="GPT-4o, GPT-4o mini, o1, and future models via the official OpenAI API."
           badges={[{ label: 'Cloud', color: 'blue' }]}
@@ -672,7 +679,7 @@ host=0.0.0.0`}</code></pre>
       </section>
 
       <NextSteps items={[
-        { href: '/environment', label: 'Config',    title: 'Environment',    desc: 'Every .env key for all 7 LLM providers, channels, auth, and rate limiting.' },
+        { href: '/environment', label: 'Config',    title: 'Environment',    desc: 'Every .env key for all 8 LLM providers, channels, auth, and rate limiting.' },
         { href: '/voice',       label: 'Voice',     title: 'Voice',          desc: 'STT/TTS model details, wake word config, and tradeoff table.' },
         { href: '/agent',       label: 'Agent',     title: 'Agent & Skills', desc: 'Permission system, tool registry, and custom skills.' },
       ]} />

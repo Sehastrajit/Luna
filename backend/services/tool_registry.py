@@ -36,11 +36,16 @@ TOOL_REGISTRY: dict[str, ToolDef] = {
     "click_at": ToolDef("click_at", "Click at screen coordinates", RiskLevel.RISKY, ["x", "y"], "Click at position ({x}, {y})?"),
     "type_text": ToolDef("type_text", "Type text into the focused window", RiskLevel.RISKY, ["text"], 'Type "{text}" into the current window?'),
     "web_search": ToolDef("web_search", "Search the web via DuckDuckGo and return results", RiskLevel.SAFE, ["query"]),
+    "web_research": ToolDef("web_research", "Search the web, fetch top readable sources, and return cited research context", RiskLevel.SAFE, ["query"]),
+    "dataset_search": ToolDef("dataset_search", "Search dataset portals and primary data publishers such as Kaggle, UCI, Hugging Face, data.gov, NOAA/NCEI, and World Bank", RiskLevel.SAFE, ["query"]),
     "web_fetch": ToolDef("web_fetch", "Fetch a URL and return readable text content", RiskLevel.SAFE, ["url"]),
+    "web_download_file": ToolDef("web_download_file", "Download any HTTP(S) file into Luna's workspace with source metadata", RiskLevel.RISKY, ["url", "path"], "Download {url} to workspace file {path}?"),
     "browser_open": ToolDef("browser_open", "Open a URL in the browser through Luna's browser layer", RiskLevel.SAFE, ["url"]),
     "browser_read": ToolDef("browser_read", "Read a public webpage into clean text", RiskLevel.SAFE, ["url"]),
     "workspace_read": ToolDef("workspace_read", "Read a file from Luna's controlled workspace", RiskLevel.SAFE, ["path"]),
     "workspace_write": ToolDef("workspace_write", "Write a file inside Luna's controlled workspace", RiskLevel.RISKY, ["path", "content"], "Write {path} in Luna's workspace?"),
+    "workspace_read_base64": ToolDef("workspace_read_base64", "Read any binary file from Luna's controlled workspace as base64", RiskLevel.SAFE, ["path"]),
+    "workspace_write_base64": ToolDef("workspace_write_base64", "Write any binary file type inside Luna's controlled workspace from base64", RiskLevel.RISKY, ["path", "content_base64"], "Write binary file {path} in Luna's workspace?"),
     "list_skills": ToolDef("list_skills", "List installed Luna skills", RiskLevel.SAFE),
     "create_agent_task": ToolDef("create_agent_task", "Create a persistent multi-step agent task", RiskLevel.SAFE, ["description"]),
     # ── System controls ──────────────────────────────────────────────────────────
@@ -63,6 +68,9 @@ TOOL_REGISTRY: dict[str, ToolDef] = {
     "github_comment": ToolDef("github_comment", "Post a comment on a GitHub issue or pull request", RiskLevel.RISKY, ["repo", "number", "body"], "Post comment on {repo}#{number}?"),
     "github_list_prs": ToolDef("github_list_prs", "List open pull requests in a GitHub repository", RiskLevel.SAFE, ["repo"]),
     "github_get_pr": ToolDef("github_get_pr", "Get details about a specific pull request", RiskLevel.SAFE, ["repo", "number"]),
+    # Google Workspace / Microsoft 365
+    "google_workspace": ToolDef("google_workspace", "Call Google Workspace services such as Gmail, Calendar, Drive, Docs, Sheets, Slides, Tasks, and People", RiskLevel.RISKY, ["service", "action", "args"], "Run Google Workspace action {service}.{action}?"),
+    "microsoft_workspace": ToolDef("microsoft_workspace", "Call Microsoft 365 services through Microsoft Graph such as Outlook, Calendar, OneDrive, Excel, To Do, and Teams", RiskLevel.RISKY, ["service", "action", "args"], "Run Microsoft 365 action {service}.{action}?"),
 }
 
 
@@ -83,10 +91,12 @@ def get_tools_for_prompt() -> str:
         lines.append(f"  {name}({params}) - {tool.description}")
     lines.append("")
     lines.append("For map, Spotify, launches, and simple URL opening use bracket tags when instructed; use tool_call JSON for agentic workflows.")
-    lines.append("Use tool_call JSON for: switch_audio, create_task, create_event, screen tools, click/type actions, web_search, web_fetch, browser_read, workspace files, skills, and agent tasks.")
+    lines.append("Use tool_call JSON for: switch_audio, create_task, create_event, screen tools, click/type actions, web_search, web_research, web_fetch, browser_read, workspace files, skills, and agent tasks.")
     lines.append("IMPORTANT: When switching audio devices, you MUST emit a tool_call JSON. Do NOT just say you are switching.")
-    lines.append("Web tools: use web_search for current information, recent news, prices, or anything that requires searching. Use web_fetch or browser_read to read a specific URL.")
-    lines.append("Agent tools: use create_agent_task for multi-step work, workspace_write/read for files inside Luna's workspace, and list_skills to discover installed local skills.")
+    lines.append("Web tools: web_search for quick lookup, web_research for source-backed research, dataset_search for dataset discovery, web_fetch/browser_read for specific pages, and web_download_file for workspace downloads.")
+    lines.append("Workspace file tools: workspace_write/read for text files and workspace_write_base64/read_base64 for binary files. Follow installed skills for workflow-specific rules.")
+    lines.append("Agent tools: use create_agent_task for multi-step work and list_skills to discover installed local skills.")
     lines.append("GitHub tools: use github_list_repos, github_list_issues(repo), github_create_issue(repo,title,body), github_comment(repo,number,body), github_list_prs(repo), github_get_pr(repo,number). Requires github_token in .env.")
+    lines.append("Workspace tools: use google_workspace(service,action,args) for Gmail/Calendar/Drive/Docs/Sheets/Slides/Tasks/People and microsoft_workspace(service,action,args) for Outlook/Calendar/OneDrive/Excel/To Do/Teams. Examples: service='gmail', action='search_messages'; service='calendar', action='create_event'; service='drive', action='search_files'. Sending mail, writing files, and updating sheets should be confirmed.")
     lines.append("System controls: get_volume/set_volume(level)/mute_audio/unmute_audio for audio; get_brightness/set_brightness(level) for display; lock_screen, turn_off_display, sleep_system; get_clipboard/set_clipboard(text); get_system_info.")
     return "\n".join(lines)

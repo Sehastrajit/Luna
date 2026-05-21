@@ -59,9 +59,16 @@ def get_skills_prompt() -> str:
     skills = list_skills()
     if not skills:
         return "No local skills are installed yet."
-    lines = ["Installed local skills:"]
+    lines = [
+        "Installed local skills:",
+        "When a user request matches a skill, follow that skill's workflow before using tools.",
+    ]
     for skill in skills:
         perms = ", ".join(skill.get("permissions") or []) or "none"
         tools = ", ".join(skill.get("tools") or []) or "none"
         lines.append(f"- {skill['id']}: {skill['description']} (permissions: {perms}; tools: {tools})")
+        body = (skill.get("body") or "").strip()
+        if body:
+            excerpt = body[:1200].strip()
+            lines.append(f"  Instructions:\n{excerpt}")
     return "\n".join(lines)

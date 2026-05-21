@@ -29,14 +29,16 @@ class RegistryToolTests(unittest.TestCase):
             "switch_audio",
             "create_task", "create_event",
             "take_screenshot", "find_text_on_screen", "get_active_window", "click_at", "type_text",
-            "browse_url", "web_search", "web_fetch", "browser_open", "browser_read",
-            "workspace_read", "workspace_write",
+            "browse_url", "web_search", "web_research", "dataset_search", "web_fetch", "web_download_file",
+            "browser_open", "browser_read",
+            "workspace_read", "workspace_write", "workspace_read_base64", "workspace_write_base64",
             "list_skills", "create_agent_task",
             "get_volume", "set_volume", "mute_audio", "unmute_audio",
             "get_brightness", "set_brightness", "lock_screen", "turn_off_display", "sleep_system",
             "get_clipboard", "set_clipboard", "get_system_info",
             "github_list_repos", "github_list_issues", "github_create_issue", "github_comment",
             "github_list_prs", "github_get_pr",
+            "google_workspace", "microsoft_workspace",
         }
         self.assertEqual(set(TOOL_REGISTRY) - covered, set())
 

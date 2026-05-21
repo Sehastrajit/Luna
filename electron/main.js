@@ -22,6 +22,10 @@ try {
 
 const isDev = !app.isPackaged
 const ROOT  = isDev ? path.join(__dirname, '..') : process.resourcesPath
+const isE2ESmoke = process.argv.includes('--e2e-smoke')
+if (isE2ESmoke) {
+  app.setPath('userData', path.join(ROOT, 'data', 'electron-e2e-user-data'))
+}
 const USER_DATA = app.getPath('userData')
 const startHidden = process.argv.includes('--hidden')
 
@@ -313,6 +317,14 @@ async function createWindow() {
 
   if (!startHidden) {
     mainWindow.show()
+  }
+
+  if (isE2ESmoke) {
+    logLine('[Luna] E2E smoke startup complete')
+    setTimeout(() => {
+      isQuitting = true
+      app.quit()
+    }, 1000)
   }
 
   mainWindow.on('close', e => {

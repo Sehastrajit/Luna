@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # ── LLM — provider selection ──────────────────────────────────────────────
-    # Values: ollama | openai-compatible | anthropic | google | groq | cohere | mistral
+    # Values: ollama | openai-compatible | nvidia-nim | anthropic | google | groq | cohere | mistral
     llm_provider: str = "ollama"
 
     # Ollama (local, default)
@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     openai_embed_model: str = "text-embedding-3-small"
+
+    # NVIDIA NIM (OpenAI-compatible /v1/chat/completions)
+    nvidia_nim_base_url: str = "https://integrate.api.nvidia.com/v1"
+    nvidia_nim_api_key: str = ""
+    nvidia_nim_model: str = "meta/llama-3.1-8b-instruct"
 
     # Anthropic Claude (native)
     anthropic_api_key: str = ""
@@ -97,6 +102,17 @@ class Settings(BaseSettings):
     github_default_repo: str = ""           # e.g. "owner/repo" — default for tool calls
     github_notify_slack_channel: str = ""   # Slack channel ID for event notifications
     github_notify_telegram_chat_id: str = "" # Telegram chat ID for event notifications
+
+    # Google Workspace / Microsoft 365 (OAuth access tokens; opt-in)
+    google_workspace_client_id: str = ""
+    google_workspace_client_secret: str = ""
+    google_workspace_refresh_token: str = ""
+    google_workspace_access_token: str = ""
+    microsoft_workspace_client_id: str = ""
+    microsoft_workspace_client_secret: str = ""
+    microsoft_workspace_tenant_id: str = "common"
+    microsoft_workspace_refresh_token: str = ""
+    microsoft_workspace_access_token: str = ""
 
     # ── Spotify (personal variant — opt-in) ──────────────────────────────────
     spotify_client_id: str = ""

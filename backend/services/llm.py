@@ -2,6 +2,7 @@
 Unified LLM client — supports:
   ollama            Local Ollama (default)
   openai-compatible OpenAI, OpenRouter, Groq, LM Studio, Jan.ai, llama.cpp, etc.
+  nvidia-nim        NVIDIA NIM / NVIDIA API Catalog (OpenAI-compatible)
   anthropic         Anthropic Claude (native Messages API)
   google            Google Gemini (native REST API)
   groq              Groq cloud inference (native, fastest)
@@ -400,6 +401,7 @@ class LLMClient:
         mapping = {
             "ollama": settings.ollama_model,
             "openai-compatible": settings.openai_model,
+            "nvidia-nim": settings.nvidia_nim_model,
             "anthropic": settings.anthropic_model,
             "google": settings.google_model,
             "groq": settings.groq_model,
@@ -419,6 +421,8 @@ class LLMClient:
                 return False
         if p == "openai-compatible":
             return bool(settings.openai_api_key and settings.openai_base_url and settings.openai_model)
+        if p == "nvidia-nim":
+            return bool(settings.nvidia_nim_base_url and settings.nvidia_nim_model and settings.nvidia_nim_api_key)
         if p == "anthropic":
             return bool(settings.anthropic_api_key)
         if p == "google":
@@ -431,7 +435,7 @@ class LLMClient:
             return bool(settings.mistral_api_key)
         return False
 
-    async def stream_chat(
+    def stream_chat(
         self,
         messages: list[dict],
         system_prompt: str,
@@ -452,6 +456,14 @@ class LLMClient:
                 base_url=settings.openai_base_url,
                 api_key=settings.openai_api_key,
                 model=settings.openai_model,
+                temperature=temperature,
+            )
+        if p == "nvidia-nim":
+            return _stream_openai_compatible(
+                messages, system_prompt,
+                base_url=settings.nvidia_nim_base_url,
+                api_key=settings.nvidia_nim_api_key,
+                model=settings.nvidia_nim_model,
                 temperature=temperature,
             )
         if p == "anthropic":
@@ -475,6 +487,11 @@ class LLMClient:
             return await _complete_openai(
                 prompt, system, temperature,
                 settings.openai_base_url, settings.openai_api_key, settings.openai_model,
+            )
+        if p == "nvidia-nim":
+            return await _complete_openai(
+                prompt, system, temperature,
+                settings.nvidia_nim_base_url, settings.nvidia_nim_api_key, settings.nvidia_nim_model,
             )
         if p == "anthropic":
             return await _complete_anthropic(prompt, system, temperature)

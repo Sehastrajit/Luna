@@ -83,7 +83,7 @@ function detectMode(env) {
 
   if (variant === 'business') return 'business';
 
-  const cloudProviders = ['anthropic', 'google', 'groq', 'cohere', 'mistral', 'openai-compatible'];
+  const cloudProviders = ['anthropic', 'google', 'groq', 'cohere', 'mistral', 'openai-compatible', 'nvidia-nim'];
   if (cloudProviders.includes(provider)) return 'cloud';
 
   // Auto-detect GPU

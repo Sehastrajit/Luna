@@ -204,6 +204,11 @@ def list_providers(request: Request):
                 "model": settings.openai_model,
                 "base_url": settings.openai_base_url,
             },
+            "nvidia-nim": {
+                "configured": bool(settings.nvidia_nim_api_key and settings.nvidia_nim_base_url),
+                "model": settings.nvidia_nim_model,
+                "base_url": settings.nvidia_nim_base_url,
+            },
             "anthropic": {
                 "configured": bool(settings.anthropic_api_key),
                 "model": settings.anthropic_model,

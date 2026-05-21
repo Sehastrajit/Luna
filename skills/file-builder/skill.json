@@ -1,0 +1,7 @@
+{
+  "id": "file-builder",
+  "name": "File Builder",
+  "description": "Create structured files such as CSV, JSON, Markdown, HTML, configs, and binary files in the workspace.",
+  "permissions": ["workspace"],
+  "tools": ["workspace_write", "workspace_read", "workspace_write_base64", "workspace_read_base64"]
+}

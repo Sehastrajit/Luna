@@ -1,0 +1,7 @@
+{
+  "id": "workspace-suite",
+  "name": "Workspace Suite",
+  "description": "Use Google Workspace and Microsoft 365 tools for mail, calendars, files, docs, sheets, and Teams.",
+  "permissions": ["google-workspace", "microsoft-365", "confirm-risky-actions"],
+  "tools": ["google_workspace", "microsoft_workspace"]
+}

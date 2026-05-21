@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
   <img src="docs-site/public/images/logo.svg" width="88" height="88" alt="L.U.N.A." />
   <h1>L.U.N.A.</h1>
   <p><strong>Large Unified Nexus Mind AI</strong></p>
@@ -44,7 +44,7 @@
 
 ---
 
-L.U.N.A. is an open-source AI platform that ships as two variants: a **Personal** local-first companion (voice, vision, Spotify, desktop automation) and a **Business** team assistant (multi-user JWT auth, rate limiting, Telegram/Discord/Slack channels). Both support 7 LLM providers — Ollama, Anthropic, Google, Groq, Cohere, Mistral, and any OpenAI-compatible endpoint.
+L.U.N.A. is an open-source AI platform that ships as two variants: a **Personal** local-first companion (voice, vision, Spotify, desktop automation) and a **Business** team assistant (multi-user JWT auth, rate limiting, Telegram/Discord/Slack channels). Both support 8 LLM providers: Ollama, NVIDIA NIM, Anthropic, Google, Groq, Cohere, Mistral, and any OpenAI-compatible endpoint.
 
 ---
 
@@ -52,7 +52,7 @@ L.U.N.A. is an open-source AI platform that ships as two variants: a **Personal*
 
 - [Variants](#variants)
 - [Features](#features)
-- [Install — one line](#install--one-line)
+- [Install â€” one line](#install--one-line)
 - [Docker](#docker)
 - [Any Model](#any-model)
 - [Quick Start (desktop)](#quick-start-desktop)
@@ -77,17 +77,17 @@ L.U.N.A. is an open-source AI platform that ships as two variants: a **Personal*
 | **Tone** | Casual companion | Professional |
 | **Auth** | None required | Multi-user JWT |
 | **Rate limiting** | Off | Sliding-window, configurable |
-| **Messaging channels** | — | Telegram, Discord, Slack, Webhook |
-| **Voice / vision** | ✓ | — |
-| **Spotify / app launcher** | ✓ | — |
-| **Calendar & web search** | ✓ | ✓ |
+| **Messaging channels** | â€” | Telegram, Discord, Slack, Webhook |
+| **Voice / vision** | âœ“ | â€” |
+| **Spotify / app launcher** | âœ“ | â€” |
+| **Calendar & web search** | âœ“ | âœ“ |
 | **Docker** | `luna docker` | `luna docker:business` |
 
 Switch at any time by changing `luna_variant=personal` or `luna_variant=business` in `.env` and restarting. No data is lost.
 
 ---
 
-## Install — one line
+## Install â€” one line
 
 ```bash
 git clone https://github.com/Sehastrajit/Luna.git
@@ -114,13 +114,13 @@ The CLI auto-detects the right compose file from your `.env`:
 | `luna docker:cloud` | Cloud LLM (no Ollama) | `compose.cloud.yml` |
 
 ```bash
-# Personal — Ollama CPU (default)
+# Personal â€” Ollama CPU (default)
 luna docker
 
-# Personal — NVIDIA GPU
+# Personal â€” NVIDIA GPU
 luna docker:gpu
 
-# Personal — cloud LLM (set llm_provider in .env first)
+# Personal â€” cloud LLM (set llm_provider in .env first)
 luna docker:cloud
 
 # Business variant
@@ -139,11 +139,12 @@ git pull && luna docker
 
 ## Any Model
 
-Luna supports 7 providers natively. Change `llm_provider` in `.env` — no code changes, no restart of anything else.
+Luna supports 8 providers natively. Change `llm_provider` in `.env` â€” no code changes, no restart of anything else.
 
 | Provider | `llm_provider` | Key needed |
 |---|---|---|
 | **Ollama** (local, default) | `ollama` | None |
+| **NVIDIA NIM** | `nvidia-nim` | `nvidia_nim_api_key` |
 | **Anthropic Claude** | `anthropic` | `anthropic_api_key` |
 | **Google Gemini** | `google` | `google_api_key` |
 | **Groq** | `groq` | `groq_api_key` |
@@ -151,7 +152,7 @@ Luna supports 7 providers natively. Change `llm_provider` in `.env` — no code 
 | **Mistral AI** | `mistral` | `mistral_api_key` |
 | **OpenAI / OpenRouter / LM Studio / llama.cpp** | `openai-compatible` | `openai_api_key` (optional for local) |
 
-**OpenRouter** is the easiest cloud path — one key, every major model, pay-as-you-go:
+**OpenRouter** is the easiest cloud path â€” one key, every major model, pay-as-you-go:
 
 ```env
 llm_provider=openai-compatible
@@ -160,24 +161,33 @@ openai_api_key=sk-or-...
 openai_model=anthropic/claude-opus-4
 ```
 
+**NVIDIA NIM** uses NVIDIA's OpenAI-compatible `/v1/chat/completions` endpoint:
+
+```env
+llm_provider=nvidia-nim
+nvidia_nim_base_url=https://integrate.api.nvidia.com/v1
+nvidia_nim_api_key=nvapi-...
+nvidia_nim_model=meta/llama-3.1-8b-instruct
+```
+
 ---
 
 ## Features
 
 | Capability | Personal | Business |
 |---|---|---|
-| 🎙 **Voice** — wake-word, push-to-talk, faster-whisper STT, edge-tts / pyttsx3 TTS | ✓ | — |
-| 🧠 **Memory** — persistent facts, personality state, conversation summaries (SQLite + ChromaDB) | ✓ | ✓ |
-| 👁 **Vision** — screen and camera awareness without storing raw frames | ✓ | — |
-| ⚡ **Automation** — app launcher, Spotify control, audio device switcher | ✓ | — |
-| 📅 **Calendar & Tasks** — create, list, update tasks with proactive reminders | ✓ | ✓ |
-| 📊 **Dashboard** — live news, weather, markets, and maps widget layer | ✓ | ✓ |
-| 🌐 **Web Tools** — DuckDuckGo search and page fetch | ✓ | ✓ |
-| 🧩 **Dynamic Widgets** — steps, timelines, code blocks, 3D scenes (Three.js) | ✓ | ✓ |
-| ✈️ **Messaging Channels** — Telegram, Discord, Slack, generic webhook | — | ✓ |
-| 🔐 **JWT Auth** — multi-user tokens, admin user management API | — | ✓ |
-| 🚦 **Rate Limiting** — sliding-window per-IP, configurable burst | — | ✓ |
-| 🔒 **Private** — inference runs locally via Ollama by default, zero telemetry | ✓ | ✓ |
+| ðŸŽ™ **Voice** â€” wake-word, push-to-talk, faster-whisper STT, edge-tts / pyttsx3 TTS | âœ“ | â€” |
+| ðŸ§  **Memory** â€” persistent facts, personality state, conversation summaries (SQLite + ChromaDB) | âœ“ | âœ“ |
+| ðŸ‘ **Vision** â€” screen and camera awareness without storing raw frames | âœ“ | â€” |
+| âš¡ **Automation** â€” app launcher, Spotify control, audio device switcher | âœ“ | â€” |
+| ðŸ“… **Calendar & Tasks** â€” create, list, update tasks with proactive reminders | âœ“ | âœ“ |
+| ðŸ“Š **Dashboard** â€” live news, weather, markets, and maps widget layer | âœ“ | âœ“ |
+| ðŸŒ **Web Tools** â€” DuckDuckGo search and page fetch | âœ“ | âœ“ |
+| ðŸ§© **Dynamic Widgets** â€” steps, timelines, code blocks, 3D scenes (Three.js) | âœ“ | âœ“ |
+| âœˆï¸ **Messaging Channels** â€” Telegram, Discord, Slack, generic webhook | â€” | âœ“ |
+| ðŸ” **JWT Auth** â€” multi-user tokens, admin user management API | â€” | âœ“ |
+| ðŸš¦ **Rate Limiting** â€” sliding-window per-IP, configurable burst | â€” | âœ“ |
+| ðŸ”’ **Private** â€” inference runs locally via Ollama by default, zero telemetry | âœ“ | âœ“ |
 
 ---
 
@@ -185,7 +195,7 @@ openai_model=anthropic/claude-opus-4
 
 **Prerequisites:** Node.js 18+, Python 3.10+, [Ollama](https://ollama.com/) installed and running.
 
-### 1 — Clone and run the setup wizard
+### 1 â€” Clone and run the setup wizard
 
 ```bash
 git clone https://github.com/Sehastrajit/Luna.git
@@ -196,7 +206,7 @@ npm run luna -- setup
 
 The wizard selects your variant, configures your LLM provider, installs all Node and Python dependencies, and pulls Ollama models. Takes about 2 minutes on a fast connection.
 
-### 2 — Start Luna
+### 2 â€” Start Luna
 
 ```bash
 luna dev         # Electron + Vite + FastAPI (full desktop)
@@ -208,7 +218,7 @@ luna backend     # FastAPI only (use any HTTP client)
 
 Open `http://localhost:5173` in your browser, or use the Electron window.
 
-> **Tip:** Run `luna doctor` if something doesn't start — it checks Node, Python, Ollama, and Docker in one shot.
+> **Tip:** Run `luna doctor` if something doesn't start â€” it checks Node, Python, Ollama, and Docker in one shot.
 
 ### Desktop installer
 
@@ -247,7 +257,7 @@ After Luna is running, start an interactive terminal chat:
 
 ```bash
 luna chat
-# or — one-shot
+# or â€” one-shot
 luna chat "what time is it?"
 ```
 
@@ -295,35 +305,35 @@ Inside chat, use `/new` to start a fresh conversation and `/exit` to quit.
 
 Luna has three layers:
 
-1. **Electron** — starts the desktop shell, launches the FastAPI backend, and hosts the React renderer.
-2. **React** — renders chat, voice controls, Luna dashboard, maps, dynamic widgets, and 3D scenes.
-3. **FastAPI** — owns chat streaming, voice, memory, vision, tool execution, live data, Spotify, scheduling, messaging channels, auth, rate limiting, and all LLM calls.
+1. **Electron** â€” starts the desktop shell, launches the FastAPI backend, and hosts the React renderer.
+2. **React** â€” renders chat, voice controls, Luna dashboard, maps, dynamic widgets, and 3D scenes.
+3. **FastAPI** â€” owns chat streaming, voice, memory, vision, tool execution, live data, Spotify, scheduling, messaging channels, auth, rate limiting, and all LLM calls.
 
 Chat is streamed over **Server-Sent Events**. A typical stream includes metadata, token chunks, command events, and a `done` event. Commands can open widgets, show maps, trigger Spotify controls, run web searches, generate 3D scenes, or execute desktop automation.
 
 ```
-User input (browser · Electron · Telegram · Discord · Slack · webhook)
-    │
-    ▼
+User input (browser Â· Electron Â· Telegram Â· Discord Â· Slack Â· webhook)
+    â”‚
+    â–¼
 Variant check (personal | business)
-    │
-    ▼
+    â”‚
+    â–¼
 Context assembly (memory + personality + calendar + vision + conversation)
-    │
-    ▼
-LLM inference  ←────── Ollama / Anthropic / Google / Groq / Cohere / Mistral / OpenAI-compatible
-    │
-    ▼
-Tool execution (web_search · web_fetch · Spotify · calendar · widgets · maps)
-    │
-    ▼
-Memory update  (fact extraction · personality update · conversation compaction)
-    │
-    ▼
+    â”‚
+    â–¼
+LLM inference  â†â”€â”€â”€â”€â”€â”€ Ollama / NVIDIA NIM / Anthropic / Google / Groq / Cohere / Mistral / OpenAI-compatible
+    â”‚
+    â–¼
+Tool execution (web_search Â· web_fetch Â· Spotify Â· calendar Â· widgets Â· maps)
+    â”‚
+    â–¼
+Memory update  (fact extraction Â· personality update Â· conversation compaction)
+    â”‚
+    â–¼
 Response streamed to UI  (or plain-text reply to channel)
 ```
 
-Full diagrams: [architecture.svg](architecture.svg) · [architecture_ai.svg](architecture_ai.svg)
+Full diagrams: [architecture.svg](architecture.svg) Â· [architecture_ai.svg](architecture_ai.svg)
 
 ---
 
@@ -337,23 +347,28 @@ luna_variant=personal          # personal | business
 
 # Identity
 user_name=friend
-# LLM — Ollama (default)
+# LLM â€” Ollama (default)
 llm_provider=ollama
 ollama_base_url=http://localhost:11434
 ollama_model=qwen2.5:7b
 
-# LLM — Anthropic Claude (recommended for business)
+# LLM â€” Anthropic Claude (recommended for business)
 # llm_provider=anthropic
 # anthropic_api_key=sk-ant-...
 # anthropic_model=claude-sonnet-4-5
 
-# LLM — any OpenAI-compatible (OpenRouter, OpenAI, LM Studio, ...)
+# LLM â€” any OpenAI-compatible (OpenRouter, OpenAI, LM Studio, ...)
 # llm_provider=openai-compatible
 # openai_base_url=https://openrouter.ai/api/v1
 # openai_api_key=sk-or-...
 # openai_model=anthropic/claude-opus-4
 
-# Business — auth & rate limiting
+# LLM — NVIDIA NIM
+# llm_provider=nvidia-nim
+# nvidia_nim_api_key=nvapi-...
+# nvidia_nim_model=meta/llama-3.1-8b-instruct
+
+# Business â€” auth & rate limiting
 # jwt_secret=change-me
 # rate_limit_enabled=true
 # rate_limit_per_minute=60
@@ -363,11 +378,32 @@ ollama_model=qwen2.5:7b
 # discord_bot_token=
 # slack_bot_token=
 
+# Workspace integrations (optional OAuth access tokens)
+# google_workspace_client_id=
+# google_workspace_client_secret=
+# google_workspace_refresh_token=
+# google_workspace_access_token=
+# microsoft_workspace_client_id=
+# microsoft_workspace_client_secret=
+# microsoft_workspace_tenant_id=common
+# microsoft_workspace_refresh_token=
+# microsoft_workspace_access_token=
+
 # Optional personal features
 the_news_api=
 spotify_client_id=
 spotify_client_secret=
 ```
+
+Workspace API routes:
+
+```http
+GET  /api/integrations/workspace/status
+POST /api/integrations/workspace/google/{service}/{action}
+POST /api/integrations/workspace/microsoft/{service}/{action}
+```
+
+Supported Google services include Gmail, Calendar, Drive, Docs, Sheets, Slides, Tasks, and People. Microsoft 365 uses Microsoft Graph for Outlook mail/calendar, OneDrive, Excel workbooks, To Do, Teams, and profile data. Routes use the `.env` token by default, can refresh tokens when OAuth client credentials are configured, and also accept `Authorization: Bearer <token>` per request.
 
 Full reference: `docs-site/pages/environment.js` or run `luna setup` for guided configuration.
 
@@ -400,64 +436,64 @@ Then open `http://YOUR-LAN-IP:5173` on any device. Use `npm run luna -- dev:lan`
 
 ```
 Luna/
-├── backend/
-│   ├── main.py
-│   ├── middleware/
-│   │   └── rate_limit.py         # sliding-window rate limiter
-│   ├── processes/
-│   │   ├── registry.py
-│   │   ├── calendar_reminders/
-│   │   ├── memory_maintenance/
-│   │   ├── proactive_followups/
-│   │   └── voice_runtime/
-│   ├── routers/
-│   │   ├── admin.py              # user management, JWT tokens
-│   │   ├── channels.py           # Telegram / Discord / Slack / webhook
-│   │   ├── chat.py
-│   │   ├── luna.py
-│   │   ├── system.py
-│   │   ├── vision.py
-│   │   ├── voice.py
-│   │   └── spotify.py
-│   └── services/
-│       ├── channel_bridge.py     # channel session & reply routing
-│       ├── dashboard/
-│       │   ├── articles.py
-│       │   ├── markets.py
-│       │   ├── news.py
-│       │   └── weather.py
-│       ├── llm.py                # 7-provider LLM client
-│       ├── memory.py
-│       ├── personality.py
-│       ├── scheduler.py
-│       ├── tool_registry.py
-│       ├── vision.py
-│       └── web_tools.py
-├── electron/
-│   ├── main.js
-│   └── preload.js
-├── frontend/
-│   └── src/
-│       ├── components/
-│       │   ├── Dynamic/
-│       │   │   ├── DynamicWidgetOverlay.tsx
-│       │   │   ├── GeneratedScene.tsx
-│       │   │   └── ThreeDScene.tsx
-│       │   ├── Luna/
-│       │   ├── Map/
-│       │   └── Voice/
-│       ├── hooks/
-│       ├── services/
-│       └── store/
-├── docs-site/          # Next.js documentation site
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── PROCESSES.md
-│   ├── CLI.md
-│   └── VSCODE.md
-├── architecture.svg
-├── architecture_ai.svg
-└── .env.example
+â”œâ”€â”€ backend/
+â”‚   â”œâ”€â”€ main.py
+â”‚   â”œâ”€â”€ middleware/
+â”‚   â”‚   â””â”€â”€ rate_limit.py         # sliding-window rate limiter
+â”‚   â”œâ”€â”€ processes/
+â”‚   â”‚   â”œâ”€â”€ registry.py
+â”‚   â”‚   â”œâ”€â”€ calendar_reminders/
+â”‚   â”‚   â”œâ”€â”€ memory_maintenance/
+â”‚   â”‚   â”œâ”€â”€ proactive_followups/
+â”‚   â”‚   â””â”€â”€ voice_runtime/
+â”‚   â”œâ”€â”€ routers/
+â”‚   â”‚   â”œâ”€â”€ admin.py              # user management, JWT tokens
+â”‚   â”‚   â”œâ”€â”€ channels.py           # Telegram / Discord / Slack / webhook
+â”‚   â”‚   â”œâ”€â”€ chat.py
+â”‚   â”‚   â”œâ”€â”€ luna.py
+â”‚   â”‚   â”œâ”€â”€ system.py
+â”‚   â”‚   â”œâ”€â”€ vision.py
+â”‚   â”‚   â”œâ”€â”€ voice.py
+â”‚   â”‚   â””â”€â”€ spotify.py
+â”‚   â””â”€â”€ services/
+â”‚       â”œâ”€â”€ channel_bridge.py     # channel session & reply routing
+â”‚       â”œâ”€â”€ dashboard/
+â”‚       â”‚   â”œâ”€â”€ articles.py
+â”‚       â”‚   â”œâ”€â”€ markets.py
+â”‚       â”‚   â”œâ”€â”€ news.py
+â”‚       â”‚   â””â”€â”€ weather.py
+â”‚       â”œâ”€â”€ llm.py                # 8-provider LLM client
+â”‚       â”œâ”€â”€ memory.py
+â”‚       â”œâ”€â”€ personality.py
+â”‚       â”œâ”€â”€ scheduler.py
+â”‚       â”œâ”€â”€ tool_registry.py
+â”‚       â”œâ”€â”€ vision.py
+â”‚       â””â”€â”€ web_tools.py
+â”œâ”€â”€ electron/
+â”‚   â”œâ”€â”€ main.js
+â”‚   â””â”€â”€ preload.js
+â”œâ”€â”€ frontend/
+â”‚   â””â”€â”€ src/
+â”‚       â”œâ”€â”€ components/
+â”‚       â”‚   â”œâ”€â”€ Dynamic/
+â”‚       â”‚   â”‚   â”œâ”€â”€ DynamicWidgetOverlay.tsx
+â”‚       â”‚   â”‚   â”œâ”€â”€ GeneratedScene.tsx
+â”‚       â”‚   â”‚   â””â”€â”€ ThreeDScene.tsx
+â”‚       â”‚   â”œâ”€â”€ Luna/
+â”‚       â”‚   â”œâ”€â”€ Map/
+â”‚       â”‚   â””â”€â”€ Voice/
+â”‚       â”œâ”€â”€ hooks/
+â”‚       â”œâ”€â”€ services/
+â”‚       â””â”€â”€ store/
+â”œâ”€â”€ docs-site/          # Next.js documentation site
+â”œâ”€â”€ docs/
+â”‚   â”œâ”€â”€ ARCHITECTURE.md
+â”‚   â”œâ”€â”€ PROCESSES.md
+â”‚   â”œâ”€â”€ CLI.md
+â”‚   â””â”€â”€ VSCODE.md
+â”œâ”€â”€ architecture.svg
+â”œâ”€â”€ architecture_ai.svg
+â””â”€â”€ .env.example
 ```
 
 ---
@@ -466,12 +502,12 @@ Luna/
 
 Luna includes a foundation for broader agent workflows:
 
-- **Skills** — local skills in `skills/` or `data/workspace/skills/` with `skill.json` and `SKILL.md`
-- **Permissions** — every tool has a mode: `allow`, `confirm`, or `block`
-- **Workspace** — agent-created files are sandboxed to `data/workspace/`
-- **Audit log** — all tool and agent actions written to `data/audit.log`
-- **Browser** — public page reading over HTTP; optional Playwright for full browser automation
-- **Tasks** — multi-step tasks can be created, planned, and expanded over time
+- **Skills** â€” local skills in `skills/` or `data/workspace/skills/` with `skill.json` and `SKILL.md`
+- **Permissions** â€” every tool has a mode: `allow`, `confirm`, or `block`
+- **Workspace** â€” agent-created files are sandboxed to `data/workspace/`
+- **Audit log** â€” all tool and agent actions written to `data/audit.log`
+- **Browser** â€” public page reading over HTTP; optional Playwright for full browser automation
+- **Tasks** â€” multi-step tasks can be created, planned, and expanded over time
 
 ```
 GET  /api/agent/skills
@@ -531,7 +567,7 @@ Please avoid non-ASCII characters in backend log messages (Windows `cp1252` comp
 
 ## Privacy
 
-- Chat inference runs through local Ollama — no tokens leave your machine by default.
+- Chat inference runs through local Ollama â€” no tokens leave your machine by default.
 - Memory, facts, and personality state are stored in local SQLite and ChromaDB.
 - Vision summaries are generated locally.
 - External APIs (news, weather, markets, Spotify) are only contacted when those features are configured and used.
@@ -541,10 +577,11 @@ Please avoid non-ASCII characters in backend log messages (Windows `cp1252` comp
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT â€” see [LICENSE](LICENSE).
 
 ---
 
 <div align="center">
   <sub>Built by the L.U.N.A. contributors. Open source, always.</sub>
 </div>
+

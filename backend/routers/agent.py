@@ -7,7 +7,13 @@ from backend.services.browser_automation import browser_open, browser_read, play
 from backend.services.permission_manager import permission_manager
 from backend.services.skill_manager import list_skills
 from backend.services.task_planner import generate_plan
-from backend.services.workspace import list_workspace, read_workspace_file, write_workspace_file
+from backend.services.workspace import (
+    list_workspace,
+    read_workspace_file,
+    read_workspace_file_base64,
+    write_workspace_file,
+    write_workspace_file_base64,
+)
 from backend.processes.registry import list_processes
 
 router = APIRouter(prefix="/api/agent", tags=["agent"])
@@ -52,10 +58,22 @@ def workspace_read(path: str):
     return {"path": path, "content": read_workspace_file(path)}
 
 
+@router.get("/workspace/read-base64")
+def workspace_read_base64(path: str):
+    return read_workspace_file_base64(path)
+
+
 @router.post("/workspace/write")
 def workspace_write(payload: dict = Body(default={})):
     result = write_workspace_file(payload.get("path", ""), payload.get("content", ""))
     record_audit("workspace_write", args=result, status="ok")
+    return result
+
+
+@router.post("/workspace/write-base64")
+def workspace_write_base64(payload: dict = Body(default={})):
+    result = write_workspace_file_base64(payload.get("path", ""), payload.get("content_base64", ""))
+    record_audit("workspace_write_base64", args=result, status="ok")
     return result
 
 

@@ -241,7 +241,7 @@ Upcoming agenda:
 - Do not use ellipses (...). Use a period or nothing.
 - You can launch apps, open websites, manage calendar and tasks, control Spotify, and interact with a live map.
 - To launch an app: [LAUNCH:app_name]
-- To open a URL: [BROWSE:https://...] — NEVER use BROWSE for weather, market prices, or stock data. Those are already in your "Right now" section. Use web_search if you need fresher web data.
+- To open a URL: [BROWSE:https://...] — NEVER use BROWSE for weather, market prices, or stock data. Those are already in your "Right now" section. Use web_research for definitions/explainers/comparisons that need sources, and web_search for quick fresh lookup.
 - To create a task: [TASK:title|due_date|priority]
 - To create a calendar event: [EVENT:title|datetime|duration_minutes]
 - To play music: [SPOTIFY:search query] — do it immediately, no confirmation needed.
@@ -721,6 +721,28 @@ def strip_tool_call_json(response: str) -> str:
     return ''.join(out).strip()
 
 
+def _extract_references_section(text: str) -> str:
+    match = re.search(r"References:\s*(.*)$", text, flags=re.IGNORECASE | re.DOTALL)
+    if not match:
+        source = re.search(r"Source:\s*(https?://\S+)", text)
+        return f"References:\n[1] {source.group(1)}" if source else ""
+    refs = []
+    for line in match.group(1).splitlines():
+        clean = line.strip()
+        if re.match(r"^\[\d+\]\s+.+https?://", clean):
+            refs.append(clean)
+    return "References:\n" + "\n".join(refs[:6]) if refs else ""
+
+
+def _ensure_references(answer: str, tool_result: str) -> str:
+    if re.search(r"\bReferences:\s*\n\s*\[\d+\]", answer, flags=re.IGNORECASE):
+        return answer
+    refs = _extract_references_section(tool_result)
+    if not refs:
+        return answer
+    return answer.rstrip() + "\n\n" + refs
+
+
 
 
 async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
@@ -840,9 +862,22 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
             from backend.services.web_tools import web_search
             return await web_search(args.get("query", ""))
 
+        elif tool_name == "web_research":
+            from backend.services.web_tools import web_research
+            return await web_research(args.get("query", ""))
+
+        elif tool_name == "dataset_search":
+            from backend.services.web_tools import dataset_search
+            return await dataset_search(args.get("query", ""))
+
         elif tool_name == "web_fetch":
             from backend.services.web_tools import web_fetch
             return await web_fetch(args.get("url", ""))
+
+        elif tool_name == "web_download_file":
+            from backend.services.web_tools import web_download_file
+            result = await web_download_file(args.get("url", ""), args.get("path", ""))
+            return json.dumps(result)[:4000]
 
         elif tool_name == "browser_open":
             from backend.services.audit_log import record_audit
@@ -865,12 +900,26 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
             record_audit("tool_call", tool=tool_name, args=args, result=f"{len(content)} chars", conversation_id=conversation_id)
             return content[:4000]
 
+        elif tool_name == "workspace_read_base64":
+            from backend.services.audit_log import record_audit
+            from backend.services.workspace import read_workspace_file_base64
+            result = read_workspace_file_base64(args.get("path", ""))
+            record_audit("tool_call", tool=tool_name, args=args, result=f"{result['size']} bytes", conversation_id=conversation_id)
+            return json.dumps(result)[:4000]
+
         elif tool_name == "workspace_write":
             from backend.services.audit_log import record_audit
             from backend.services.workspace import write_workspace_file
             result = write_workspace_file(args.get("path", ""), args.get("content", ""))
             record_audit("tool_call", tool=tool_name, args=args, result=json.dumps(result), conversation_id=conversation_id)
             return f"workspace file written: {result['path']}"
+
+        elif tool_name == "workspace_write_base64":
+            from backend.services.audit_log import record_audit
+            from backend.services.workspace import write_workspace_file_base64
+            result = write_workspace_file_base64(args.get("path", ""), args.get("content_base64", ""))
+            record_audit("tool_call", tool=tool_name, args={"path": args.get("path", "")}, result=json.dumps(result), conversation_id=conversation_id)
+            return f"workspace binary file written: {result['path']}"
 
         elif tool_name == "list_skills":
             from backend.services.skill_manager import list_skills
@@ -931,6 +980,16 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
             if tool_name == "github_get_pr":
                 return json.dumps(await github.get_pr(args.get("repo", ""), int(args.get("number", 0))))[:4000]
 
+        elif tool_name in ("google_workspace", "microsoft_workspace"):
+            from backend.services.workspace_integrations import google_workspace, microsoft_workspace
+            provider_call = google_workspace if tool_name == "google_workspace" else microsoft_workspace
+            result = await provider_call(
+                args.get("service", ""),
+                args.get("action", ""),
+                args.get("args", {}),
+            )
+            return json.dumps(result.as_dict())[:4000]
+
         else:
             return f"unknown tool {tool_name}"
 
@@ -940,21 +999,23 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
 
 async def verify_tool_result(tool_name: str, args: dict, result: str, user_message: str = "") -> str:
     """Ask the LLM to produce a natural-language confirmation of the tool result."""
-    if tool_name in ("web_search", "web_fetch"):
+    if tool_name in ("web_search", "web_research", "web_fetch"):
         query_hint = user_message or args.get("query") or args.get("url", "")
         prompt = (
             f"The user asked: {query_hint}\n\n"
             f"Web results:\n{result}\n\n"
             "Answer the user's question in Luna's voice — concise and direct. "
             "Do not say 'according to search results' or 'based on'. Just answer naturally. "
-            "If results are unhelpful, say so briefly."
+            "If this is a definition or explanation request, include a compact [WIDGET:summary|...|...] command after the answer. "
+            "End with a References section that preserves the numbered source links from the web results. "
+            "If results are unhelpful, say so briefly and do not invent references."
         )
         full = ""
         async for token in ollama.stream_chat(
             [{"role": "user", "content": prompt}], "You are Luna. Be brief and natural."
         ):
             full += token
-        return full.strip()[:800]
+        return _ensure_references(full.strip(), result)[:2200]
 
     prompt = (
         f"Tool '{tool_name}' was called with args {json.dumps(args)}. "
@@ -1381,6 +1442,11 @@ async def chat_stream(
                     tc = {"tool": "web_search", "args": {"query": _ws.group(1).strip()}, "speak": ""}
                     full_response = full_response[:_ws.start()].rstrip() + full_response[_ws.end():]
             if not tc:
+                _wr = re.search(r'\[WEB_RESEARCH:([^\]]+)\]', full_response, re.IGNORECASE)
+                if _wr:
+                    tc = {"tool": "web_research", "args": {"query": _wr.group(1).strip()}, "speak": ""}
+                    full_response = full_response[:_wr.start()].rstrip() + full_response[_wr.end():]
+            if not tc:
                 _wf = re.search(r'\[WEB_FETCH:([^\]]+)\]', full_response, re.IGNORECASE)
                 if _wf:
                     tc = {"tool": "web_fetch", "args": {"url": _wf.group(1).strip()}, "speak": ""}
@@ -1438,7 +1504,7 @@ async def chat_stream(
                     yield f"data: {json.dumps({'type': 'plan_progress', 'step': plan.current, 'total': plan.total})}\n\n"
 
         # ── Stream visible message parts to frontend ──────────────────────────
-        STRIP_RE = r"\s*\[(?:LAUNCH|TASK|EVENT|SPOTIFY|BROWSE|MAP|WIDGET|WEB_SEARCH|WEB_FETCH):[^\]]+\]"
+        STRIP_RE = r"\s*\[(?:LAUNCH|TASK|EVENT|SPOTIFY|BROWSE|MAP|WIDGET|WEB_SEARCH|WEB_RESEARCH|WEB_FETCH):[^\]]+\]"
         _cli_text = re.sub(STRIP_RE, "", full_response).strip()
         _cli_text = re.sub(r"<think>.*?</think>", "", _cli_text, flags=re.DOTALL).strip()
         if _cli_text:

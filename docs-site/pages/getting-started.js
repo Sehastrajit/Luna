@@ -184,7 +184,7 @@ luna web         # Backend + browser UI, no Electron`}</code></pre>
       <section>
         <h2 id="providers">LLM provider</h2>
         <p>
-          Luna works with 7 providers out of the box. Switch by setting <code>llm_provider</code> in
+          Luna works with 8 providers out of the box. Switch by setting <code>llm_provider</code> in
           <code>.env</code> — no code changes, no restart of anything else.
         </p>
 
@@ -193,6 +193,7 @@ luna web         # Backend + browser UI, no Electron`}</code></pre>
           <tbody>
             <tr><td>Ollama (default)</td><td><code>ollama</code></td><td>None</td><td>Fully local. Pull any model with <code>ollama pull</code>.</td></tr>
             <tr><td>OpenAI</td><td><code>openai-compatible</code></td><td><code>openai_api_key</code></td><td>Also covers LM Studio, OpenRouter, Jan.ai, llama.cpp.</td></tr>
+            <tr><td>NVIDIA NIM</td><td><code>nvidia-nim</code></td><td><code>nvidia_nim_api_key</code></td><td>OpenAI-compatible NVIDIA-hosted or self-hosted NIM endpoint.</td></tr>
             <tr><td>Anthropic Claude</td><td><code>anthropic</code></td><td><code>anthropic_api_key</code></td><td>Native Messages API. Recommended for business.</td></tr>
             <tr><td>Google Gemini</td><td><code>google</code></td><td><code>google_api_key</code></td><td>Gemini 2.0 Flash by default. Long context, multimodal.</td></tr>
             <tr><td>Groq</td><td><code>groq</code></td><td><code>groq_api_key</code></td><td>~300 tok/s. Free tier. Fastest cloud option.</td></tr>
@@ -255,7 +256,7 @@ luna chat`}</code></pre>
       </section>
 
       <NextSteps items={[
-        { href: '/environment',  label: 'Config',    title: 'Environment',      desc: 'Every .env key for all 7 LLM providers, channels, auth, and rate limiting.' },
+        { href: '/environment',  label: 'Config',    title: 'Environment',      desc: 'Every .env key for all 8 LLM providers, channels, auth, and rate limiting.' },
         { href: '/integrations', label: 'Integrate', title: 'Integrations',     desc: 'All supported providers, apps, messaging channels, and platforms.' },
         { href: '/voice',        label: 'Feature',   title: 'Voice setup',      desc: 'Configure wake-word, STT model, TTS voice, and push-to-talk.' },
         { href: '/agent',        label: 'Agent',     title: 'Agent & Skills',   desc: 'Permission system, custom skills, and workspace.' },

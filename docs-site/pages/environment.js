@@ -18,7 +18,7 @@ export default function Environment() {
   return (
     <DocsLayout
       title="Environment"
-      description="Every .env key explained — variants, 7 LLM providers, messaging channels, auth, rate limiting, and live data services."
+      description="Every .env key explained — variants, 8 LLM providers, messaging channels, auth, rate limiting, and live data services."
       toc={toc}
     >
       <section>
@@ -72,7 +72,7 @@ business_tone=professional`}</code></pre>
       <section>
         <h2 id="llm">LLM providers</h2>
         <p>
-          Set <code>llm_provider</code> to one of the seven supported values, then fill in the
+          Set <code>llm_provider</code> to one of the eight supported values, then fill in the
           matching key block. All providers stream tokens via the same interface — no other code changes needed.
         </p>
 
@@ -94,6 +94,15 @@ openai_model=gpt-4o-mini`}</code></pre>
         </CodeFile>
         <p>Works with any OpenAI-compatible endpoint: LM Studio, Jan.ai, llama.cpp server, vLLM, Together AI, and
         OpenRouter (which gives you access to every major model through one key).</p>
+
+        <h3>NVIDIA NIM</h3>
+        <CodeFile label=".env">
+          <pre><code>{`llm_provider=nvidia-nim
+nvidia_nim_base_url=https://integrate.api.nvidia.com/v1
+nvidia_nim_api_key=nvapi-...
+nvidia_nim_model=meta/llama-3.1-8b-instruct`}</code></pre>
+        </CodeFile>
+        <p>Uses NVIDIA NIM's OpenAI-compatible chat completions endpoint. Point the base URL at NVIDIA API Catalog or a self-hosted NIM.</p>
 
         <h3>Anthropic Claude (native)</h3>
         <CodeFile label=".env">
@@ -334,13 +343,16 @@ spotify_client_secret=your_client_secret`}</code></pre>
             <tr><td><code>business_name</code></td><td>—</td><td>Company name injected into business system prompt.</td></tr>
             <tr><td><code>business_description</code></td><td>—</td><td>One-line description of the organisation.</td></tr>
             <tr><td><code>business_tone</code></td><td><code>professional</code></td><td><code>professional</code> | <code>friendly</code> | <code>technical</code> | <code>concise</code>.</td></tr>
-            <tr><td><code>llm_provider</code></td><td><code>ollama</code></td><td><code>ollama</code> | <code>openai-compatible</code> | <code>anthropic</code> | <code>google</code> | <code>groq</code> | <code>cohere</code> | <code>mistral</code>.</td></tr>
+            <tr><td><code>llm_provider</code></td><td><code>ollama</code></td><td><code>ollama</code> | <code>openai-compatible</code> | <code>nvidia-nim</code> | <code>anthropic</code> | <code>google</code> | <code>groq</code> | <code>cohere</code> | <code>mistral</code>.</td></tr>
             <tr><td><code>ollama_base_url</code></td><td><code>http://localhost:11434</code></td><td>Ollama server URL.</td></tr>
             <tr><td><code>ollama_model</code></td><td><code>qwen2.5:7b</code></td><td>Ollama chat model.</td></tr>
             <tr><td><code>ollama_embed_model</code></td><td><code>nomic-embed-text</code></td><td>Ollama embedding model.</td></tr>
             <tr><td><code>openai_base_url</code></td><td><code>https://api.openai.com/v1</code></td><td>OpenAI-compatible base URL.</td></tr>
             <tr><td><code>openai_api_key</code></td><td>—</td><td>API key for OpenAI-compatible provider.</td></tr>
             <tr><td><code>openai_model</code></td><td><code>gpt-4o-mini</code></td><td>Model name.</td></tr>
+            <tr><td><code>nvidia_nim_base_url</code></td><td><code>https://integrate.api.nvidia.com/v1</code></td><td>NVIDIA NIM OpenAI-compatible base URL.</td></tr>
+            <tr><td><code>nvidia_nim_api_key</code></td><td>—</td><td>NVIDIA API key.</td></tr>
+            <tr><td><code>nvidia_nim_model</code></td><td><code>meta/llama-3.1-8b-instruct</code></td><td>NVIDIA NIM model ID.</td></tr>
             <tr><td><code>anthropic_api_key</code></td><td>—</td><td>Anthropic API key.</td></tr>
             <tr><td><code>anthropic_model</code></td><td><code>claude-sonnet-4-5</code></td><td>Anthropic model ID.</td></tr>
             <tr><td><code>google_api_key</code></td><td>—</td><td>Google AI Studio API key.</td></tr>

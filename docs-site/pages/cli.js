@@ -172,7 +172,7 @@ luna chat "what time is it?"`}</code></pre>
 2. luna_variant=business in .env → compose.business.yml
 3. --cloud flag → compose.cloud.yml
 4. llm_provider is a cloud provider → compose.cloud.yml
-   (anthropic, google, groq, cohere, mistral, openai-compatible)
+   (anthropic, google, groq, cohere, mistral, openai-compatible, nvidia-nim)
 5. --gpu flag → compose.yml + compose.gpu.yml
 6. NVIDIA GPU detected on host → GPU overlay
 7. fallback → compose.yml (CPU)`}</code></pre>
