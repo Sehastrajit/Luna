@@ -33,3 +33,22 @@ luna doctor
 - `clean`: remove local runtime/build artifacts ignored by git.
 
 The CLI intentionally wraps existing npm and Python entrypoints. Feature-specific commands should stay thin and delegate to the owning process, service, or package script.
+
+## Chat
+
+`luna chat` uses the same `/api/chat/stream` path as the web and Electron UI. Terminal chat supports normal conversation plus tool execution, web research, workspace file creation, installed skills, agent tasks, Google/Microsoft workspace tools, plans, proactive messages, and backend command events.
+
+```powershell
+luna chat
+luna chat "research the SEC and show references"
+luna chat --yes "create the requested workspace file"
+luna chat --no "try the task but deny any risky confirmation"
+```
+
+Inside chat:
+
+- `/new`: start a fresh conversation.
+- `/help`: show terminal chat commands.
+- `/exit` or `/quit`: leave chat.
+
+When a tool requires confirmation, the CLI prompts for approval. Use `--yes` to auto-approve confirmations for a one-shot or session, and `--no` to auto-deny them.

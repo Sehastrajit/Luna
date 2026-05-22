@@ -1,16 +1,63 @@
 from sqlalchemy import (
     create_engine, Column, Integer, String, Float, Boolean,
-    DateTime, Text, JSON, ForeignKey, func
+    DateTime, Text, JSON, ForeignKey, func, event, text
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+from sqlalchemy.pool import NullPool, QueuePool
 from datetime import datetime, timezone
 from backend.config import settings
 
-engine = create_engine(
-    f"sqlite:///{settings.db_path}",
-    connect_args={"check_same_thread": False},
-    echo=False,
-)
+
+def _resolve_db_url() -> str:
+    """Return the effective database URL — explicit db_url wins, else SQLite fallback."""
+    url = (settings.db_url or "").strip()
+    return url or f"sqlite:///{settings.db_path}"
+
+
+def _db_backend(url: str) -> str:
+    """Return short backend name from URL scheme."""
+    if url.startswith("sqlite"):
+        return "sqlite"
+    if "postgresql" in url or "postgres" in url:
+        return "postgresql"
+    if "mysql" in url or "mariadb" in url:
+        return "mysql"
+    if "mssql" in url:
+        return "mssql"
+    return "unknown"
+
+
+def _build_engine(url: str):
+    backend = _db_backend(url)
+    if backend == "sqlite":
+        eng = create_engine(
+            url,
+            connect_args={"check_same_thread": False},
+            echo=settings.db_echo,
+        )
+        # Enable WAL mode for SQLite — better concurrent read performance
+        @event.listens_for(eng, "connect")
+        def _set_wal(dbapi_conn, _):
+            dbapi_conn.execute("PRAGMA journal_mode=WAL")
+            dbapi_conn.execute("PRAGMA synchronous=NORMAL")
+            dbapi_conn.execute("PRAGMA foreign_keys=ON")
+        return eng
+    else:
+        return create_engine(
+            url,
+            pool_size=settings.db_pool_size,
+            max_overflow=settings.db_max_overflow,
+            pool_timeout=settings.db_pool_timeout,
+            pool_recycle=settings.db_pool_recycle,
+            pool_pre_ping=True,     # detect and drop stale connections
+            echo=settings.db_echo,
+        )
+
+
+DB_URL = _resolve_db_url()
+DB_BACKEND = _db_backend(DB_URL)
+
+engine = _build_engine(DB_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -249,25 +296,24 @@ class HealthSync(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
-    # Add new columns to existing tables when they don't exist yet (SQLite ALTER TABLE)
-    with engine.connect() as conn:
-        for col, definition in [
-            ("importance",     "REAL DEFAULT 0.5"),
-            ("expires_at",     "DATETIME"),
-            ("is_private",     "BOOLEAN DEFAULT 0"),
-            ("source",         "VARCHAR DEFAULT 'inferred'"),
-            ("superseded_by",  "INTEGER"),
-            ("memory_type",    "VARCHAR DEFAULT 'long'"),
-        ]:
-            try:
-                conn.execute(
-                    __import__("sqlalchemy").text(
-                        f"ALTER TABLE facts ADD COLUMN {col} {definition}"
-                    )
-                )
-                conn.commit()
-            except Exception:
-                pass  # column already exists
+
+    # SQLite-only backward-compat: add columns introduced in later versions.
+    # For PostgreSQL/MySQL/MSSQL these are handled by Alembic (`alembic upgrade head`).
+    if DB_BACKEND == "sqlite":
+        with engine.connect() as conn:
+            for col, definition in [
+                ("importance",     "REAL DEFAULT 0.5"),
+                ("expires_at",     "DATETIME"),
+                ("is_private",     "BOOLEAN DEFAULT 0"),
+                ("source",         "VARCHAR DEFAULT 'inferred'"),
+                ("superseded_by",  "INTEGER"),
+                ("memory_type",    "VARCHAR DEFAULT 'long'"),
+            ]:
+                try:
+                    conn.execute(text(f"ALTER TABLE facts ADD COLUMN {col} {definition}"))
+                    conn.commit()
+                except Exception:
+                    pass  # column already exists
 
     db = SessionLocal()
     try:

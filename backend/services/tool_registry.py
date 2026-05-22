@@ -71,6 +71,12 @@ TOOL_REGISTRY: dict[str, ToolDef] = {
     # Google Workspace / Microsoft 365
     "google_workspace": ToolDef("google_workspace", "Call Google Workspace services such as Gmail, Calendar, Drive, Docs, Sheets, Slides, Tasks, and People", RiskLevel.RISKY, ["service", "action", "args"], "Run Google Workspace action {service}.{action}?"),
     "microsoft_workspace": ToolDef("microsoft_workspace", "Call Microsoft 365 services through Microsoft Graph such as Outlook, Calendar, OneDrive, Excel, To Do, and Teams", RiskLevel.RISKY, ["service", "action", "args"], "Run Microsoft 365 action {service}.{action}?"),
+    # ── Coding agent (Ollama-powered) ────────────────────────────────────────────
+    "code_read_file":   ToolDef("code_read_file",   "Read a file from the coding workspace",                              RiskLevel.SAFE,      ["path"]),
+    "code_write_file":  ToolDef("code_write_file",  "Write or overwrite a file in the coding workspace",                  RiskLevel.RISKY,     ["path", "content"],  "Write workspace file {path}?"),
+    "code_list_files":  ToolDef("code_list_files",  "List files in a coding workspace directory",                         RiskLevel.SAFE,      ["path"]),
+    "code_search":      ToolDef("code_search",      "Search for a text/regex pattern across coding workspace files",      RiskLevel.SAFE,      ["pattern", "path"]),
+    "code_run_shell":   ToolDef("code_run_shell",   "Run a shell command inside the coding workspace (needs approval)",   RiskLevel.DANGEROUS, ["command"],          "Run shell command: {command}?"),
 }
 
 
@@ -96,6 +102,7 @@ def get_tools_for_prompt() -> str:
     lines.append("Web tools: web_search for quick lookup, web_research for source-backed research, dataset_search for dataset discovery, web_fetch/browser_read for specific pages, and web_download_file for workspace downloads.")
     lines.append("Workspace file tools: workspace_write/read for text files and workspace_write_base64/read_base64 for binary files. Follow installed skills for workflow-specific rules.")
     lines.append("Agent tools: use create_agent_task for multi-step work and list_skills to discover installed local skills.")
+    lines.append("Coding tools (Ollama coding model): code_read_file/code_write_file/code_list_files/code_search for workspace file operations; code_run_shell for shell commands (always confirm first). These are automatically used when a coding request is detected.")
     lines.append("GitHub tools: use github_list_repos, github_list_issues(repo), github_create_issue(repo,title,body), github_comment(repo,number,body), github_list_prs(repo), github_get_pr(repo,number). Requires github_token in .env.")
     lines.append("Workspace tools: use google_workspace(service,action,args) for Gmail/Calendar/Drive/Docs/Sheets/Slides/Tasks/People and microsoft_workspace(service,action,args) for Outlook/Calendar/OneDrive/Excel/To Do/Teams. Examples: service='gmail', action='search_messages'; service='calendar', action='create_event'; service='drive', action='search_files'. Sending mail, writing files, and updating sheets should be confirmed.")
     lines.append("System controls: get_volume/set_volume(level)/mute_audio/unmute_audio for audio; get_brightness/set_brightness(level) for display; lock_screen, turn_off_display, sleep_system; get_clipboard/set_clipboard(text); get_system_info.")

@@ -1,4 +1,4 @@
-# Web Research
+# Research
 
 Use this skill when the user asks for current information, comparisons, source-backed answers, or website research.
 

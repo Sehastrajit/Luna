@@ -57,6 +57,12 @@ const navGroups = [
     ],
   },
   {
+    label: 'Performance',
+    items: [
+      { href: '/benchmarks', label: 'Benchmarks' },
+    ],
+  },
+  {
     label: 'Community',
     items: [
       { href: '/contributing',    label: 'Contributing' },

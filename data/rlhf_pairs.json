@@ -5,5 +5,19 @@
     "mode": "response",
     "luna_tone": "concerned",
     "auto_generated": true
+  },
+  {
+    "message": "play shape of you",
+    "chosen": "Playing.",
+    "mode": "response",
+    "luna_tone": "warm",
+    "auto_generated": true
+  },
+  {
+    "message": "hey",
+    "chosen": "Hey!\n\nWhat's up? Need help with anything?",
+    "mode": "response",
+    "luna_tone": "thoughtful",
+    "auto_generated": true
   }
 ]

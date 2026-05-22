@@ -398,7 +398,9 @@ async function chatCli(args = []) {
   const port = env.port || '8899'
   const baseUrl = process.env.LUNA_URL || env.luna_url || `http://localhost:${port}`
   let conversationId = null
-  const firstMessage = args.join(' ').trim()
+  const approveAll = args.includes('--yes') || args.includes('-y')
+  const denyAll = args.includes('--no')
+  const firstMessage = args.filter(a => !['--yes', '-y', '--no'].includes(a)).join(' ').trim()
 
   console.log(`${c.bold}
   ██╗     ██╗   ██╗███╗   ██╗ █████╗
@@ -410,7 +412,7 @@ async function chatCli(args = []) {
 ${c.reset}  Large Unified Nexus Mind AI
 `)
   console.log(`  ${c.dim}${baseUrl}${c.reset}`)
-  console.log(`  ${c.dim}Type /exit or press Ctrl+C to quit. Type /new for a new conversation.${c.reset}\n`)
+  console.log(`  ${c.dim}Type /exit or press Ctrl+C to quit. Type /new for a new conversation. Type /help for CLI commands.${c.reset}\n`)
 
   // ── Start a local backend unless an existing one could not be stopped ───────
   let _backendProc = null
@@ -477,7 +479,53 @@ ${c.reset}  Large Unified Nexus Mind AI
     process.on('SIGTERM', () => { cleanup(); process.exit(0) })
   }
 
-  async function sendMessage(message) {
+  async function confirmTool(data, rl = null) {
+    if (approveAll) return true
+    if (denyAll) return false
+    if (!input.isTTY) return false
+
+    output.write(`\n${c.yellow}Confirmation required:${c.reset} ${data.message || `Run ${data.tool}?`}\n`)
+    if (data.tool) output.write(`${c.dim}Tool: ${data.tool} ${JSON.stringify(data.args || {})}${c.reset}\n`)
+
+    let answer = ''
+    if (rl) {
+      answer = await rl.question(`${c.yellow}Approve?${c.reset} [y/N] `)
+    } else {
+      const confirmRl = createInterface({ input, output })
+      try {
+        answer = await confirmRl.question(`${c.yellow}Approve?${c.reset} [y/N] `)
+      } finally {
+        confirmRl.close()
+      }
+    }
+    return /^(y|yes)$/i.test(answer.trim())
+  }
+
+  async function submitConfirmation(confirmId, approved) {
+    try {
+      const r = await fetch(`${baseUrl}/api/chat/confirm/${encodeURIComponent(confirmId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approved }),
+      })
+      if (!r.ok) warn(`Confirmation failed: ${r.status} ${r.statusText}`)
+    } catch (e) {
+      warn(`Confirmation failed: ${e.message}`)
+    }
+  }
+
+  function describeCommand(cmd) {
+    if (!cmd || typeof cmd !== 'object') return 'command'
+    if (cmd.type === 'map') return `map ${cmd.action || 'open'}${cmd.query ? `: ${cmd.query}` : ''}`
+    if (cmd.type === 'widget') return `widget ${cmd.kind || 'summary'}${cmd.title ? `: ${cmd.title}` : ''}`
+    if (cmd.type === 'browse') return `open ${cmd.url || ''}`.trim()
+    if (cmd.type === 'launch') return `launch ${cmd.app || ''}`.trim()
+    if (cmd.type === 'spotify' || cmd.type === 'spotify_queue') return `${cmd.type}: ${cmd.query || ''}`.trim()
+    if (cmd.type === 'away') return `away mode ${cmd.action || ''}`.trim()
+    return `${cmd.type || 'command'} ${JSON.stringify(cmd)}`
+  }
+
+  async function sendMessage(message, rl = null) {
     const body = { message }
     if (conversationId) body.conversation_id = conversationId
 
@@ -534,13 +582,35 @@ ${c.reset}  Large Unified Nexus Mind AI
 
             if (data.type === 'meta' && data.conversation_id) {
               conversationId = data.conversation_id
-            } else if (data.type === 'message_part' && data.content) {
+            } else if ((data.type === 'message_part' && data.content) || (data.type === 'token' && data.token)) {
               stopWaiting()
-              output.write(data.content)
+              output.write(data.content || data.token)
               wrote = true
             } else if (data.type === 'confirmation_required') {
               stopWaiting()
-              output.write(`\n${c.yellow}Confirmation required:${c.reset} ${data.message}\n`)
+              const approved = await confirmTool(data, rl)
+              await submitConfirmation(data.confirm_id, approved)
+              output.write(`${c.dim}${approved ? 'Approved.' : 'Denied.'}${c.reset}\n`)
+            } else if (data.type === 'proactive' && data.message) {
+              stopWaiting()
+              output.write(`\n${c.blue}Proactive>${c.reset} ${data.message}\n`)
+              wrote = true
+            } else if (data.type === 'commands' && Array.isArray(data.commands)) {
+              stopWaiting()
+              for (const cmd of data.commands) {
+                output.write(`\n${c.dim}[command] ${describeCommand(cmd)}${c.reset}`)
+              }
+            } else if (data.type === 'plan') {
+              stopWaiting()
+              const steps = Array.isArray(data.steps) ? data.steps : []
+              output.write(`\n${c.blue}Plan>${c.reset} ${steps.length || data.total || 0} step${(steps.length || data.total) === 1 ? '' : 's'}\n`)
+              steps.forEach((step, index) => output.write(`${c.dim}${index + 1}. ${step}${c.reset}\n`))
+            } else if (data.type === 'plan_progress') {
+              stopWaiting()
+              output.write(`\n${c.dim}[plan] step ${data.step ?? '?'} of ${data.total ?? '?'} complete${c.reset}\n`)
+            } else if (data.type === 'plan_done') {
+              stopWaiting()
+              output.write(`\n${c.green}Plan complete>${c.reset} ${data.summary || 'done'}\n`)
             } else if (data.type === 'error') {
               stopWaiting()
               output.write('\n')
@@ -587,7 +657,14 @@ ${c.reset}  Large Unified Nexus Mind AI
         ok('Started a new conversation')
         continue
       }
-      await sendMessage(message)
+      if (message === '/help') {
+        console.log(`${c.dim}/new      start a new conversation${c.reset}`)
+        console.log(`${c.dim}/exit     quit chat${c.reset}`)
+        console.log(`${c.dim}/quit     quit chat${c.reset}`)
+        console.log(`${c.dim}Use natural language for tools, files, web research, workspace integrations, plans, and app actions.${c.reset}`)
+        continue
+      }
+      await sendMessage(message, rl)
     }
   } finally {
     rl.close()
@@ -666,10 +743,28 @@ function runSync(bin, args) {
 }
 
 function readEnvFile() {
-  const p = join(root, '.env')
-  if (!existsSync(p)) return {}
+  if (process.env.LUNA_ENV_FILE) return parseEnvFiles([process.env.LUNA_ENV_FILE])
+
+  const baseEnv = parseEnvFiles(['.env'])
+  const variant = (process.env.LUNA_VARIANT || process.env.luna_variant || baseEnv.luna_variant || 'personal')
+    .trim()
+    .toLowerCase()
+
+  const envFiles = ['.env']
+  if (variant === 'personal' || variant === 'business') envFiles.push(`.env.${variant}`)
+
+  return parseEnvFiles(envFiles)
+}
+
+function parseEnvFiles(files) {
+  const existingFiles = files
+    .map(p => resolve(root, p))
+    .filter(p => existsSync(p))
+
+  if (existingFiles.length === 0) return {}
+
   return Object.fromEntries(
-    readFileSync(p, 'utf8').split('\n')
+    existingFiles.flatMap(p => readFileSync(p, 'utf8').split('\n'))
       .filter(l => l.includes('=') && !l.startsWith('#'))
       .map(l => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()] })
   )

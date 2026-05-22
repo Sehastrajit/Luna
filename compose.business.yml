@@ -40,7 +40,10 @@ services:
     ports:
       - "8899:8899"
     env_file:
-      - .env
+      - path: .env
+        required: true
+      - path: .env.business
+        required: false
     environment:
       # Force business variant and production-safe defaults
       - luna_variant=business

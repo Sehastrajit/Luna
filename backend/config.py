@@ -9,6 +9,43 @@ DATA_DIR.mkdir(exist_ok=True)
 (DATA_DIR / "backups").mkdir(exist_ok=True)
 
 
+def _read_env_value(path: Path, key: str) -> str | None:
+    if not path.exists():
+        return None
+
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, _, value = line.partition("=")
+        if name.strip().lower() == key:
+            return value.strip().strip("\"'")
+    return None
+
+
+def _selected_variant() -> str:
+    return (
+        os.getenv("LUNA_VARIANT")
+        or os.getenv("luna_variant")
+        or _read_env_value(BASE_DIR / ".env", "luna_variant")
+        or "personal"
+    ).strip().lower()
+
+
+def _env_files() -> tuple[str, ...] | str:
+    explicit = os.getenv("LUNA_ENV_FILE")
+    if explicit:
+        return explicit
+
+    files = [str(BASE_DIR / ".env")]
+    variant = _selected_variant()
+    if variant in {"personal", "business"}:
+        variant_file = BASE_DIR / f".env.{variant}"
+        if variant_file.exists():
+            files.append(str(variant_file))
+    return tuple(files)
+
+
 class Settings(BaseSettings):
     app_name: str = "Luna"
     host: str = "127.0.0.1"
@@ -58,8 +95,40 @@ class Settings(BaseSettings):
     # Embedding provider: ollama | openai-compatible
     embedding_provider: str = "ollama"
 
+    # ── Coding agent (Ollama-powered) ─────────────────────────────────────────
+    # Set to any code-specialized model pulled in Ollama, e.g.:
+    #   qwen2.5-coder:7b  deepseek-coder-v2:16b  codellama:7b  starcoder2:7b
+    coding_model: str = "qwen2.5-coder:7b"
+    coding_max_iterations: int = 8
+
+    # ── Database ──────────────────────────────────────────────────────────────
+    # Default: SQLite (local, zero-config). Set db_url to switch backends.
+    #
+    # SQLite (default — leave db_url blank):
+    #   stored at db_path, no extra packages required
+    #
+    # PostgreSQL / Supabase:
+    #   db_url=postgresql+psycopg2://user:pass@host:5432/luna
+    #   pip install psycopg2-binary
+    #
+    # MySQL / MariaDB:
+    #   db_url=mysql+pymysql://user:pass@host:3306/luna
+    #   pip install pymysql
+    #
+    # MS SQL Server:
+    #   db_url=mssql+pyodbc://user:pass@server/db?driver=ODBC+Driver+17+for+SQL+Server
+    #   pip install pyodbc
+    #
+    # After changing db_url, run:  alembic upgrade head
+    db_url: str = ""                         # empty = use SQLite at db_path
+    db_path: str = str(DATA_DIR / "luna.db") # SQLite file (ignored when db_url is set)
+    db_pool_size: int = 10                   # max persistent connections (not used for SQLite)
+    db_max_overflow: int = 20                # extra connections above pool_size
+    db_pool_timeout: int = 30               # seconds to wait for a connection
+    db_pool_recycle: int = 1800             # recycle connections after 30 min (prevents stale TCP)
+    db_echo: bool = False                   # log every SQL statement (use only for debugging)
+
     # ── Paths ─────────────────────────────────────────────────────────────────
-    db_path: str = str(DATA_DIR / "luna.db")
     chroma_path: str = str(DATA_DIR / "chroma")
     frontend_dist: str = str(BASE_DIR / "frontend" / "dist")
 
@@ -181,7 +250,7 @@ class Settings(BaseSettings):
         return value
 
     class Config:
-        env_file = os.getenv("LUNA_ENV_FILE", ".env")
+        env_file = _env_files()
         env_file_encoding = "utf-8"
         extra = "ignore"
 

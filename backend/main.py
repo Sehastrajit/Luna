@@ -11,6 +11,7 @@ from backend.models.database import init_db, Base, engine
 from backend.services.activity_tracker import Activity
 from backend.services.scheduler import luna_scheduler
 from backend.routers import chat, memory, calendar, system, voice as voice_router, spotify as spotify_router, state as state_router, train as train_router, sleep as sleep_router, vision as vision_router, luna as luna_router, agent as agent_router, channels as channels_router, admin as admin_router, workspace_integrations as workspace_integrations_router
+from backend.routers.coding import router as coding_router
 from backend.routers.observe import router as observe_router
 from backend.routers.health_integrations import router as health_router
 from backend.middleware.rate_limit import RateLimitMiddleware
@@ -69,6 +70,7 @@ app.include_router(admin_router.router)
 app.include_router(workspace_integrations_router.router)
 app.include_router(observe_router)
 app.include_router(health_router)
+app.include_router(coding_router)
 
 # Serve React frontend (production build)
 frontend_dist = Path(settings.frontend_dist)

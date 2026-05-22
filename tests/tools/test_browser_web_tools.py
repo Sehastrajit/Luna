@@ -36,8 +36,83 @@ class BrowserWebToolTests(unittest.IsolatedAsyncioTestCase):
 
         tool_result = "References:\n[1] Example - https://example.com/"
         answer = _ensure_references("Short answer.", tool_result)
-        self.assertIn("References:", answer)
+        self.assertIn("\n\nReferences:", answer)
         self.assertIn("https://example.com/", answer)
+
+    def test_web_answer_reference_safeguard_separates_jammed_references(self) -> None:
+        from backend.routers.chat import _ensure_references
+
+        answer = _ensure_references(
+            "Short answer.References:\n[1] Example - https://example.com/",
+            "",
+        )
+        self.assertEqual(answer, "Short answer.\n\nReferences:\n[1] Example - https://example.com/")
+
+    def test_web_answer_reference_safeguard_strips_malformed_source_bleed(self) -> None:
+        from backend.routers.chat import _ensure_references
+
+        noisy = (
+            "The SEC is a U.S. agency.(https://bad.example/source)\n"
+            "2. [How to cite SEC filings](https://bad.example/cite)\n"
+        )
+        tool_result = "References:\n[1] SEC.gov - https://www.sec.gov/about"
+        answer = _ensure_references(noisy, tool_result)
+        self.assertIn("The SEC is a U.S. agency.", answer)
+        self.assertIn("[1] SEC.gov - https://www.sec.gov/about", answer)
+        self.assertNotIn("How to cite", answer)
+        self.assertNotIn("bad.example", answer)
+
+    def test_web_answer_reference_safeguard_strips_inline_title_url_bleed(self) -> None:
+        from backend.routers.chat import _ensure_references
+
+        noisy = (
+            "Pool pump efficiency uses WEF. "
+            "Choosing, Installing, and Operating an Efficient Swimming Pool Pump - "
+            "https://www.energy.gov/energysaver/choosing-installing-and-operating-efficient-swimming-pool-pump"
+        )
+        tool_result = "References:\n[1] Energy Saver - https://www.energy.gov/energysaver/choosing-installing-and-operating-efficient-swimming-pool-pump"
+        answer = _ensure_references(noisy, tool_result)
+        self.assertEqual(
+            answer,
+            "Pool pump efficiency uses WEF.\n\nReferences:\n[1] Energy Saver - https://www.energy.gov/energysaver/choosing-installing-and-operating-efficient-swimming-pool-pump",
+        )
+
+    def test_direct_research_query_detection_handles_citations_typo(self) -> None:
+        from backend.routers.chat import _extract_direct_research_query
+
+        query = _extract_direct_research_query("research what is SEC and include the sitations")
+        self.assertEqual(query, "what is SEC")
+
+    def test_direct_research_query_detection_handles_citations_without_research_word(self) -> None:
+        from backend.routers.chat import _extract_direct_research_query
+
+        query = _extract_direct_research_query("what is SEC with citations")
+        self.assertEqual(query, "what is SEC")
+
+    def test_direct_research_query_detection_strips_cite_references(self) -> None:
+        from backend.routers.chat import _extract_direct_research_query
+
+        query = _extract_direct_research_query("research what is SEC and cite the references")
+        self.assertEqual(query, "what is SEC")
+
+    def test_direct_research_query_detection_ten_prompt_smoke(self) -> None:
+        from backend.routers.chat import _extract_direct_research_query
+
+        cases = {
+            "research what is SEC and cite the references": "what is SEC",
+            "research on how to find defects in solar panels": "how to find defects in solar panels",
+            "research on how to find the effiency of the pumps in swimming pools and water useage across the USA through NAIP imagery": "how to find the effiency of the pumps in swimming pools and water useage across the USA through NAIP imagery",
+            "what is SEC with citations": "what is SEC",
+            "what is SEC with references": "what is SEC",
+            "find out about NAIP imagery and include sources": "NAIP imagery",
+            "look up pool pump weighted energy factor with references": "pool pump weighted energy factor",
+            "investigate solar panel microcrack detection and provide citations": "solar panel microcrack detection",
+            "source-backed comparison of pool pump WEF and electricity usage": "source-backed comparison of pool pump WEF and electricity usage",
+            "hey": None,
+        }
+        for prompt, expected in cases.items():
+            with self.subTest(prompt=prompt):
+                self.assertEqual(_extract_direct_research_query(prompt), expected)
 
     async def test_web_download_rejects_non_http_url(self) -> None:
         from backend.services.web_tools import web_download_file

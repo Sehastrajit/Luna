@@ -111,10 +111,17 @@ luna help       # list all commands`}</code></pre>
 luna chat
 
 # One-shot query
-luna chat "what time is it?"`}</code></pre>
+luna chat "what time is it?"
+
+# Auto-approve or auto-deny confirmation prompts
+luna chat --yes "create the requested workspace file"
+luna chat --no "try this but deny risky actions"`}</code></pre>
         </CodeFile>
         <p>Inside the interactive session, use <code>/new</code> to start a fresh conversation and
-        <code>/exit</code> to quit. The backend must be running.</p>
+        <code>/help</code> for terminal commands. Use <code>/exit</code> to quit.</p>
+        <p>The terminal uses the same chat stream as web and Electron. It handles tool confirmations,
+        plans, plan progress, proactive messages, command events, web research, workspace file tools,
+        installed skills, agent tasks, and Google/Microsoft workspace tool calls.</p>
 
         <h3>tunnel</h3>
         <CodeFile label="terminal">

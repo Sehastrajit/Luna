@@ -28,6 +28,7 @@ from backend.services.tool_registry import get_tools_for_prompt
 from backend.services.permission_manager import permission_manager
 from backend.services.task_planner import is_complex_task, generate_plan, TaskPlan
 from backend.services.state_engine import state_engine, UserState
+from backend.services.coding_agent import stream_coding_agent
 from backend.services.contradiction_store import pop as _pop_contradiction_notes
 from backend.services.vision import get_visual_context
 
@@ -348,6 +349,23 @@ Respond directly to the question or task. No "Great question!" or similar paddin
 {recent_context or 'No prior context.'}
 {f'## Upcoming agenda{chr(10)}{agenda}' if agenda else ''}
 {f'## Live data{chr(10)}{live_data}' if live_data else ''}"""
+
+
+_CODING_PATTERNS = [
+    r"\b(write|create|generate|build|implement|make)\b.{0,70}\b(function|class|method|component|module|script|api|endpoint|algorithm|program)\b",
+    r"\b(in|using|with)\s+(python|javascript|typescript|tsx?|rust|go|java|c\+\+|cpp|c#|csharp|ruby|php|swift|kotlin|sql|bash|shell|powershell|react|vue|django|flask|fastapi|express|node)\b",
+    r"\b(debug|fix|refactor|optimize|review|unit.?test)\b.{0,60}\b(code|function|class|script|file|this|it)\b",
+    r"\b(explain|what does|how does)\b.{0,60}\b(this code|this function|this class|this method|this script)\b",
+    r"```",
+    r"\b(write|give me|show me|make me)\b.{0,40}\b(code|snippet|example|implementation)\b",
+    r"\b(how (do|to|can) (i|you))\b.{0,60}\b(implement|code|write|build|program)\b",
+]
+
+
+def _is_coding_request(message: str) -> bool:
+    """Return True when the message is clearly a coding / programming task."""
+    lower = message.lower()
+    return any(re.search(p, lower) for p in _CODING_PATTERNS)
 
 
 def parse_user_launch_request(message: str) -> str | None:
@@ -734,15 +752,87 @@ def _extract_references_section(text: str) -> str:
     return "References:\n" + "\n".join(refs[:6]) if refs else ""
 
 
-def _ensure_references(answer: str, tool_result: str) -> str:
-    if re.search(r"\bReferences:\s*\n\s*\[\d+\]", answer, flags=re.IGNORECASE):
+def _strip_reference_noise(answer: str) -> str:
+    """Remove malformed inline source lists before adding canonical references."""
+    if not answer:
         return answer
+    match = re.search(r"\bReferences:\s*", answer, flags=re.IGNORECASE)
+    head = answer[:match.start()] if match else answer
+
+    clean_lines = []
+    for line in head.splitlines():
+        clean = line.strip()
+        if re.match(r"^\d+\.\s+\[.+?\]\(https?://", clean):
+            continue
+        if re.match(r"^\d+\.\s+\[.+?\]\s*$", clean):
+            continue
+        if re.match(r"^\[\d+\]\s+.+https?://", clean):
+            continue
+        if re.match(r"^\d+\.\s+.+https?://", clean):
+            continue
+        clean_lines.append(line)
+    text = "\n".join(clean_lines)
+    text = re.sub(r"\s*\(https?://[^)\s]+\)", "", text)
+    text = re.sub(r"\s+[A-Z][^\n.]{8,140}\s+-\s+https?://\S+\s*$", "", text)
+    return text.strip()
+
+
+def _ensure_references(answer: str, tool_result: str) -> str:
+    answer_refs = _extract_references_section(answer)
+    clean_answer = _strip_reference_noise(answer)
+    if answer_refs:
+        return clean_answer.rstrip() + "\n\n" + answer_refs.strip()
     refs = _extract_references_section(tool_result)
     if not refs:
-        return answer
-    return answer.rstrip() + "\n\n" + refs
+        return clean_answer or answer
+    return clean_answer.rstrip() + "\n\n" + refs.strip()
 
 
+def _extract_direct_research_query(message: str) -> str | None:
+    """Return a query when the user explicitly asks for research/citations."""
+    text = (message or "").strip()
+    if not text:
+        return None
+
+    wants_research = re.search(
+        r"\b(research|investigate|source-backed|sources?|references?|citations?|citings?|sitations?)\b",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if not wants_research:
+        return None
+
+    query = re.sub(
+        r"^\s*(please\s+)?(can you\s+|could you\s+|would you\s+)?"
+        r"(research|investigate)\b\s+(?:on|about)\s+",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    query = re.sub(
+        r"^\s*(please\s+)?(can you\s+|could you\s+|would you\s+)?"
+        r"(research|investigate|look up|search for|find out about|find out)\b\s*",
+        "",
+        query,
+        flags=re.IGNORECASE,
+    )
+    query = re.sub(
+        r"\b(and\s+)?(include|show|add|give|provide|cite|citing|with)\s+(the\s+)?"
+        r"(citations?|citings?|sitations?|references?|sources?)\b.*$",
+        "",
+        query,
+        flags=re.IGNORECASE,
+    )
+    query = re.sub(
+        r"\b(with|including)\s+(citations?|citings?|sitations?|references?|sources?)\b.*$",
+        "",
+        query,
+        flags=re.IGNORECASE,
+    )
+    query = query.strip(" .?!:;-")
+    if len(query) < 3:
+        query = text
+    return query
 
 
 async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
@@ -979,6 +1069,17 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
                 return json.dumps(await github.list_prs(args.get("repo", "")))[:4000]
             if tool_name == "github_get_pr":
                 return json.dumps(await github.get_pr(args.get("repo", ""), int(args.get("number", 0))))[:4000]
+
+        elif tool_name in ("code_read_file", "code_write_file", "code_list_files",
+                           "code_search", "code_run_shell"):
+            from backend.services.coding_agent import execute_coding_tool
+            from backend.services.audit_log import record_audit
+            result, needs_confirm = execute_coding_tool(tool_name, args)
+            if needs_confirm:
+                record_audit("tool_call", tool=tool_name, args=args, result="confirmation_required", conversation_id=conversation_id)
+                return "Needs user confirmation before running shell command."
+            record_audit("tool_call", tool=tool_name, args=args, result=result[:200], conversation_id=conversation_id)
+            return result[:4000]
 
         elif tool_name in ("google_workspace", "microsoft_workspace"):
             from backend.services.workspace_integrations import google_workspace, microsoft_workspace
@@ -1278,6 +1379,7 @@ async def chat_stream(
     from backend.services.spotify import spotify_service
     spotify_track = None if (cli or _is_business) else spotify_service.get_current()
     direct_spotify_cmd = None if _is_business else parse_user_spotify_request(req.message, spotify_track)
+    direct_research_query = _extract_direct_research_query(req.message)
 
     # Build system prompt — branch on variant and mode
     user_name = settings.user_name
@@ -1388,50 +1490,84 @@ async def chat_stream(
             _tool_succeeded = success
             full_response_parts = [full_response]
 
+        elif direct_research_query:
+            _had_tool_call = True
+            tc = {"tool": "web_research", "args": {"query": direct_research_query}, "speak": ""}
+            result = await execute_tool_call(tc, db, conv.id)
+            _tool_succeeded = "fail" not in result and "error" not in result
+            full_response = await verify_tool_result(
+                "web_research",
+                {"query": direct_research_query},
+                result,
+                req.message,
+            )
+            full_response_parts = [full_response]
+
         else:
-            # ── Check for active planning mode first ────────────────────────
-            plan = _active_plans.get(conv.id)
-            if plan and not plan.done:
-                step_prompt = await plan.next_prompt()
-                step_messages = [{"role": "user", "content": step_prompt}]
-            elif is_complex_task(req.message):
-                # Start a new plan
-                steps = await generate_plan(req.message)
-                if len(steps) > 1:
-                    plan = TaskPlan(req.message, steps)
-                    _active_plans[conv.id] = plan
-                    # Announce the plan
-                    plan_text = "\n".join(f"{i+1}. {s}" for i, s in enumerate(steps))
-                    yield f"data: {json.dumps({'type': 'plan', 'steps': steps, 'total': plan.total})}\n\n"
+            plan = None  # may be re-assigned by the normal LLM path below
+            # ── Coding agent fast-path (Ollama coding model) ─────────────────
+            if _is_coding_request(req.message) and not _is_business:
+                _voice_streamed = True  # tokens streamed in real-time; skip post-process re-stream
+                async for event in stream_coding_agent(messages, auto_confirm_shell=False):
+                    etype = event.get("type")
+                    if etype == "token":
+                        tok = event["content"]
+                        full_response_parts.append(tok)
+                        yield f"data: {json.dumps({'type': 'message_part', 'content': tok})}\n\n"
+                    elif etype == "tool_call":
+                        yield f"data: {json.dumps({'type': 'coding_tool_call', 'tool': event['tool'], 'args': event['args']})}\n\n"
+                    elif etype == "tool_result":
+                        yield f"data: {json.dumps({'type': 'coding_tool_result', 'tool': event['tool'], 'result': event['result']})}\n\n"
+                    elif etype == "confirmation_required":
+                        yield f"data: {json.dumps({'type': 'confirmation_required', 'confirm_id': 'shell_cmd', 'message': f'Run shell: {event[\"args\"].get(\"command\", \"\")}?', 'tool': event['tool'], 'args': event['args']})}\n\n"
+                    elif etype == "error":
+                        yield f"data: {json.dumps({'type': 'error', 'message': event['message']})}\n\n"
+                        return
+                full_response = "".join(full_response_parts)
+
+            else:
+                # ── Check for active planning mode first ─────────────────────
+                plan = _active_plans.get(conv.id)
+                if plan and not plan.done:
                     step_prompt = await plan.next_prompt()
                     step_messages = [{"role": "user", "content": step_prompt}]
+                elif is_complex_task(req.message):
+                    # Start a new plan
+                    steps = await generate_plan(req.message)
+                    if len(steps) > 1:
+                        plan = TaskPlan(req.message, steps)
+                        _active_plans[conv.id] = plan
+                        # Announce the plan
+                        yield f"data: {json.dumps({'type': 'plan', 'steps': steps, 'total': plan.total})}\n\n"
+                        step_prompt = await plan.next_prompt()
+                        step_messages = [{"role": "user", "content": step_prompt}]
+                    else:
+                        plan = None
+                        step_messages = messages
                 else:
                     plan = None
                     step_messages = messages
-            else:
-                plan = None
-                step_messages = messages
 
-            # ── LLM generation ───────────────────────────────────────────────
-            try:
-                async for token in ollama.stream_chat(
-                    step_messages,
-                    system_prompt,
-                    num_ctx=2048 if cli else None,
-                    num_predict=192 if cli else None,
-                    temperature=0.5 if cli else 0.7,
-                ):
-                    full_response_parts.append(token)
-                    if voice or cli:
-                        clean = re.sub(r'<think>.*?</think>', '', token, flags=re.DOTALL)
-                        if clean:
-                            yield f"data: {json.dumps({'type': 'message_part', 'content': clean})}\n\n"
-                            _voice_streamed = True
-            except Exception as e:
-                yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
-                return
+                # ── LLM generation ────────────────────────────────────────────
+                try:
+                    async for token in ollama.stream_chat(
+                        step_messages,
+                        system_prompt,
+                        num_ctx=None,
+                        num_predict=None,
+                        temperature=0.5 if cli else 0.7,
+                    ):
+                        full_response_parts.append(token)
+                        if voice or cli:
+                            clean = re.sub(r'<think>.*?</think>', '', token, flags=re.DOTALL)
+                            if clean:
+                                yield f"data: {json.dumps({'type': 'message_part', 'content': clean})}\n\n"
+                                _voice_streamed = True
+                except Exception as e:
+                    yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+                    return
 
-            full_response = format_luna_response("".join(full_response_parts))
+                full_response = format_luna_response("".join(full_response_parts))
 
             # ── JSON tool call detection and execution ───────────────────────
             tc = parse_tool_call_json(full_response)
@@ -1509,20 +1645,32 @@ async def chat_stream(
         _cli_text = re.sub(r"<think>.*?</think>", "", _cli_text, flags=re.DOTALL).strip()
         if _cli_text:
             _chat_print(f"[chat] Luna: {_cli_text}")
-        visible_parts = [
-            part.strip()
-            for part in re.split(r"\n{2,}", re.sub(STRIP_RE, "", full_response))
-            if part.strip()
-        ]
+        visible_text = re.sub(STRIP_RE, "", full_response).strip()
+        refs_match = re.search(r"\n\s*References:\s*", visible_text, flags=re.IGNORECASE)
+        if refs_match:
+            body_text = visible_text[:refs_match.start()].strip()
+            refs_text = visible_text[refs_match.start():].strip()
+            body_parts = [
+                part.strip()
+                for part in re.split(r"\n{2,}", body_text)
+                if part.strip()
+            ]
+            visible_parts = body_parts[:2] + ([refs_text] if refs_text else [])
+        else:
+            visible_parts = [
+                part.strip()
+                for part in re.split(r"\n{2,}", visible_text)
+                if part.strip()
+            ][:2]
         if not visible_parts:
             visible_parts = [full_response] if full_response else [""]
-        visible_parts = visible_parts[:2]
 
         if not (_voice_streamed and not _had_tool_call):
             for index, part in enumerate(visible_parts):
                 if index > 0 and not voice:
                     await asyncio.sleep(min(2.8, 1.35 + (len(part) * 0.018)))
-                yield f"data: {json.dumps({'type': 'message_part', 'content': part})}\n\n"
+                content = f"\n\n{part}" if cli and index > 0 else part
+                yield f"data: {json.dumps({'type': 'message_part', 'content': content})}\n\n"
 
         # Save Luna's response
         luna_msg = Message(

@@ -1,7 +1,0 @@
-{
-  "id": "web-research",
-  "name": "Web Research",
-  "description": "Search, read, compare, and summarize public web sources.",
-  "permissions": ["web"],
-  "tools": ["web_search", "web_fetch", "browser_read", "browser_open"]
-}

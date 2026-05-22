@@ -31,8 +31,11 @@ from pathlib import Path
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from sqlalchemy.orm import Session
 
 from backend.config import settings
+from backend.models.database import get_db
+import backend.services.db_manager as db_mgr
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -236,3 +239,33 @@ def list_providers(request: Request):
 def _current_model() -> str:
     from backend.services.llm import ollama as llm
     return llm.model
+
+
+# ── Database management ───────────────────────────────────────────────────────
+
+@router.get("/database/status")
+def database_status(request: Request, db: Session = Depends(get_db)):
+    """Database health, connection pool stats, and per-table row counts."""
+    _require_admin(request)
+    return {
+        **db_mgr.db_health(),
+        "tables": db_mgr.table_stats(db),
+        "migrations": db_mgr.migration_status(),
+    }
+
+
+@router.post("/database/migrate")
+def run_migrations(request: Request):
+    """Run `alembic upgrade head` — applies all pending schema migrations."""
+    _require_admin(request)
+    result = db_mgr.run_migrations()
+    if not result.get("ok"):
+        raise HTTPException(status_code=500, detail=result)
+    return result
+
+
+@router.get("/database/tables")
+def table_stats(request: Request, db: Session = Depends(get_db)):
+    """Row counts for all Luna tables."""
+    _require_admin(request)
+    return {"tables": db_mgr.table_stats(db)}
