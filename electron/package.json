@@ -1,6 +1,6 @@
 {
   "name": "luna",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "L.U.N.A. - Large Unified Nexus Mind AI",
   "author": "L.U.N.A. contributors",
   "license": "MIT",
@@ -55,13 +55,18 @@
           "!__pycache__/**",
           "!*.pyc"
         ]
+      },
+      {
+        "from": "../dist-backend/luna-backend",
+        "to": "backend-bin",
+        "filter": ["**/*"]
       }
     ],
     "win": {
       "artifactName": "Luna-Setup-${version}.${ext}",
       "target": [
         {
-          "target": "nsis",
+          "target": "zip",
           "arch": [
             "x64"
           ]

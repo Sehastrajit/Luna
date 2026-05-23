@@ -300,10 +300,10 @@ async function createWindow() {
   mainWindow.on('unmaximize', () => mainWindow.webContents.send('window:maximized', false))
 
   console.log('[Luna] Waiting for backend...')
-  const ready = await waitForBackend()
+  const ready = await waitForBackend(90_000)
   if (!ready) {
-    logLine('[Luna] Backend failed to start within 30s')
-    loadBackendErrorWindow('The local API did not become ready within 30 seconds.')
+    logLine('[Luna] Backend failed to start within 90s')
+    loadBackendErrorWindow('The local API did not become ready within 90 seconds.')
     return
   }
   console.log('[Luna] Backend ready.')
@@ -364,6 +364,8 @@ function showMainWindow() {
 // ── IPC ────────────────────────────────────────────────────────────────────────
 function setupAutoUpdater() {
   if (isDev || !autoUpdater) return
+  const updateYml = path.join(process.resourcesPath, 'app-update.yml')
+  if (!fs.existsSync(updateYml)) return  // zip/portable build — no updater
   autoUpdater.autoDownload = true
   autoUpdater.on('checking-for-update', () => logLine('[update] checking for update'))
   autoUpdater.on('update-available', info => {
@@ -551,6 +553,10 @@ app.whenReady().then(async () => {
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
     return _ALLOWED_PERMISSIONS.has(permission)
   })
+  // Spoof as Chrome so YouTube embedded player works (Electron UA triggers Error 153)
+  session.defaultSession.setUserAgent(
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
+  )
 
   if (!isDev) {
     app.setLoginItemSettings({

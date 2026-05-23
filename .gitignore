@@ -8,6 +8,7 @@ docs-site/node_modules/
 dist/
 build/
 build-backend/
+dist-backend/
 frontend/dist/
 dist-electron/
 docs-site/.next/

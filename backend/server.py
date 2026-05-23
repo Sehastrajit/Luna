@@ -16,9 +16,11 @@ except Exception:
 # Ensure project root is on the path when run as a subprocess
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Write PID file so Electron can cleanly kill this process on next launch
-_PID_FILE = Path(__file__).parent.parent / "data" / "backend.pid"
-_PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+# Write PID file — use LUNA_DATA_DIR from Electron so we always write to a
+# user-writable location (AppData/Roaming/luna/data), never into Program Files.
+_data_dir = Path(os.environ.get("LUNA_DATA_DIR") or (Path(__file__).parent.parent / "data"))
+_PID_FILE = _data_dir / "backend.pid"
+_data_dir.mkdir(parents=True, exist_ok=True)
 _PID_FILE.write_text(str(os.getpid()))
 
 @atexit.register
@@ -30,10 +32,11 @@ def _cleanup_pid():
 
 import uvicorn
 from backend.config import settings
+from backend.main import app
 
 if __name__ == '__main__':
     uvicorn.run(
-        'backend.main:app',
+        app,
         host=settings.host,
         port=settings.port,
         log_level='warning',

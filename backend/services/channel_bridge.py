@@ -87,9 +87,17 @@ def _channel_system_prompt(channel: str, user_display: str) -> str:
             "Do not mention desktop features, widgets, maps, or app launchers."
         )
 
+    try:
+        from backend.services.skill_manager import get_skills_prompt
+        skills_block = get_skills_prompt(ui="channel")
+        skills_section = f"\n## Skills\n{skills_block}\n" if skills_block and "No local" not in skills_block else ""
+    except Exception:
+        skills_section = ""
+
     return (
         f"You are Luna, an AI assistant talking to {user_display} via {channel}.\n"
-        f"Current time: {now.strftime('%A, %B %d, %Y at %I:%M %p')}.\n\n"
+        f"Current time: {now.strftime('%A, %B %d, %Y at %I:%M %p')}.\n"
+        f"{skills_section}\n"
         "Reply concisely — this is a messaging channel, not a desktop UI. "
         "Keep responses under 3 short paragraphs. "
         "Do not mention widgets, maps, app launchers, or desktop features. "
