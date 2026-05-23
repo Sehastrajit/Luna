@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 _CODING_PATTERNS = [
     r"\b(write|create|generate|build|implement|make)\b.{0,70}\b(function|class|method|component|module|script|api|endpoint|algorithm|program)\b",
     r"\b(in|using|with)\s+(python|javascript|typescript|tsx?|rust|go|java|c\+\+|cpp|c#|csharp|ruby|php|swift|kotlin|sql|bash|shell|powershell|react|vue|django|flask|fastapi|express|node)\b",
-    r"\b(debug|fix|refactor|optimize|review|unit.?test)\b.{0,60}\b(code|function|class|script|file|this|it)\b",
+    r"\b(debug|fix|refactor|optimize|review|unit.?test)\b.{0,60}\b(code|function|class|script|file)\b",
     r"\b(explain|what does|how does)\b.{0,60}\b(this code|this function|this class|this method|this script)\b",
     r"```",
     r"\b(write|give me|show me|make me)\b.{0,40}\b(code|snippet|example|implementation)\b",
@@ -204,39 +204,67 @@ def parse_user_spotify_request(message: str, current_track: dict | None = None) 
 
 
 def extract_direct_research_query(message: str) -> str | None:
-    """Return a query when the user explicitly asks for research/citations."""
+    """Return a query when the user is asking for current/web-sourced info."""
     text = (message or "").strip()
     if not text:
         return None
-    wants_research = re.search(
+
+    # Explicit research/citation request
+    explicit = re.search(
         r"\b(research|investigate|source-backed|sources?|references?|citations?|citings?|sitations?)\b",
         text, flags=re.IGNORECASE,
     )
-    if not wants_research:
-        return None
-    query = re.sub(
-        r"^\s*(please\s+)?(can you\s+|could you\s+|would you\s+)?"
-        r"(research|investigate)\b\s+(?:on|about)\s+",
-        "", text, flags=re.IGNORECASE,
+    # Current-events / live-info patterns — model can't answer these from training data
+    live = re.search(
+        r"\b(latest|recent|current|today|this week|this month|right now|news|happening|update[sd]?|"
+        r"announce[d]?|release[d]?|launch(?:ed)?|what(?:'s| is) new|just|broke|breaking)\b",
+        text, flags=re.IGNORECASE,
     )
+    # Comparison of versioned/dated things that may have changed
+    compare = re.search(
+        r"\b(compare|vs|versus|difference between|better|which is best)\b.{0,60}"
+        r"\b(gpt|claude|gemini|llama|mistral|model|llm|ai|version)\b",
+        text, flags=re.IGNORECASE,
+    )
+
+    if not (explicit or live or compare):
+        return None
+
     query = re.sub(
         r"^\s*(please\s+)?(can you\s+|could you\s+|would you\s+)?"
-        r"(research|investigate|look up|search for|find out about|find out)\b\s*",
-        "", query, flags=re.IGNORECASE,
+        r"(research|investigate|look up|search for|find out about|find out|tell me about|"
+        r"what(?:'s| is|are)|show me|give me)\b\s*(?:the\s+)?(?:latest\s+|current\s+|recent\s+)?",
+        "", text, flags=re.IGNORECASE,
     )
     query = re.sub(
         r"\b(and\s+)?(include|show|add|give|provide|cite|citing|with)\s+(the\s+)?"
         r"(citations?|citings?|sitations?|references?|sources?)\b.*$",
         "", query, flags=re.IGNORECASE,
     )
-    query = re.sub(
-        r"\b(with|including)\s+(citations?|citings?|sitations?|references?|sources?)\b.*$",
-        "", query, flags=re.IGNORECASE,
-    )
     query = query.strip(" .?!:;-")
     if len(query) < 3:
         query = text
     return query
+
+
+def extract_direct_dataset_query(message: str) -> str | None:
+    """Return a query when the user is asking for a dataset or data file."""
+    text = (message or "").strip()
+    if not text:
+        return None
+    match = re.search(
+        r"\b(find|get|download|fetch|locate|give me|search for)\b.{0,60}"
+        r"\b(dataset|data\s*set|data\s*file|training data|csv|parquet|data\s*for)\b",
+        text, flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    query = re.sub(
+        r"^\s*(please\s+)?(can you\s+|could you\s+)?"
+        r"(find|get|download|fetch|locate|give me|search for)\s+(me\s+)?(?:a\s+|an\s+|the\s+)?",
+        "", text, flags=re.IGNORECASE,
+    ).strip(" .?!:;-")
+    return query if len(query) >= 3 else text
 
 
 # ── Away detection ────────────────────────────────────────────────────────────

@@ -17,7 +17,7 @@ from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from backend.config import settings
-from backend.services.coding_agent import (
+from backend.services.coding import (
     WORKSPACE_ROOT,
     execute_coding_tool,
     stream_coding_agent,
@@ -77,14 +77,20 @@ async def coding_stream(payload: dict = Body(default={})):
     Body:
       message            str   — user's coding request (required)
       history            list  — prior messages [{role, content}, ...]
-      auto_confirm_shell bool  — skip confirmation for shell commands (default false)
+      auto_confirm_shell bool  — skip shell confirmation (default false)
+      workspace_root     str   — absolute path to project root (optional)
+                                 defaults to Luna's internal workspace
     """
+    from pathlib import Path as _Path
     message = (payload.get("message") or "").strip()
     history = payload.get("history") or []
     auto_confirm_shell = bool(payload.get("auto_confirm_shell", False))
+    ws_str = (payload.get("workspace_root") or "").strip()
 
     if not message:
         return JSONResponse({"detail": "message is required"}, status_code=400)
+
+    workspace_root = _Path(ws_str) if ws_str else None
 
     messages = list(history) + [{"role": "user", "content": message}]
 
@@ -92,6 +98,7 @@ async def coding_stream(payload: dict = Body(default={})):
         async for event in stream_coding_agent(
             messages,
             auto_confirm_shell=auto_confirm_shell,
+            workspace_root=workspace_root,
         ):
             yield f"data: {json.dumps(event)}\n\n"
 

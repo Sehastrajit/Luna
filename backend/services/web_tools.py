@@ -1,10 +1,9 @@
-"""Web search (DuckDuckGo) and page fetch for Luna tool calls."""
+"""Web search (DuckDuckGo via ddgs) and page fetch for Luna tool calls."""
 import html
 import base64
 import json
 import re
 from datetime import datetime, timezone
-from urllib.parse import parse_qs, unquote, urlparse
 
 import httpx
 
@@ -24,54 +23,23 @@ def _strip_html(html_text: str) -> str:
     return html_text.strip()
 
 
-def _clean_html_text(value: str) -> str:
-    value = re.sub(r"<[^>]+>", " ", value)
-    value = html.unescape(value)
-    return re.sub(r"\s+", " ", value).strip()
-
-
-def _decode_duckduckgo_url(href: str) -> str:
-    href = html.unescape(href or "").strip()
-    if href.startswith("//"):
-        href = "https:" + href
-    parsed = urlparse(href)
-    params = parse_qs(parsed.query)
-    if "uddg" in params and params["uddg"]:
-        return unquote(params["uddg"][0])
-    return href
-
-
 async def web_search(query: str, max_results: int = 6) -> str:
-    """Search DuckDuckGo HTML and return snippets with numbered sources."""
+    """Search DuckDuckGo via the ddgs library and return snippets with numbered sources."""
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True) as c:
-            r = await c.get(
-                "https://html.duckduckgo.com/html/",
-                params={"q": query},
-                headers={"User-Agent": _UA, "Accept-Language": "en-US,en;q=0.9"},
-            )
-            r.raise_for_status()
-
-        links = re.findall(
-            r'<a[^>]+class="result__a"[^>]+href="([^"]+)"[^>]*>(.*?)</a>',
-            r.text,
-            re.DOTALL | re.IGNORECASE,
-        )
-        snippets = re.findall(r'class="result__snippet"[^>]*>(.*?)</a>', r.text, re.DOTALL)
-
+        from ddgs import DDGS
+        results = list(DDGS().text(query, max_results=max_results))
+        if not results:
+            print(f"[web] search '{query}': 0 results")
+            return "No results found."
         lines = []
         refs = []
-        for idx, ((href, title_html), snippet_html) in enumerate(
-            zip(links[:max_results], snippets[:max_results]),
-            start=1,
-        ):
-            title = _clean_html_text(title_html)
-            snippet = _clean_html_text(snippet_html)
-            url = _decode_duckduckgo_url(href)
+        for idx, r in enumerate(results[:max_results], start=1):
+            title = r.get("title", "")
+            snippet = r.get("body", "")
+            url = r.get("href", "")
             if title:
                 lines.append(f"[{idx}] {title}\nSnippet: {snippet}\nURL: {url}")
                 refs.append(f"[{idx}] {title} - {url}")
-
         print(f"[web] search '{query}': {len(lines)} results")
         if not lines:
             return "No results found."

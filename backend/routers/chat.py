@@ -43,6 +43,7 @@ from backend.services.command_parser import (
     parse_user_launch_request,
     parse_user_spotify_request,
     extract_direct_research_query,
+    extract_direct_dataset_query,
     parse_commands,
     execute_commands,
 )
@@ -151,6 +152,7 @@ async def chat_stream(
     spotify_track        = None if (cli or _is_business) else spotify_service.get_current()
     direct_spotify_cmd   = None if _is_business else parse_user_spotify_request(req.message, spotify_track)
     direct_research_query = extract_direct_research_query(req.message)
+    direct_dataset_query  = extract_direct_dataset_query(req.message)
 
     user_name = settings.user_name
 
@@ -261,6 +263,14 @@ async def chat_stream(
             full_response = await verify_tool_result("web_research", {"query": direct_research_query}, result, req.message)
             full_response_parts = [full_response]
 
+        elif direct_dataset_query:
+            _had_tool_call = True
+            tc = {"tool": "dataset_search", "args": {"query": direct_dataset_query}, "speak": ""}
+            result = await execute_tool_call(tc, db, conv.id)
+            _tool_succeeded = "fail" not in result and "error" not in result
+            full_response = await verify_tool_result("dataset_search", {"query": direct_dataset_query}, result, req.message)
+            full_response_parts = [full_response]
+
         else:
             plan = None
             # ── Coding agent fast-path ────────────────────────────────────────
@@ -348,6 +358,26 @@ async def chat_stream(
                 if _wf:
                     tc = {"tool": "web_fetch", "args": {"url": _wf.group(1).strip()}, "speak": ""}
                     full_response = full_response[:_wf.start()].rstrip() + full_response[_wf.end():]
+            if not tc:
+                _ds = re.search(r'\[DATASET_SEARCH:([^\]]+)\]', full_response, re.IGNORECASE)
+                if _ds:
+                    tc = {"tool": "dataset_search", "args": {"query": _ds.group(1).strip()}, "speak": ""}
+                    full_response = full_response[:_ds.start()].rstrip() + full_response[_ds.end():]
+            if not tc:
+                _ww = re.search(r'\[WORKSPACE_WRITE:([^|]+)\|([^\]]+)\]', full_response, re.IGNORECASE | re.DOTALL)
+                if _ww:
+                    tc = {"tool": "workspace_write", "args": {"path": _ww.group(1).strip(), "content": _ww.group(2)}, "speak": ""}
+                    full_response = full_response[:_ww.start()].rstrip() + full_response[_ww.end():]
+            if not tc:
+                _wr2 = re.search(r'\[WORKSPACE_READ:([^\]]+)\]', full_response, re.IGNORECASE)
+                if _wr2:
+                    tc = {"tool": "workspace_read", "args": {"path": _wr2.group(1).strip()}, "speak": ""}
+                    full_response = full_response[:_wr2.start()].rstrip() + full_response[_wr2.end():]
+            if not tc:
+                _gw = re.search(r'\[GMAIL(?:_CHECK)?\]', full_response, re.IGNORECASE)
+                if _gw:
+                    tc = {"tool": "google_workspace", "args": {"service": "gmail", "action": "search_messages", "args": {"q": "is:unread", "maxResults": 10}}, "speak": ""}
+                    full_response = full_response[:_gw.start()].rstrip() + full_response[_gw.end():]
 
             _had_tool_call = tc is not None
             if tc:
@@ -378,13 +408,18 @@ async def chat_stream(
                 else:
                     result = await execute_tool_call(tc, db, conv.id)
                     _tool_succeeded = "fail" not in result and "error" not in result
-                    if speak and tool_name not in ("web_search", "web_fetch"):
+                    _info_tools = {"web_search", "web_research", "web_fetch", "dataset_search",
+                                   "workspace_read", "workspace_read_base64", "browser_read",
+                                   "github_list_repos", "github_list_issues", "github_list_prs",
+                                   "github_get_pr", "get_system_info", "get_volume",
+                                   "get_brightness", "get_clipboard"}
+                    if tool_name in _info_tools:
+                        verified = await verify_tool_result(tool_name, args, result, req.message)
+                        full_response = verified or strip_tool_call_json(full_response)
+                    elif speak:
                         full_response = speak
                     else:
-                        verified = await verify_tool_result(tool_name, args, result, req.message)
-                        full_response = strip_tool_call_json(full_response)
-                        if not full_response:
-                            full_response = verified
+                        full_response = strip_tool_call_json(full_response) or result[:300]
 
             # ── Planning progress ─────────────────────────────────────────────
             if plan and not plan.done:
@@ -404,14 +439,16 @@ async def chat_stream(
             _chat_print(f"[chat] Luna: {_cli_text}")
 
         visible_text = re.sub(STRIP_RE, "", full_response).strip()
+        # Tool responses (research, dataset, etc.) need full content; regular chat capped at 2 parts
+        _max_parts = 10 if _had_tool_call else 2
         refs_match = re.search(r"\n\s*References:\s*", visible_text, flags=re.IGNORECASE)
         if refs_match:
             body_text = visible_text[:refs_match.start()].strip()
             refs_text = visible_text[refs_match.start():].strip()
             body_parts = [p.strip() for p in re.split(r"\n{2,}", body_text) if p.strip()]
-            visible_parts = body_parts[:2] + ([refs_text] if refs_text else [])
+            visible_parts = body_parts[:_max_parts] + ([refs_text] if refs_text else [])
         else:
-            visible_parts = [p.strip() for p in re.split(r"\n{2,}", visible_text) if p.strip()][:2]
+            visible_parts = [p.strip() for p in re.split(r"\n{2,}", visible_text) if p.strip()][:_max_parts]
 
         if not visible_parts:
             visible_parts = [full_response] if full_response else [""]

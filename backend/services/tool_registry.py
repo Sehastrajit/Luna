@@ -87,23 +87,45 @@ def get_tool(name: str) -> ToolDef | None:
 def get_tools_for_prompt() -> str:
     """Return a compact tool list for inclusion in Luna's system prompt."""
     lines = [
-        "You can call tools by including JSON anywhere in your response:",
-        '{"tool_call": {"tool": "<name>", "args": {<params>}, "speak": "<what you say>"}}',
+        "## Tool calling — MANDATORY rules",
+        "",
+        "To call a tool, emit this JSON anywhere in your reply (the parser extracts it):",
+        '  {"tool_call": {"tool": "<name>", "args": {<key:value>}, "speak": "<one-line confirmation>"}}',
+        "",
+        "RULES — you MUST call a tool (not just describe it) when:",
+        "  - User asks to SEARCH the web, find current info, news, or prices → web_research",
+        "  - User asks for a DATASET, data file, or training data → dataset_search",
+        "  - User asks to CREATE or SAVE a file in the workspace → workspace_write",
+        "  - User asks to READ a file from the workspace → workspace_read",
+        "  - User asks about GMAIL, email, calendar, Drive, Docs, Sheets → google_workspace",
+        "  - User asks about Outlook, OneDrive, Teams, Excel → microsoft_workspace",
+        "  - User asks to SWITCH audio device → switch_audio",
+        "  - User asks to TAKE a screenshot → take_screenshot",
+        "  - User asks to CREATE a task or calendar event → create_task / create_event",
+        "",
+        "DO NOT describe what you would do — DO IT by emitting the tool_call JSON.",
+        "DO NOT say 'Sure, checking your Gmail' without also emitting the tool_call JSON.",
+        "",
+        "Examples:",
+        '  User: "search for latest AI news"',
+        '  → {"tool_call": {"tool": "web_research", "args": {"query": "latest AI news 2025"}, "speak": "Searching now."}}',
+        "",
+        '  User: "save a CSV with employee data"',
+        '  → {"tool_call": {"tool": "workspace_write", "args": {"path": "employees.csv", "content": "id,name,role\\n1,Jane,Engineer"}, "speak": "Saved employees.csv."}}',
+        "",
+        '  User: "check my Gmail"',
+        '  → {"tool_call": {"tool": "google_workspace", "args": {"service": "gmail", "action": "search_messages", "args": {"q": "is:unread", "maxResults": 10}}, "speak": "Checking Gmail."}}',
+        "",
+        '  User: "find a climate dataset"',
+        '  → {"tool_call": {"tool": "dataset_search", "args": {"query": "global climate temperature dataset"}, "speak": "Searching dataset portals."}}',
         "",
         "Available tools:",
     ]
     for name, tool in TOOL_REGISTRY.items():
         params = ", ".join(tool.params) if tool.params else "-"
-        lines.append(f"  {name}({params}) - {tool.description}")
+        lines.append(f"  {name}({params}) — {tool.description}")
     lines.append("")
-    lines.append("For map, Spotify, launches, and simple URL opening use bracket tags when instructed; use tool_call JSON for agentic workflows.")
-    lines.append("Use tool_call JSON for: switch_audio, create_task, create_event, screen tools, click/type actions, web_search, web_research, web_fetch, browser_read, workspace files, skills, and agent tasks.")
-    lines.append("IMPORTANT: When switching audio devices, you MUST emit a tool_call JSON. Do NOT just say you are switching.")
-    lines.append("Web tools: web_search for quick lookup, web_research for source-backed research, dataset_search for dataset discovery, web_fetch/browser_read for specific pages, and web_download_file for workspace downloads.")
-    lines.append("Workspace file tools: workspace_write/read for text files and workspace_write_base64/read_base64 for binary files. Follow installed skills for workflow-specific rules.")
-    lines.append("Agent tools: use create_agent_task for multi-step work and list_skills to discover installed local skills.")
-    lines.append("Coding tools (Ollama coding model): code_read_file/code_write_file/code_list_files/code_search for workspace file operations; code_run_shell for shell commands (always confirm first). These are automatically used when a coding request is detected.")
-    lines.append("GitHub tools: use github_list_repos, github_list_issues(repo), github_create_issue(repo,title,body), github_comment(repo,number,body), github_list_prs(repo), github_get_pr(repo,number). Requires github_token in .env.")
-    lines.append("Workspace tools: use google_workspace(service,action,args) for Gmail/Calendar/Drive/Docs/Sheets/Slides/Tasks/People and microsoft_workspace(service,action,args) for Outlook/Calendar/OneDrive/Excel/To Do/Teams. Examples: service='gmail', action='search_messages'; service='calendar', action='create_event'; service='drive', action='search_files'. Sending mail, writing files, and updating sheets should be confirmed.")
-    lines.append("System controls: get_volume/set_volume(level)/mute_audio/unmute_audio for audio; get_brightness/set_brightness(level) for display; lock_screen, turn_off_display, sleep_system; get_clipboard/set_clipboard(text); get_system_info.")
+    lines.append("Bracket tags (for map, Spotify, launches, simple URL): use as instructed in the behavior section.")
+    lines.append("Google Workspace service/action pairs: gmail/search_messages, gmail/send_message, calendar/list_events, calendar/create_event, drive/search_files, sheets/get_values, docs/create_document.")
+    lines.append("Microsoft Workspace service/action pairs: mail/search_messages, calendar/list_events, drive/search_files, excel/get_values, todo/list_tasks.")
     return "\n".join(lines)

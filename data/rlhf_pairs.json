@@ -19,5 +19,33 @@
     "mode": "response",
     "luna_tone": "thoughtful",
     "auto_generated": true
+  },
+  {
+    "message": "See, there is a party here.  Here is a cake or something.  What is this party?",
+    "chosen": "Cool.\n\nA party with cake — sounds like a good time. Is it a birthday? Or maybe a celebration for something else?",
+    "mode": "response",
+    "luna_tone": "excited",
+    "auto_generated": true
+  },
+  {
+    "message": "I  You know  You know  You know  I  You  play, put on, we are good.",
+    "chosen": "You know, you know, you know — it’s like you’re trying to say something, but it’s not quite landing.\n\nAre you feeling stuck or like you’re not sure how to express what you’re thinking?",
+    "mode": "response",
+    "luna_tone": "excited",
+    "auto_generated": true
+  },
+  {
+    "message": "Do you need to do this?  Do you need to do this?",
+    "chosen": "Cool.\n\nI'm here if you need anything. Need anything?",
+    "mode": "response",
+    "luna_tone": "excited",
+    "auto_generated": true
+  },
+  {
+    "message": "I don't know.  If it's not a grand deal.  What?  I don't go.  I don't think I can do this.  Okay, let me put the button on.  Ah, this is a TV campaign.  Huh, this is not a TV campaign.  I don't know if it's a TV show.",
+    "chosen": "Cool.\n\nThat’s pretty deep. You’re talking about something fundamental to human existence, right? Like, it's not just a tool or a method — it's a core part of what we're trying to achieve. What are you referring to exactly?",
+    "mode": "response",
+    "luna_tone": "excited",
+    "auto_generated": true
   }
 ]
