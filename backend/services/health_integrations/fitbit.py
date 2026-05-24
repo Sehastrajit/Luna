@@ -168,3 +168,41 @@ async def fitbit_sync(db: Session, target_date: Optional[str] = None) -> list[He
     count = persist(db, points)
     _update_sync(db, "fitbit", "ok", count)
     return points
+
+
+# ── Integration class (auto-discovered by sync.py) ────────────────────────────
+
+from backend.services.health_integrations.base import EnvField, HealthIntegration, IntegrationManifest  # noqa: E402
+
+
+class FitbitIntegration(HealthIntegration):
+    @property
+    def manifest(self) -> IntegrationManifest:
+        return IntegrationManifest(
+            id="fitbit", name="Fitbit",
+            description="Steps, sleep, heart rate, SpO2, HRV, breathing rate",
+            auth_type="oauth",
+            env_fields=[
+                EnvField("FITBIT_CLIENT_ID",     "Client ID",     placeholder="your-fitbit-client-id"),
+                EnvField("FITBIT_CLIENT_SECRET", "Client Secret", secret=True, placeholder="your-fitbit-client-secret"),
+            ],
+            help_text=(
+                "1. Go to dev.fitbit.com → Register an App (Personal)\n"
+                "2. Set OAuth 2.0 redirect URI to:\n"
+                "   http://127.0.0.1:8899/api/health/oauth/callback\n"
+                "3. Copy Client ID and Secret, then click Connect"
+            ),
+            help_url="https://dev.fitbit.com/apps/new",
+        )
+
+    def is_configured(self) -> bool:
+        return fitbit_is_configured()
+
+    async def sync(self, db, target_date=None):
+        return await fitbit_sync(db, target_date)
+
+    async def oauth_url(self, redirect_uri):
+        return await fitbit_oauth_url(redirect_uri)
+
+    async def exchange_code(self, code, redirect_uri):
+        return await fitbit_exchange_code(code, redirect_uri)

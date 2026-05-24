@@ -93,3 +93,33 @@ async def oura_sync(db: Session, target_date: Optional[str] = None) -> list[Heal
     count = persist(db, points)
     _update_sync(db, "oura", "ok", count)
     return points
+
+
+# ── Integration class (auto-discovered by sync.py) ────────────────────────────
+
+from backend.services.health_integrations.base import EnvField, HealthIntegration, IntegrationManifest  # noqa: E402
+
+
+class OuraIntegration(HealthIntegration):
+    @property
+    def manifest(self) -> IntegrationManifest:
+        return IntegrationManifest(
+            id="oura", name="Oura Ring",
+            description="Sleep, readiness, HRV, activity, stress",
+            auth_type="apikey",
+            env_fields=[
+                EnvField("OURA_API_KEY", "Personal Access Token", secret=True, placeholder="your-oura-token"),
+            ],
+            help_text=(
+                "1. Go to cloud.ouraring.com/user/settings\n"
+                "2. Open the Personal Access Tokens section\n"
+                "3. Generate a new token and paste it below"
+            ),
+            help_url="https://cloud.ouraring.com/user/settings",
+        )
+
+    def is_configured(self) -> bool:
+        return oura_is_configured()
+
+    async def sync(self, db, target_date=None):
+        return await oura_sync(db, target_date)

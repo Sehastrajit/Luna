@@ -224,3 +224,49 @@ def metric_types():
             for k, v in METRIC_UNITS.items()
         ]
     }
+
+
+# ── Integration manifests ─────────────────────────────────────────────────
+
+
+@router.get("/manifests")
+def integration_manifests():
+    """Return metadata for every auto-discovered integration.
+
+    The settings UI uses this to render integration cards and setup forms
+    without any frontend code changes when a new integration is added.
+    """
+    from backend.services.health_integrations.sync import _PLATFORMS
+    webhook = {"apple", "samsung"}
+    platforms = []
+    for pid, p in _PLATFORMS.items():
+        m = p.manifest
+        platforms.append({
+            "id":          m.id,
+            "name":        m.name,
+            "description": m.description,
+            "auth_type":   m.auth_type,
+            "configured":  p.is_configured(),
+            "env_fields": [
+                {
+                    "key":         f.key,
+                    "label":       f.label,
+                    "secret":      f.secret,
+                    "placeholder": f.placeholder,
+                    "required":    f.required,
+                }
+                for f in m.env_fields
+            ],
+            "help_text": m.help_text,
+            "help_url":  m.help_url,
+        })
+    # Include webhook-only platforms that aren't auto-discovered
+    for name in webhook:
+        if name not in _PLATFORMS:
+            platforms.append({
+                "id": name, "name": name.title(),
+                "description": f"{name.title()} Health (webhook push)",
+                "auth_type": "webhook", "configured": True,
+                "env_fields": [], "help_text": "", "help_url": "",
+            })
+    return {"platforms": platforms}

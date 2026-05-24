@@ -159,3 +159,42 @@ async def google_fit_sync(db: Session, target_date: Optional[str] = None) -> lis
     count = persist(db, points)
     _update_sync(db, "google_fit", "ok", count)
     return points
+
+
+# ── Integration class (auto-discovered by sync.py) ────────────────────────────
+
+from backend.services.health_integrations.base import EnvField, HealthIntegration, IntegrationManifest  # noqa: E402
+
+
+class GoogleFitIntegration(HealthIntegration):
+    @property
+    def manifest(self) -> IntegrationManifest:
+        return IntegrationManifest(
+            id="google_fit", name="Google Fit",
+            description="Activity, calories, heart rate, sleep, body metrics",
+            auth_type="oauth",
+            env_fields=[
+                EnvField("GOOGLE_FIT_CLIENT_ID",     "Client ID",     placeholder="your-id.apps.googleusercontent.com"),
+                EnvField("GOOGLE_FIT_CLIENT_SECRET", "Client Secret", secret=True, placeholder="GOCSPX-..."),
+            ],
+            help_text=(
+                "1. Go to console.cloud.google.com → enable the Fitness API\n"
+                "2. Create OAuth 2.0 credentials (Desktop app)\n"
+                "3. Set redirect URI to:\n"
+                "   http://127.0.0.1:8899/api/health/oauth/callback\n"
+                "4. Copy Client ID and Secret, then click Connect"
+            ),
+            help_url="https://console.cloud.google.com",
+        )
+
+    def is_configured(self) -> bool:
+        return google_fit_is_configured()
+
+    async def sync(self, db, target_date=None):
+        return await google_fit_sync(db, target_date)
+
+    async def oauth_url(self, redirect_uri):
+        return await google_fit_oauth_url(redirect_uri)
+
+    async def exchange_code(self, code, redirect_uri):
+        return await google_fit_exchange_code(code, redirect_uri)

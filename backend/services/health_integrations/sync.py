@@ -1,50 +1,64 @@
-"""Unified sync dispatcher and integration status."""
+"""Unified sync dispatcher and integration status.
+
+Platforms are auto-discovered: drop a file in this package that subclasses
+HealthIntegration and it appears here automatically — no edits needed.
+"""
 from __future__ import annotations
 
+import importlib
 import logging
+import pkgutil
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from backend.services.health_integrations.base import HealthIntegration
 from backend.services.health_integrations.db import _update_sync, get_sync_status
-from backend.services.health_integrations.fitbit import (
-    fitbit_exchange_code, fitbit_is_configured, fitbit_oauth_url, fitbit_sync,
-)
-from backend.services.health_integrations.garmin import garmin_is_configured, garmin_sync
-from backend.services.health_integrations.google_fit import (
-    google_fit_exchange_code, google_fit_is_configured, google_fit_oauth_url, google_fit_sync,
-)
 from backend.services.health_integrations.models import HealthIntegrationError
-from backend.services.health_integrations.oura import oura_is_configured, oura_sync
-from backend.services.health_integrations.withings import (
-    withings_exchange_code, withings_is_configured, withings_oauth_url, withings_sync,
-)
 
 log = logging.getLogger(__name__)
 
-PLATFORM_SYNC = {
-    "fitbit":     fitbit_sync,
-    "google_fit": google_fit_sync,
-    "oura":       oura_sync,
-    "withings":   withings_sync,
-    "garmin":     garmin_sync,
+_SKIP = {"base", "models", "db", "oauth", "sync", "webhooks"}
+
+
+def _discover() -> dict[str, HealthIntegration]:
+    import backend.services.health_integrations as _pkg
+    platforms: dict[str, HealthIntegration] = {}
+    for _, name, _ in pkgutil.iter_modules(_pkg.__path__):
+        if name.startswith("_") or name in _SKIP:
+            continue
+        try:
+            mod = importlib.import_module(f"backend.services.health_integrations.{name}")
+        except Exception as e:
+            log.warning("Health integration module %s failed to import: %s", name, e)
+            continue
+        for attr in vars(mod).values():
+            if (
+                isinstance(attr, type)
+                and issubclass(attr, HealthIntegration)
+                and attr is not HealthIntegration
+            ):
+                try:
+                    inst = attr()
+                    platforms[inst.manifest.id] = inst
+                except Exception as e:
+                    log.warning("Health integration %s failed to instantiate: %s", attr.__name__, e)
+    return platforms
+
+
+_PLATFORMS: dict[str, HealthIntegration] = _discover()
+
+# Backward-compatible dicts — the router calls these unchanged
+PLATFORM_SYNC       = {k: v.sync          for k, v in _PLATFORMS.items()}
+PLATFORM_CONFIGURED = {k: v.is_configured for k, v in _PLATFORMS.items()}
+PLATFORM_OAUTH      = {
+    k: (v.oauth_url, v.exchange_code)
+    for k, v in _PLATFORMS.items()
+    if v.is_oauth
 }
 
-PLATFORM_CONFIGURED = {
-    "fitbit":     fitbit_is_configured,
-    "google_fit": google_fit_is_configured,
-    "oura":       oura_is_configured,
-    "withings":   withings_is_configured,
-    "garmin":     garmin_is_configured,
-    "apple":      lambda: True,
-    "samsung":    lambda: True,
-}
-
-PLATFORM_OAUTH = {
-    "fitbit":     (fitbit_oauth_url,     fitbit_exchange_code),
-    "google_fit": (google_fit_oauth_url, google_fit_exchange_code),
-    "withings":   (withings_oauth_url,   withings_exchange_code),
-}
+# Webhook-only platforms have no sync function but are always "configured"
+PLATFORM_CONFIGURED.update({"apple": lambda: True, "samsung": lambda: True})
 
 
 async def sync_all(db: Session, target_date: Optional[str] = None) -> dict[str, int]:
@@ -66,17 +80,24 @@ async def sync_all(db: Session, target_date: Optional[str] = None) -> dict[str, 
 
 def integration_status(db: Session) -> dict:
     syncs     = {r["platform"]: r for r in get_sync_status(db)}
+    webhook   = {"apple", "samsung"}
     platforms = []
+
     for name, configured_fn in PLATFORM_CONFIGURED.items():
         sync = syncs.get(name, {})
+        if name in webhook:
+            auth_type = "webhook"
+        elif name in _PLATFORMS:
+            auth_type = _PLATFORMS[name].manifest.auth_type
+        else:
+            auth_type = "unknown"
         platforms.append({
             "platform":       name,
             "configured":     configured_fn(),
-            "auth_type":      "webhook" if name in ("apple", "samsung") else
-                              ("api_key" if name == "oura" else
-                               ("credentials" if name == "garmin" else "oauth2")),
+            "auth_type":      auth_type,
             "status":         sync.get("status", "never"),
             "last_sync_at":   sync.get("last_sync_at"),
             "metrics_synced": sync.get("metrics_synced", 0),
         })
+
     return {"platforms": platforms}

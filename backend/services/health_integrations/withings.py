@@ -142,3 +142,41 @@ async def withings_sync(db: Session, target_date: Optional[str] = None) -> list[
     count = persist(db, points)
     _update_sync(db, "withings", "ok", count)
     return points
+
+
+# ── Integration class (auto-discovered by sync.py) ────────────────────────────
+
+from backend.services.health_integrations.base import EnvField, HealthIntegration, IntegrationManifest  # noqa: E402
+
+
+class WithingsIntegration(HealthIntegration):
+    @property
+    def manifest(self) -> IntegrationManifest:
+        return IntegrationManifest(
+            id="withings", name="Withings",
+            description="Weight, blood pressure, sleep, body composition",
+            auth_type="oauth",
+            env_fields=[
+                EnvField("WITHINGS_CLIENT_ID",     "Client ID",     placeholder="your-withings-client-id"),
+                EnvField("WITHINGS_CLIENT_SECRET", "Client Secret", secret=True, placeholder="your-withings-client-secret"),
+            ],
+            help_text=(
+                "1. Go to developer.withings.com → Create an application\n"
+                "2. Set redirect URI to:\n"
+                "   http://127.0.0.1:8899/api/health/oauth/callback\n"
+                "3. Copy Client ID and Secret, then click Connect"
+            ),
+            help_url="https://developer.withings.com",
+        )
+
+    def is_configured(self) -> bool:
+        return withings_is_configured()
+
+    async def sync(self, db, target_date=None):
+        return await withings_sync(db, target_date)
+
+    async def oauth_url(self, redirect_uri):
+        return await withings_oauth_url(redirect_uri)
+
+    async def exchange_code(self, code, redirect_uri):
+        return await withings_exchange_code(code, redirect_uri)

@@ -10,17 +10,6 @@ from backend.services.health_integrations.models import (
 from backend.services.health_integrations.db import (
     daily_summary, get_sync_status, persist, query_metrics,
 )
-from backend.services.health_integrations.fitbit import (
-    fitbit_exchange_code, fitbit_is_configured, fitbit_oauth_url, fitbit_sync,
-)
-from backend.services.health_integrations.google_fit import (
-    google_fit_exchange_code, google_fit_is_configured, google_fit_oauth_url, google_fit_sync,
-)
-from backend.services.health_integrations.oura import oura_is_configured, oura_sync
-from backend.services.health_integrations.withings import (
-    withings_exchange_code, withings_is_configured, withings_oauth_url, withings_sync,
-)
-from backend.services.health_integrations.garmin import garmin_is_configured, garmin_sync
 from backend.services.health_integrations.webhooks import (
     parse_apple_health_export, parse_samsung_health_export,
 )
@@ -37,11 +26,6 @@ __all__ = [
     "BP_SYSTOLIC", "BP_DIASTOLIC", "STRESS_SCORE", "READINESS_SCORE",
     "VO2_MAX", "RESPIRATORY_RATE", "SKIN_TEMP", "ACTIVE_MINUTES", "WORKOUT",
     "persist", "get_sync_status", "query_metrics", "daily_summary",
-    "fitbit_is_configured", "fitbit_oauth_url", "fitbit_exchange_code", "fitbit_sync",
-    "google_fit_is_configured", "google_fit_oauth_url", "google_fit_exchange_code", "google_fit_sync",
-    "oura_is_configured", "oura_sync",
-    "withings_is_configured", "withings_oauth_url", "withings_exchange_code", "withings_sync",
-    "garmin_is_configured", "garmin_sync",
     "parse_apple_health_export", "parse_samsung_health_export",
     "PLATFORM_SYNC", "PLATFORM_CONFIGURED", "PLATFORM_OAUTH",
     "sync_all", "integration_status",

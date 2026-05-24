@@ -79,3 +79,30 @@ async def garmin_sync(db: Session, target_date: Optional[str] = None) -> list[He
     count = persist(db, points)
     _update_sync(db, "garmin", "ok", count)
     return points
+
+
+# ── Integration class (auto-discovered by sync.py) ────────────────────────────
+
+from backend.services.health_integrations.base import EnvField, HealthIntegration, IntegrationManifest  # noqa: E402
+
+
+class GarminIntegration(HealthIntegration):
+    @property
+    def manifest(self) -> IntegrationManifest:
+        return IntegrationManifest(
+            id="garmin", name="Garmin",
+            description="GPS, steps, heart rate, sleep, body battery",
+            auth_type="credentials",
+            env_fields=[
+                EnvField("GARMIN_EMAIL",    "Garmin Email",    placeholder="you@example.com"),
+                EnvField("GARMIN_PASSWORD", "Garmin Password", secret=True, placeholder="your password"),
+            ],
+            help_text="Enter your Garmin Connect account credentials. Luna uses garth to fetch activity data directly.",
+            help_url="https://connect.garmin.com",
+        )
+
+    def is_configured(self) -> bool:
+        return garmin_is_configured()
+
+    async def sync(self, db, target_date=None):
+        return await garmin_sync(db, target_date)

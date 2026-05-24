@@ -98,21 +98,18 @@ async def _refresh_summary():
 
 
 async def _moondream_ask(client: httpx.AsyncClient, question: str, image_b64: str) -> str:
-    try:
-        r = await client.post(
-            f"{settings.ollama_base_url}/api/generate",
-            json={
-                "model": VISION_MODEL,
-                "prompt": question,
-                "images": [image_b64],
-                "stream": False,
-                "options": {"num_predict": 150, "temperature": 0.2},
-            },
-        )
-        r.raise_for_status()
-        return r.json().get("response", "").strip()
-    except Exception:
-        return ""
+    r = await client.post(
+        f"{settings.ollama_base_url}/api/generate",
+        json={
+            "model": VISION_MODEL,
+            "prompt": question,
+            "images": [image_b64],
+            "stream": False,
+            "options": {"num_predict": 150, "temperature": 0.2},
+        },
+    )
+    r.raise_for_status()
+    return r.json().get("response", "").strip()
 
 
 async def analyze_frame(image_b64: str) -> VisualContext:
@@ -122,7 +119,6 @@ async def analyze_frame(image_b64: str) -> VisualContext:
     fp = _fingerprint(image_b64)
     if fp == _prev_fingerprint and _cached and not _cached.is_stale():
         return _cached
-    _prev_fingerprint = fp
 
     # Sequential — moondream is single-threaded on GPU; parallel requests time out.
     try:
@@ -132,13 +128,16 @@ async def analyze_frame(image_b64: str) -> VisualContext:
             ans_activity = await _moondream_ask(client, _Q_ACTIVITY, image_b64)
             ans_mood     = await _moondream_ask(client, _Q_MOOD,     image_b64)
         raw = f"{ans_activity}. {ans_mood}".strip(". ")
-        if not ans_activity and not ans_mood:
-            _safe_log("[vision] moondream returned empty — reusing cache")
+        if not raw:
+            _safe_log("[vision] moondream returned empty — skipping cache update")
             return _cached or VisualContext()
     except Exception as e:
         _safe_log(f"[vision] moondream failed: {e}")
         return _cached or VisualContext()
 
+    # Only lock in the fingerprint after a successful response so that a
+    # failed/empty moondream call doesn't permanently suppress retries.
+    _prev_fingerprint = fp
     _safe_log(f"[vision] -> {raw[:300]}")
 
     # Append to rolling log and maybe refresh summary
