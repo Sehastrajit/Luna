@@ -48,12 +48,45 @@ const navGroups = [
     ],
   },
   {
+    label: 'Build with Luna',
+    items: [
+      { href: '/sdk-overview',              label: 'SDK Overview' },
+      { href: '/services/llm',              label: 'LLM Service' },
+      { href: '/services/memory-manager',   label: 'Memory Manager' },
+      { href: '/services/personality',      label: 'Personality Engine' },
+      { href: '/services/scheduler',        label: 'Scheduler' },
+      { href: '/services/state-engine',     label: 'State Engine' },
+      { href: '/services/command-parser',   label: 'Command Parser' },
+      { href: '/services/tool-runner',      label: 'Tool Runner' },
+      { href: '/services/memory-graph',     label: 'Memory Graph' },
+      { href: '/mcp',                       label: 'MCP Servers' },
+    ],
+  },
+  {
+    label: 'Skills',
+    items: [
+      { href: '/skills',          label: 'Using Skills' },
+      { href: '/skills-authoring',label: 'Building Skills' },
+    ],
+  },
+  {
+    label: 'UI Components',
+    items: [
+      { href: '/ui/chat',     label: 'Chat' },
+      { href: '/ui/voice',    label: 'Voice Orb' },
+      { href: '/ui/settings', label: 'Settings' },
+      { href: '/ui/sidebar',  label: 'Sidebar & Layout' },
+    ],
+  },
+  {
     label: 'Platform',
     items: [
       { href: '/cli',               label: 'CLI' },
       { href: '/environment',       label: 'Environment' },
+      { href: '/database',          label: 'Database Setup' },
+      { href: '/variants',          label: 'Personal vs Business' },
       { href: '/project-structure', label: 'Project Structure' },
-      { href: '/api-reference',      label: 'API Reference' },
+      { href: '/api-reference',     label: 'API Reference' },
     ],
   },
   {
