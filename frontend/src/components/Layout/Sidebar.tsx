@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { MessageCircle, Brain, Calendar, Activity, Plus, Trash2, Clock, Dna, Moon, FlaskConical, ShieldCheck } from 'lucide-react'
+import { MessageCircle, Brain, Calendar, Activity, Plus, Trash2, Clock, Dna, Moon, FlaskConical, ShieldCheck, Settings } from 'lucide-react'
 import { useStore } from '../../store'
 import { useChat } from '../../hooks/useChat'
 import { View } from '../../types'
@@ -21,6 +21,7 @@ const NAV: { id: View; icon: typeof MessageCircle; label: string }[] = [
   { id: 'sleep',      icon: Moon,          label: 'Sleep' },
   { id: 'train',      icon: Dna,           label: 'Train' },
   { id: 'extract',    icon: FlaskConical,  label: 'Extract' },
+  { id: 'settings',   icon: Settings,      label: 'Settings' },
 ]
 
 export function Sidebar() {

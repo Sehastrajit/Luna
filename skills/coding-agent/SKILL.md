@@ -22,7 +22,8 @@ The coding agent also has its own streaming endpoint at `POST /api/coding/stream
 ## Tools
 
 - `code_read_file(path)` — Read a workspace file (max 100 KB)
-- `code_write_file(path, content)` — Write or overwrite a workspace file
+- `code_edit_file(path, old_string, new_string)` — Replace exact text in a file; fails if not found or ambiguous. Prefer this over full rewrites.
+- `code_write_file(path, content)` — Write or overwrite a workspace file; use only for new files
 - `code_list_files(path)` — List a workspace directory (`path=""` = workspace root)
 - `code_search(pattern, path)` — Regex/text search across workspace files (returns up to 50 matches)
 - `code_run_shell(command)` — Run a shell command in the workspace directory (requires user confirmation)

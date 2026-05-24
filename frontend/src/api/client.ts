@@ -94,6 +94,13 @@ export const api = {
       body: JSON.stringify({ description }),
     }),
   getBrowserStatus: () => request<any>('/api/agent/browser/status'),
+
+  // Coding agent settings
+  getCodingSettings: () => request<any>('/api/coding/settings'),
+  updateCodingSettings: (data: Record<string, unknown>) =>
+    request<any>('/api/coding/settings', { method: 'POST', body: JSON.stringify(data) }),
+  getCodingModels: () => request<{ models: string[]; current: string }>('/api/coding/models'),
+  getCodingStatus: () => request<any>('/api/coding/status'),
 }
 
 export async function* streamChat(

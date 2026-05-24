@@ -71,12 +71,17 @@ TOOL_REGISTRY: dict[str, ToolDef] = {
     # Google Workspace / Microsoft 365
     "google_workspace": ToolDef("google_workspace", "Call Google Workspace services such as Gmail, Calendar, Drive, Docs, Sheets, Slides, Tasks, and People", RiskLevel.RISKY, ["service", "action", "args"], "Run Google Workspace action {service}.{action}?"),
     "microsoft_workspace": ToolDef("microsoft_workspace", "Call Microsoft 365 services through Microsoft Graph such as Outlook, Calendar, OneDrive, Excel, To Do, and Teams", RiskLevel.RISKY, ["service", "action", "args"], "Run Microsoft 365 action {service}.{action}?"),
-    # ── Coding agent (Ollama-powered) ────────────────────────────────────────────
-    "code_read_file":   ToolDef("code_read_file",   "Read a file from the coding workspace",                              RiskLevel.SAFE,      ["path"]),
-    "code_write_file":  ToolDef("code_write_file",  "Write or overwrite a file in the coding workspace",                  RiskLevel.RISKY,     ["path", "content"],  "Write workspace file {path}?"),
-    "code_list_files":  ToolDef("code_list_files",  "List files in a coding workspace directory",                         RiskLevel.SAFE,      ["path"]),
-    "code_search":      ToolDef("code_search",      "Search for a text/regex pattern across coding workspace files",      RiskLevel.SAFE,      ["pattern", "path"]),
-    "code_run_shell":   ToolDef("code_run_shell",   "Run a shell command inside the coding workspace (needs approval)",   RiskLevel.DANGEROUS, ["command"],          "Run shell command: {command}?"),
+    # ── Coding agent ─────────────────────────────────────────────────────────────
+    "code_read_file":   ToolDef("code_read_file",   "Read a file from the coding workspace",                                RiskLevel.SAFE,      ["path"]),
+    "code_edit_file":   ToolDef("code_edit_file",   "Replace an exact string in a coding workspace file (patch semantics)", RiskLevel.RISKY,     ["path", "old_string", "new_string"], "Edit {path} in coding workspace?"),
+    "code_write_file":  ToolDef("code_write_file",  "Write or overwrite a file in the coding workspace",                    RiskLevel.RISKY,     ["path", "content"],  "Write workspace file {path}?"),
+    "code_list_files":  ToolDef("code_list_files",  "List files in a coding workspace directory",                           RiskLevel.SAFE,      ["path"]),
+    "code_search":      ToolDef("code_search",      "Search for a text/regex pattern across coding workspace files",        RiskLevel.SAFE,      ["pattern", "path"]),
+    "code_delete_file": ToolDef("code_delete_file", "Permanently delete a file from the coding workspace",                  RiskLevel.RISKY,     ["path"],             "Delete workspace file {path}?"),
+    "code_rename_file": ToolDef("code_rename_file", "Move or rename a file within the coding workspace",                    RiskLevel.RISKY,     ["old_path", "new_path"], "Rename {old_path} → {new_path}?"),
+    "code_web_search":  ToolDef("code_web_search",  "Search the web for docs, answers, or packages from within the coding agent", RiskLevel.SAFE, ["query"]),
+    "code_web_fetch":   ToolDef("code_web_fetch",   "Fetch a URL and return readable text from within the coding agent",   RiskLevel.SAFE,      ["url"]),
+    "code_run_shell":   ToolDef("code_run_shell",   "Run a shell command inside the coding workspace (needs approval)",     RiskLevel.DANGEROUS, ["command"],          "Run shell command: {command}?"),
 }
 
 

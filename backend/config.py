@@ -95,11 +95,16 @@ class Settings(BaseSettings):
     # Embedding provider: ollama | openai-compatible
     embedding_provider: str = "ollama"
 
-    # ── Coding agent (Ollama-powered) ─────────────────────────────────────────
-    # Set to any code-specialized model pulled in Ollama, e.g.:
-    #   qwen2.5-coder:7b  deepseek-coder-v2:16b  codellama:7b  starcoder2:7b
+    # ── Coding agent ───────────────────────────────────────────────────────────
+    # coding_provider: which LLM provider to use for the coding agent.
+    #   Empty string (default) → same as llm_provider.
+    #   Set explicitly to use a different provider just for coding, e.g. "groq".
+    coding_provider: str = ""
+    # coding_model: Ollama model name (used when coding_provider resolves to "ollama").
+    #   Examples: qwen2.5-coder:7b  deepseek-coder-v2:16b  codellama:7b
     coding_model: str = "qwen2.5-coder:7b"
-    coding_max_iterations: int = 8
+    coding_max_iterations: int = 20
+    coding_shell_timeout: int = 120  # seconds before a shell command is killed
 
     # ── Database ──────────────────────────────────────────────────────────────
     # Default: SQLite (local, zero-config). Set db_url to switch backends.
@@ -256,3 +261,23 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def write_env_value(key: str, value: str) -> None:
+    """Update or append KEY=value in the primary .env file (BASE_DIR/.env)."""
+    env_path = BASE_DIR / ".env"
+    lines = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
+    key_upper = key.upper()
+    found = False
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        name, _, _ = stripped.partition("=")
+        if name.strip().upper() == key_upper:
+            lines[i] = f"{key_upper}={value}"
+            found = True
+            break
+    if not found:
+        lines.append(f"{key_upper}={value}")
+    env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

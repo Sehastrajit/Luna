@@ -47,5 +47,12 @@
     "mode": "response",
     "luna_tone": "excited",
     "auto_generated": true
+  },
+  {
+    "message": "Love you!",
+    "chosen": "You're welcome.\n\nI'm here if you need anything. Need anything?",
+    "mode": "response",
+    "luna_tone": "excited",
+    "auto_generated": true
   }
 ]

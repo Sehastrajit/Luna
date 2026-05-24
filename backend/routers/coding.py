@@ -1,14 +1,17 @@
 """
-Coding agent router — Ollama-powered ReAct coding assistant.
+Coding agent router.
 
 Endpoints:
-  GET  /api/coding/status           — Ollama reachability + model availability
-  GET  /api/coding/models           — List Ollama models
+  GET  /api/coding/status           — Provider reachability + model availability
+  GET  /api/coding/models           — List Ollama models (when provider is ollama)
+  GET  /api/coding/settings         — Current coding agent settings (no secrets)
+  POST /api/coding/settings         — Update coding agent settings (writes .env)
   POST /api/coding/stream           — SSE streaming coding chat
   POST /api/coding/complete         — Non-streaming code completion
   GET  /api/coding/workspace        — List workspace files
   GET  /api/coding/workspace/read   — Read a workspace file
   POST /api/coding/workspace/write  — Write a workspace file
+  POST /api/coding/workspace/tool   — Invoke a coding tool directly
 """
 import json
 
@@ -16,7 +19,7 @@ import httpx
 from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from backend.config import settings
+from backend.config import settings, write_env_value
 from backend.services.coding import (
     WORKSPACE_ROOT,
     execute_coding_tool,
@@ -52,6 +55,71 @@ async def coding_status():
             {"ollama_running": False, "error": str(exc)},
             status_code=503,
         )
+
+
+@router.get("/settings")
+async def get_coding_settings():
+    """Return current coding agent settings — no API keys or secrets."""
+    provider = settings.coding_provider.strip().lower()
+    effective = provider if provider else settings.llm_provider.strip().lower()
+    return {
+        "llm_provider": settings.llm_provider,
+        "coding_provider": settings.coding_provider,
+        "effective_coding_provider": effective,
+        "coding_model": settings.coding_model,
+        "coding_max_iterations": settings.coding_max_iterations,
+        "coding_shell_timeout": settings.coding_shell_timeout,
+        "ollama_model": settings.ollama_model,
+        "anthropic_model": settings.anthropic_model,
+        "groq_model": settings.groq_model,
+        "google_model": settings.google_model,
+        "openai_model": settings.openai_model,
+        "mistral_model": settings.mistral_model,
+        "cohere_model": settings.cohere_model,
+        "nvidia_nim_model": settings.nvidia_nim_model,
+        "providers": {
+            "ollama":           {"label": "Ollama (local)",      "configured": True},
+            "anthropic":        {"label": "Anthropic Claude",    "configured": bool(settings.anthropic_api_key)},
+            "groq":             {"label": "Groq",                "configured": bool(settings.groq_api_key)},
+            "google":           {"label": "Google Gemini",       "configured": bool(settings.google_api_key)},
+            "openai-compatible":{"label": "OpenAI / Compatible", "configured": bool(settings.openai_api_key or settings.openai_base_url != "https://api.openai.com/v1")},
+            "mistral":          {"label": "Mistral AI",          "configured": bool(settings.mistral_api_key)},
+            "cohere":           {"label": "Cohere",              "configured": bool(settings.cohere_api_key)},
+            "nvidia-nim":       {"label": "NVIDIA NIM",          "configured": bool(settings.nvidia_nim_api_key)},
+        },
+    }
+
+
+_SETTINGS_ALLOWED = {
+    "coding_provider", "coding_model", "coding_max_iterations", "coding_shell_timeout",
+    "llm_provider",
+    "ollama_model", "anthropic_model", "groq_model", "google_model",
+    "openai_model", "mistral_model", "cohere_model", "nvidia_nim_model",
+}
+
+
+@router.post("/settings")
+async def update_coding_settings(payload: dict = Body(default={})):
+    """
+    Update coding agent settings. Writes to .env and applies in-memory immediately.
+    Changes to llm_provider / coding_provider take effect for new requests right away.
+    """
+    updated: dict = {}
+    for key, value in payload.items():
+        if key not in _SETTINGS_ALLOWED:
+            continue
+        current = getattr(settings, key, None)
+        if current is None:
+            continue
+        # Cast to the same type as the current value
+        try:
+            typed = type(current)(value)
+        except (TypeError, ValueError):
+            typed = str(value)
+        setattr(settings, key, typed)
+        write_env_value(key, str(typed))
+        updated[key] = typed
+    return {"updated": updated}
 
 
 @router.get("/models")
@@ -177,7 +245,7 @@ def workspace_write(payload: dict = Body(default={})):
 
 
 @router.post("/workspace/tool")
-def workspace_tool(payload: dict = Body(default={})):
+async def workspace_tool(payload: dict = Body(default={})):
     """
     Directly invoke a coding tool (for testing / UI integration).
 
@@ -191,7 +259,7 @@ def workspace_tool(payload: dict = Body(default={})):
     if not tool_name:
         return JSONResponse({"detail": "tool is required"}, status_code=400)
 
-    result, needs_confirm = execute_coding_tool(tool_name, args)
+    result, needs_confirm = await execute_coding_tool(tool_name, args)
 
     if needs_confirm and not confirmed:
         return JSONResponse(

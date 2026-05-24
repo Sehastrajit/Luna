@@ -20,6 +20,7 @@ import { AwayScreen } from './components/Layout/AwayScreen'
 import { LunaDashboardView } from './components/Luna/LunaDashboardView'
 import { DynamicWidgetOverlay } from './components/Dynamic/DynamicWidgetOverlay'
 import { AgentView } from './components/Agent/AgentView'
+import { SettingsView } from './components/Settings/SettingsView'
 
 function StartupSplash({ show }: { show: boolean }) {
   return (
@@ -146,6 +147,7 @@ export default function App() {
     sleep: SleepView,
     train: TrainView,
     extract: ExtractTrainView,
+    settings: SettingsView,
   }
   const View = views[activeView]
 
