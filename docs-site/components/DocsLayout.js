@@ -161,7 +161,7 @@ export default function DocsLayout({ title, description, toc, children }) {
               >
                 {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
               </button>
-              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer" className="docs-topbar-link">
+              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer" className="docs-topbar-link">
                 <GitHubIcon /> GitHub
               </a>
               <Link href="/" className="docs-topbar-cta">← Home</Link>
@@ -191,7 +191,7 @@ export default function DocsLayout({ title, description, toc, children }) {
             </nav>
 
             <div className="docs-sidebar-footer">
-              <a href="https://github.com/luna-ai-project/Luna" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/Sehastrajit/Luna" target="_blank" rel="noopener noreferrer">
                 <GitHubIcon /> GitHub <ExternalArrow />
               </a>
             </div>
