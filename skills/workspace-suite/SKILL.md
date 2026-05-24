@@ -1,6 +1,8 @@
 # Workspace Suite
 
-Use this skill when the user asks to work with Google Workspace or Microsoft 365: Gmail, Outlook, Calendar, Drive, OneDrive, Docs, Sheets, Excel, Slides, Teams, contacts, or tasks.
+Use this skill when the user asks to check, read, fetch, send, or search their mail, mails, email, emails, or inbox — regardless of whether they name Gmail or Outlook explicitly. Also use it for: Calendar, Drive, Docs, Sheets, Slides, Tasks, Contacts (Google), or Outlook, OneDrive, Excel, To Do, Teams (Microsoft).
+
+Do NOT hand off to the research skill. These are live account operations, not web searches.
 
 Workflow:
 

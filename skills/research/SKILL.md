@@ -2,6 +2,8 @@
 
 Use this skill when the user asks for current information, comparisons, source-backed answers, or website research.
 
+Do NOT use this skill when the user is asking to check, read, fetch, send, or search their own mail, emails, inbox, calendar events, files, or any connected account. Those requests go to the workspace-suite skill.
+
 Workflow:
 
 1. Search the web when the answer may have changed recently.

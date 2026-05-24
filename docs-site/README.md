@@ -1,48 +1,45 @@
-# LUNA Docs Site
+# Luna Docs Site
 
-A production-ready Next.js documentation website for open source contributors working on the L.U.N.A. repository.
-
-## Install
-
-From the project root:
-
-```powershell
-cd docs-site
-npm install
-```
+Next.js documentation website for the L.U.N.A. project.
 
 ## Run locally
 
-```powershell
-npm run dev
+From the repo root:
+
+```bash
+npm run docs
 ```
 
 Open `http://localhost:3000`.
 
-## Use from the repository root
+Or from this folder directly:
 
-```powershell
-npm run docs
+```bash
+npm install
+npm run dev
 ```
 
-## Build and start
+## Build for production
 
-```powershell
+```bash
 npm run docs:build
 npm run docs:start
 ```
 
 ## Pages
 
-- `/`: landing page with quick links and repo overview
-- `/getting-started`: setup and local development instructions
-- `/architecture`: application architecture and boundaries
-- `/cli`: repository CLI command reference
-- `/codebase`: deep dive on implementation, entrypoints, and runtime patterns
-- `/contributing`: contributor and PR guidelines
-- `/project-structure`: repository layout and module ownership
-- `/environment`: runtime configuration and `.env` guidance
+| Route | Contents |
+|---|---|
+| `/` | Landing page — quick links and project overview |
+| `/getting-started` | Setup, local development, and first run |
+| `/architecture` | Application architecture, layer boundaries, and data flow |
+| `/cli` | Full `luna` CLI command reference |
+| `/codebase` | Implementation deep-dive — entrypoints, services, runtime patterns |
+| `/contributing` | Contributor guide — skills, health integrations, pull request process |
+| `/project-structure` | Repository layout and module ownership |
+| `/environment` | All `.env` variables with descriptions and examples |
+| `/health` | Health platform setup, device list, metric types, and API reference |
 
 ## Theme
 
-The docs UI supports light and dark modes. Use the top-bar toggle to switch themes; the selected theme is saved in `localStorage` and falls back to the system color scheme on first visit.
+Light and dark modes are supported. The toggle is in the top bar; the selected theme is saved in `localStorage` and falls back to the system color scheme on first visit.

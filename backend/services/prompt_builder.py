@@ -66,6 +66,47 @@ def _load_rlhf_examples() -> str:
         return ""
 
 
+def _build_connected_section() -> str:
+    """Inject a live-connectivity block so Luna never searches the web for connected accounts."""
+    lines: list[str] = []
+
+    google_connected = bool(
+        settings.google_workspace_access_token or settings.google_workspace_refresh_token
+    )
+    microsoft_connected = bool(
+        settings.microsoft_workspace_access_token or settings.microsoft_workspace_refresh_token
+    )
+
+    if not google_connected and not microsoft_connected:
+        return ""
+
+    lines.append("## Connected integrations — use tools directly, NEVER search the web")
+    lines.append("When the user references anything in the list below, call the tool immediately.")
+    lines.append("Do NOT use web_search or web_research for these — that is always wrong.")
+    lines.append("")
+
+    if google_connected:
+        lines.append(
+            "Google Workspace is connected. "
+            "Any mention of mail, mails, email, emails, inbox, messages, Gmail, "
+            "calendar, Drive, Docs, Sheets, Slides, Tasks, or Contacts → "
+            '{"tool_call": {"tool": "google_workspace", "args": {"service": "<service>", "action": "<action>", "args": {}}, "speak": "..."}}'
+        )
+        lines.append(
+            '  Example — "what\'s my latest mail" / "check my emails" / "any new messages" → '
+            '{"tool_call": {"tool": "google_workspace", "args": {"service": "gmail", "action": "search_messages", "args": {"q": "", "maxResults": 5}}, "speak": "Fetching your latest emails."}}'
+        )
+
+    if microsoft_connected:
+        lines.append(
+            "Microsoft 365 is connected. "
+            "Any mention of Outlook, mail, emails, inbox, OneDrive, Teams, Excel, To Do, or tasks → "
+            '{"tool_call": {"tool": "microsoft_workspace", "args": {"service": "<service>", "action": "<action>", "args": {}}, "speak": "..."}}'
+        )
+
+    return "\n".join(lines)
+
+
 def build_system_prompt(
     memory: MemoryManager,
     personality: PersonalityEngine,
@@ -108,11 +149,12 @@ def build_system_prompt(
         if visual_context else ""
     )
     live_data_section = get_live_data_section()
+    connected_section = _build_connected_section()
 
     return f"""You are Luna, {user_name}'s personal assistant.
 {state_context}
 You know {user_name} well and are always on their side — smart, direct, and genuinely helpful. You're warm but not clingy. Friendly but not over the top. You never use words like "love", "darling", "honey", or any term of endearment. You're not a romantic companion — you're the best PA someone could have.
-
+{connected_section}
 ## Tools
 {tools_section}
 

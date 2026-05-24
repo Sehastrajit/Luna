@@ -545,7 +545,11 @@ class VoiceService:
                                     if cmd.get("type") == "map":
                                         self._fire_ui_event({"type": "map", "action": cmd.get("action", "open"), "query": cmd.get("query")})
                                     elif cmd.get("type") == "away":
-                                        self._fire_ui_event({"type": "away", "action": cmd.get("action", "on")})
+                                        action = cmd.get("action", "on")
+                                        if action == "on":
+                                            from backend.services.away_state import set_away
+                                            set_away(True)
+                                        self._fire_ui_event({"type": "away", "action": action})
                                     elif cmd.get("type") == "widget":
                                         self._fire_ui_event({
                                             "type": "widget",
