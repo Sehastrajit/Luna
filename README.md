@@ -42,7 +42,7 @@
 
 ---
 
-**L.U.N.A. is an open-source AI engine** — a local-first platform you own completely. Drop in any LLM, extend it with skills written in plain text, connect your health devices, automate your desktop, and talk to it with your voice. No subscriptions, no cloud lock-in, no data leaving your machine by default.
+**L.U.N.A. is an open-source AI engine** - a local-first platform you own completely. Drop in any LLM, extend it with skills written in plain text, connect your health devices, automate your desktop, and talk to it with your voice. No subscriptions, no cloud lock-in, no data leaving your machine by default.
 
 It ships as two modes: **Personal** (voice, vision, Spotify, health data, desktop automation) and **Business** (multi-user JWT auth, rate limiting, Telegram/Discord/Slack channels). Switch between them with a single `.env` change.
 

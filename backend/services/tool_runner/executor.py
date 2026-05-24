@@ -228,10 +228,13 @@ async def execute_tool_call(tc: dict, db: Session, conversation_id: int) -> str:
             if tool_name == "github_get_pr":
                 return json.dumps(await github.get_pr(args.get("repo", ""), int(args.get("number", 0))))[:4000]
 
-        elif tool_name in ("code_read_file", "code_write_file", "code_list_files", "code_search", "code_run_shell"):
+        elif tool_name in (
+            "code_read_file", "code_write_file", "code_list_files", "code_search", "code_run_shell",
+            "code_edit_file", "code_delete_file", "code_rename_file", "code_web_search", "code_web_fetch",
+        ):
             from backend.services.coding_agent import execute_coding_tool
             from backend.services.audit_log import record_audit
-            result, needs_confirm = execute_coding_tool(tool_name, args)
+            result, needs_confirm = await execute_coding_tool(tool_name, args)
             if needs_confirm:
                 record_audit("tool_call", tool=tool_name, args=args, result="confirmation_required", conversation_id=conversation_id)
                 return "Needs user confirmation before running shell command."

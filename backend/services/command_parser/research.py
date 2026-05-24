@@ -29,7 +29,7 @@ def extract_direct_research_query(message: str) -> str | None:
     query = re.sub(
         r"^\s*(please\s+)?(can you\s+|could you\s+|would you\s+)?"
         r"(research|investigate|look up|search for|find out about|find out|tell me about|"
-        r"what(?:'s| is|are)|show me|give me)\b\s*(?:the\s+)?(?:latest\s+|current\s+|recent\s+)?",
+        r"show me|give me)\b\s*(?:on\s+)?(?:the\s+)?(?:latest\s+|current\s+|recent\s+)?",
         "", text, flags=re.IGNORECASE,
     )
     query = re.sub(

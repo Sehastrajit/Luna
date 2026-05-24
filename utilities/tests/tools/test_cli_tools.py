@@ -44,7 +44,7 @@ class CliToolTests(unittest.TestCase):
     def test_chat_stream_keeps_references_when_body_has_multiple_parts(self) -> None:
         source = (_bootstrap.ROOT / "backend" / "routers" / "chat.py").read_text(encoding="utf-8")
         self.assertIn("refs_match = re.search", source)
-        self.assertIn("body_parts[:2] + ([refs_text] if refs_text else [])", source)
+        self.assertIn("body_parts[:_max_parts] + ([refs_text] if refs_text else [])", source)
 
 
 if __name__ == "__main__":

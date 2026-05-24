@@ -31,7 +31,7 @@ from backend.services.prompt_builder import (
     build_business_system_prompt,
     get_live_data_section,
 )
-from backend.services.response_formatter import format_luna_response
+from backend.services.response_formatter import format_luna_response, ensure_references as _ensure_references
 from backend.services.tool_runner import (
     execute_tool_call,
     verify_tool_result,
@@ -48,6 +48,8 @@ from backend.services.command_parser import (
     execute_commands,
 )
 from backend.services.chat_background import post_conversation_processing, track_activity_bg
+
+_extract_direct_research_query = extract_direct_research_query
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 

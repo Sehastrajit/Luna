@@ -59,11 +59,12 @@ class VisualContext:
 
 
 # ── Module-level state ────────────────────────────────────────────────────────
-_cached:          Optional[VisualContext] = None
-_obs_log:         deque[Observation]     = deque(maxlen=LOG_MAXLEN)
-_session_summary: str   = ""
-_last_summary_at: float = 0.0
-_prev_fingerprint: str  = ""
+_cached:           Optional[VisualContext] = None
+_obs_log:          deque[Observation]      = deque(maxlen=LOG_MAXLEN)
+_session_summary:  str   = ""
+_last_summary_at:  float = 0.0
+_prev_fingerprint: str   = ""
+_retry_after:      float = 0.0   # backoff until after a 404 (model not installed)
 
 
 def _safe_log(msg: str):
@@ -113,7 +114,11 @@ async def _moondream_ask(client: httpx.AsyncClient, question: str, image_b64: st
 
 
 async def analyze_frame(image_b64: str) -> VisualContext:
-    global _cached, _prev_fingerprint
+    global _cached, _prev_fingerprint, _retry_after
+
+    # Skip silently if moondream returned 404 recently (model not pulled)
+    if time.time() < _retry_after:
+        return _cached or VisualContext()
 
     # Skip moondream if the scene hasn't meaningfully changed
     fp = _fingerprint(image_b64)
@@ -132,7 +137,11 @@ async def analyze_frame(image_b64: str) -> VisualContext:
             _safe_log("[vision] moondream returned empty — skipping cache update")
             return _cached or VisualContext()
     except Exception as e:
-        _safe_log(f"[vision] moondream failed: {e}")
+        if "404" in str(e):
+            _retry_after = time.time() + 300  # 5-min backoff — run: ollama pull moondream
+            _safe_log("[vision] moondream not found — run: ollama pull moondream  (suppressing for 5 min)")
+        else:
+            _safe_log(f"[vision] moondream failed: {e}")
         return _cached or VisualContext()
 
     # Only lock in the fingerprint after a successful response so that a

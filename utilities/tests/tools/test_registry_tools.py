@@ -39,6 +39,8 @@ class RegistryToolTests(unittest.TestCase):
             "github_list_repos", "github_list_issues", "github_create_issue", "github_comment",
             "github_list_prs", "github_get_pr",
             "google_workspace", "microsoft_workspace",
+            "code_read_file", "code_write_file", "code_list_files", "code_search", "code_run_shell",
+            "code_edit_file", "code_delete_file", "code_rename_file", "code_web_search", "code_web_fetch",
         }
         self.assertEqual(set(TOOL_REGISTRY) - covered, set())
 

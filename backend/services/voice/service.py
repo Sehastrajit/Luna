@@ -285,6 +285,7 @@ class VoiceService:
             self._set_state(VoiceState.FOLLOWUP)
 
         print("[voice] Follow-up window closed — back to wake word")
+        self._voice_conv_id = None  # fresh conversation on next wake
 
     # ── wake → record command ─────────────────────────────────────────────────
 
@@ -484,7 +485,11 @@ class VoiceService:
                             if cmd.get("type") == "map":
                                 self._fire_ui_event({"type": "map", "action": cmd.get("action", "open"), "query": cmd.get("query")})
                             elif cmd.get("type") == "away":
-                                self._fire_ui_event({"type": "away", "action": cmd.get("action", "on")})
+                                action = cmd.get("action", "on")
+                                if action == "on":
+                                    from backend.services.away_state import set_away
+                                    set_away(True)
+                                self._fire_ui_event({"type": "away", "action": action})
                         continue
                     if data.get("type") == "message_part":
                         parts.append(data.get("content", ""))
