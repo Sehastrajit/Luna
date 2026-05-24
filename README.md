@@ -367,7 +367,7 @@ Memory update  (fact extraction · personality update · conversation compaction
 Response streamed to UI  (or plain-text reply to channel)
 ```
 
-Full diagrams: [architecture.svg](architecture.svg) · [architecture_ai.svg](architecture_ai.svg)
+Full diagrams: [architecture.svg](utilities/docs/architecture.svg) · [architecture_ai.svg](utilities/docs/architecture_ai.svg)
 
 ---
 
@@ -525,8 +525,8 @@ Luna/
 │   ├── PROCESSES.md
 │   ├── CLI.md
 │   └── VSCODE.md
-├── architecture.svg
-├── architecture_ai.svg
+├── utilities/docs/architecture.svg
+├── utilities/docs/architecture_ai.svg
 └── .env.example
 ```
 
