@@ -1,0 +1,49 @@
+{
+  "timeZone": "America/New_York",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/documents.currentonly",
+    "https://www.googleapis.com/auth/spreadsheets.currentonly",
+    "https://www.googleapis.com/auth/presentations.currentonly",
+    "https://www.googleapis.com/auth/gmail.addons.current.message.readonly",
+    "https://www.googleapis.com/auth/script.locale",
+    "https://www.googleapis.com/auth/userinfo.email"
+  ],
+  "addOns": {
+    "common": {
+      "name": "Luna AI",
+      "logoUrl": "https://www.gstatic.com/images/branding/product/1x/drive_48dp.png",
+      "layoutProperties": {
+        "primaryColor": "#7c6af7",
+        "secondaryColor": "#4f46e5"
+      },
+      "homepageTrigger": {
+        "runFunction": "onHomepage"
+      },
+      "universalActions": [
+        {
+          "label": "Settings",
+          "runFunction": "openSettings"
+        },
+        {
+          "label": "New conversation",
+          "runFunction": "newConversation"
+        }
+      ]
+    },
+    "docs": {
+      "homepageTrigger": { "runFunction": "onDocsHomepage" },
+      "onFileScopeGrantedTrigger": { "runFunction": "onFileScopeGranted" }
+    },
+    "sheets": {
+      "homepageTrigger": { "runFunction": "onSheetsHomepage" },
+      "onFileScopeGrantedTrigger": { "runFunction": "onFileScopeGranted" }
+    },
+    "slides": {
+      "homepageTrigger": { "runFunction": "onSlidesHomepage" },
+      "onFileScopeGrantedTrigger": { "runFunction": "onFileScopeGranted" }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
-import { CheckCircle, AlertCircle, RefreshCw, Save, ChevronDown } from 'lucide-react'
+import { useStore } from '../../store'
+import { CheckCircle, AlertCircle, RefreshCw, Save, ChevronDown, Mic } from 'lucide-react'
 
 const PROVIDERS = [
   { value: 'ollama',            label: 'Ollama (local)' },
@@ -135,6 +136,7 @@ function OllamaModelPicker({
 }
 
 export function SettingsView() {
+  const { viewMode, toggleViewMode } = useStore()
   const [data, setData] = useState<CodingSettings | null>(null)
   const [form, setForm] = useState<Partial<CodingSettings>>({})
   const [saving, setSaving] = useState(false)
@@ -185,6 +187,32 @@ export function SettingsView() {
         <h2 className="text-luna-text font-semibold text-base mb-0.5">Settings</h2>
         <p className="text-luna-dim text-xs">Model providers and coding agent configuration</p>
       </div>
+
+      {/* ── Interface ───────────────────────────────────────────────────── */}
+      <section className="space-y-4">
+        <h3 className="text-luna-text text-sm font-medium border-b border-luna-border pb-1.5">
+          Interface
+        </h3>
+        <div className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-luna-card border border-luna-border/50">
+          <div className="flex items-center gap-3">
+            <Mic size={15} className="text-luna-dim" />
+            <div>
+              <p className="text-sm text-luna-text">Jarvis mode</p>
+              <p className="text-[11px] text-luna-dim">Voice-only interface — hides the sidebar and panels</p>
+            </div>
+          </div>
+          <button
+            onClick={() => { if (viewMode !== 'luna') toggleViewMode() }}
+            className={`relative w-10 h-5 rounded-full transition-colors ${
+              viewMode === 'user' ? 'bg-luna-primary/70' : 'bg-luna-border'
+            }`}
+          >
+            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+              viewMode === 'user' ? 'translate-x-5' : 'translate-x-0.5'
+            }`} />
+          </button>
+        </div>
+      </section>
 
       {/* ── Model Configuration ─────────────────────────────────────────── */}
       <section className="space-y-4">

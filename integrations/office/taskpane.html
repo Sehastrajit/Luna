@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Luna AI</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    :root {
+      --bg:        #0f1117;
+      --surface:   #161b27;
+      --card:      #1e2535;
+      --border:    #2a3347;
+      --primary:   #7c6af7;
+      --text:      #e2e8f0;
+      --dim:       #64748b;
+      --user-bg:   #2d2060;
+      --luna-bg:   #1e2535;
+      --error:     #f87171;
+      --success:   #34d399;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; }
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* ── Header ── */
+    #header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    #header .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    #header .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+    #header .actions { display: flex; gap: 4px; }
+    #header button { background: none; border: none; color: var(--dim); cursor: pointer; padding: 4px 6px; border-radius: 6px; font-size: 14px; transition: color .15s; }
+    #header button:hover { color: var(--text); background: var(--card); }
+
+    /* ── Settings panel ── */
+    #settings {
+      display: none; padding: 12px 14px; background: var(--surface);
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    #settings.open { display: block; }
+    #settings label { display: block; color: var(--dim); font-size: 11px; margin-bottom: 4px; margin-top: 8px; }
+    #settings label:first-child { margin-top: 0; }
+    #settings input {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); padding: 6px 8px; font-size: 12px; outline: none;
+    }
+    #settings input:focus { border-color: var(--primary); }
+    #settings .save-row { display: flex; gap: 6px; margin-top: 10px; }
+    #settings .save-row button {
+      flex: 1; background: var(--primary); border: none; color: white; border-radius: 6px;
+      padding: 6px 0; cursor: pointer; font-size: 12px; font-weight: 500;
+    }
+    #settings .save-row button:hover { opacity: .85; }
+    #settings .save-row button.danger { background: #7f1d1d; }
+
+    /* ── Context bar (host + selection info) ── */
+    #context-bar {
+      display: flex; align-items: center; gap: 8px; padding: 6px 14px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      flex-shrink: 0; font-size: 11px; color: var(--dim);
+    }
+    #host-badge {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 600;
+      color: var(--primary);
+    }
+    #sel-info { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Messages ── */
+    #messages {
+      flex: 1; overflow-y: auto; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .msg { display: flex; flex-direction: column; max-width: 90%; gap: 3px; }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.luna { align-self: flex-start; align-items: flex-start; }
+    .bubble {
+      padding: 8px 11px; border-radius: 12px; line-height: 1.5;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .msg.user .bubble { background: var(--user-bg); border-bottom-right-radius: 3px; color: #c4b5fd; }
+    .msg.luna .bubble { background: var(--luna-bg); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+    .msg.luna .bubble.streaming::after { content: '▋'; animation: blink .8s step-end infinite; color: var(--primary); }
+    @keyframes blink { 50% { opacity: 0; } }
+    .msg-label { font-size: 10px; color: var(--dim); padding: 0 4px; }
+    .msg.luna .bubble pre {
+      background: #0a0e17; border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px; margin: 6px 0; overflow-x: auto; font-size: 11px;
+    }
+    .copy-btn {
+      font-size: 10px; color: var(--dim); background: var(--card); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 6px; cursor: pointer; margin-top: 2px; align-self: flex-end;
+    }
+    .copy-btn:hover { color: var(--text); }
+
+    /* ── Action bar ── */
+    #action-bar {
+      display: flex; gap: 6px; padding: 8px 14px 4px;
+      flex-shrink: 0; flex-wrap: wrap;
+    }
+    #action-bar button {
+      flex: 1; min-width: 80px; background: var(--card); border: 1px solid var(--border);
+      color: var(--text); border-radius: 7px; padding: 6px 4px; cursor: pointer;
+      font-size: 11px; transition: background .15s, border-color .15s;
+    }
+    #action-bar button:hover { background: var(--surface); border-color: var(--primary); color: var(--primary); }
+    #action-bar button:disabled { opacity: .4; cursor: default; }
+
+    /* ── Input bar ── */
+    #input-bar {
+      display: flex; align-items: flex-end; gap: 8px;
+      padding: 8px 14px 12px; flex-shrink: 0;
+      border-top: 1px solid var(--border);
+    }
+    #user-input {
+      flex: 1; background: var(--card); border: 1px solid var(--border);
+      color: var(--text); border-radius: 10px; padding: 8px 10px;
+      font-size: 13px; font-family: inherit; resize: none;
+      min-height: 38px; max-height: 120px; outline: none; line-height: 1.4;
+    }
+    #user-input:focus { border-color: var(--primary); }
+    #user-input::placeholder { color: var(--dim); }
+    #send-btn {
+      background: var(--primary); border: none; color: white;
+      width: 36px; height: 36px; border-radius: 9px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: opacity .15s;
+    }
+    #send-btn:hover { opacity: .85; }
+    #send-btn:disabled { opacity: .4; cursor: default; }
+
+    /* ── Status / error ── */
+    #status { padding: 4px 14px; font-size: 11px; color: var(--dim); flex-shrink: 0; min-height: 20px; }
+    #status.error { color: var(--error); }
+    #status.ok { color: var(--success); }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <div class="brand">
+    <div class="dot"></div>
+    Luna AI
+  </div>
+  <div class="actions">
+    <button id="btn-gear" title="Settings">⚙</button>
+    <button id="btn-new"  title="New conversation">＋</button>
+  </div>
+</div>
+
+<!-- Settings panel -->
+<div id="settings">
+  <label>Luna server URL</label>
+  <input id="s-url" type="text" placeholder="http://localhost:8899"/>
+  <label>Auth token (business variant only)</label>
+  <input id="s-token" type="password" placeholder="Bearer token (leave blank for personal)"/>
+  <div class="save-row">
+    <button id="btn-save-settings">Save</button>
+    <button id="btn-test-conn" class="danger">Test connection</button>
+  </div>
+</div>
+
+<!-- Context bar -->
+<div id="context-bar">
+  <span id="host-badge">…</span>
+  <span id="sel-info">No selection</span>
+</div>
+
+<!-- Messages -->
+<div id="messages">
+  <div class="msg luna">
+    <span class="msg-label">Luna</span>
+    <div class="bubble">Hello! I'm Luna. Select text in your document and send it to me, or just ask me anything.</div>
+  </div>
+</div>
+
+<!-- Status -->
+<div id="status"></div>
+
+<!-- Action bar -->
+<div id="action-bar">
+  <button id="btn-use-sel">Use selection</button>
+  <button id="btn-insert"  disabled>Insert response</button>
+  <button id="btn-read-doc">Read document</button>
+</div>
+
+<!-- Input bar -->
+<div id="input-bar">
+  <textarea id="user-input" rows="1" placeholder="Ask Luna…"></textarea>
+  <button id="send-btn" title="Send">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    </svg>
+  </button>
+</div>
+
+<script>
+// ── Settings ─────────────────────────────────────────────────────────────────
+
+const DEFAULT_URL = 'http://localhost:8899';
+
+function loadSettings() {
+  return {
+    url:   localStorage.getItem('luna_url')   || DEFAULT_URL,
+    token: localStorage.getItem('luna_token') || '',
+    convId: parseInt(localStorage.getItem('luna_conv_id') || '0') || null,
+  };
+}
+function saveSettings(url, token) {
+  localStorage.setItem('luna_url', url);
+  localStorage.setItem('luna_token', token);
+}
+function setConvId(id) {
+  if (id) localStorage.setItem('luna_conv_id', String(id));
+  else localStorage.removeItem('luna_conv_id');
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+let streaming    = false;
+let lastResponse = '';
+let convId       = null;
+let hostType     = 'Unknown';
+
+// ── Office init ───────────────────────────────────────────────────────────────
+
+Office.onReady((info) => {
+  const s = loadSettings();
+  document.getElementById('s-url').value   = s.url;
+  document.getElementById('s-token').value = s.token;
+  convId = s.convId;
+
+  // Detect host
+  const h = info.host;
+  if (h === Office.HostType.Word)         hostType = 'Word';
+  else if (h === Office.HostType.Excel)   hostType = 'Excel';
+  else if (h === Office.HostType.PowerPoint) hostType = 'PowerPoint';
+  else                                    hostType = 'Office';
+
+  document.getElementById('host-badge').textContent = hostType;
+
+  // Auto-grow textarea
+  const ta = document.getElementById('user-input');
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  });
+  ta.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  // Bind buttons
+  document.getElementById('send-btn').addEventListener('click', send);
+  document.getElementById('btn-gear').addEventListener('click', toggleSettings);
+  document.getElementById('btn-new').addEventListener('click', newConversation);
+  document.getElementById('btn-save-settings').addEventListener('click', () => {
+    saveSettings(document.getElementById('s-url').value.trim(), document.getElementById('s-token').value.trim());
+    setStatus('Settings saved.', 'ok');
+    toggleSettings();
+  });
+  document.getElementById('btn-test-conn').addEventListener('click', testConnection);
+  document.getElementById('btn-use-sel').addEventListener('click', useSelection);
+  document.getElementById('btn-insert').addEventListener('click', insertLastResponse);
+  document.getElementById('btn-read-doc').addEventListener('click', readDocument);
+});
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+
+function toggleSettings() {
+  document.getElementById('settings').classList.toggle('open');
+}
+function setStatus(msg, cls = '') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className   = cls;
+}
+function scrollToBottom() {
+  const el = document.getElementById('messages');
+  el.scrollTop = el.scrollHeight;
+}
+function setInputEnabled(enabled) {
+  document.getElementById('user-input').disabled = !enabled;
+  document.getElementById('send-btn').disabled   = !enabled;
+  streaming = !enabled;
+}
+
+function addMessage(role, text, id) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+  if (id) wrap.id = id;
+
+  const label = document.createElement('span');
+  label.className = 'msg-label';
+  label.textContent = role === 'luna' ? 'Luna' : 'You';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+
+  wrap.appendChild(label);
+  wrap.appendChild(bubble);
+
+  if (role === 'luna') {
+    const copy = document.createElement('button');
+    copy.className = 'copy-btn';
+    copy.textContent = 'Copy';
+    copy.onclick = () => {
+      navigator.clipboard.writeText(bubble.textContent).then(() => {
+        copy.textContent = 'Copied!';
+        setTimeout(() => { copy.textContent = 'Copy'; }, 1500);
+      });
+    };
+    wrap.appendChild(copy);
+  }
+
+  document.getElementById('messages').appendChild(wrap);
+  scrollToBottom();
+  return bubble;
+}
+
+function newConversation() {
+  convId = null;
+  setConvId(null);
+  lastResponse = '';
+  document.getElementById('messages').innerHTML = `
+    <div class="msg luna">
+      <span class="msg-label">Luna</span>
+      <div class="bubble">New conversation started. How can I help?</div>
+    </div>`;
+  document.getElementById('btn-insert').disabled = true;
+  setStatus('');
+}
+
+// ── Luna API ──────────────────────────────────────────────────────────────────
+
+async function send(prefixText) {
+  if (streaming) return;
+  const s    = loadSettings();
+  const ta   = document.getElementById('user-input');
+  const text = (prefixText || ta.value).trim();
+  if (!text) return;
+
+  ta.value = '';
+  ta.style.height = 'auto';
+  addMessage('user', text);
+  setInputEnabled(false);
+  setStatus('Luna is thinking…');
+
+  const msgId    = 'luna-' + Date.now();
+  const bubble   = addMessage('luna', '', msgId);
+  bubble.classList.add('streaming');
+
+  let full = '';
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (s.token) headers['Authorization'] = `Bearer ${s.token}`;
+
+    const res = await fetch(`${s.url}/api/chat/stream`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message: text, conversation_id: convId }),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const reader  = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        let evt;
+        try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+
+        if (evt.type === 'token') {
+          full += evt.content;
+          bubble.textContent = full;
+          scrollToBottom();
+        } else if (evt.type === 'done') {
+          if (evt.conversation_id) {
+            convId = evt.conversation_id;
+            setConvId(convId);
+          }
+        }
+      }
+    }
+
+    bubble.classList.remove('streaming');
+    if (!full) bubble.textContent = '(empty response)';
+    lastResponse = full;
+    document.getElementById('btn-insert').disabled = false;
+    setStatus('');
+  } catch (err) {
+    bubble.classList.remove('streaming');
+    bubble.textContent = `Error: ${err.message}`;
+    setStatus(`Connection failed — check settings.`, 'error');
+  } finally {
+    setInputEnabled(true);
+  }
+}
+
+async function testConnection() {
+  const s = loadSettings();
+  setStatus('Testing…');
+  try {
+    const headers = {};
+    if (s.token) headers['Authorization'] = `Bearer ${s.token}`;
+    const r = await fetch(`${s.url}/api/chat/conversations`, { headers });
+    if (r.ok) setStatus('Connected ✓', 'ok');
+    else      setStatus(`Error: HTTP ${r.status}`, 'error');
+  } catch (e) {
+    setStatus(`Cannot reach ${s.url}`, 'error');
+  }
+}
+
+// ── Office document operations ────────────────────────────────────────────────
+
+function getSelection() {
+  return new Promise((resolve, reject) => {
+    Office.context.document.getSelectedDataAsync(
+      Office.CoercionType.Text,
+      (result) => {
+        if (result.status === Office.AsyncResultStatus.Succeeded) {
+          resolve(result.value || '');
+        } else {
+          reject(result.error.message);
+        }
+      }
+    );
+  });
+}
+
+function insertText(text) {
+  return new Promise((resolve, reject) => {
+    // Word: prefer Word.run for better control
+    if (hostType === 'Word' && typeof Word !== 'undefined') {
+      Word.run(async (ctx) => {
+        const sel = ctx.document.getSelection();
+        sel.insertText(text, Word.InsertLocation.replace);
+        await ctx.sync();
+        resolve();
+      }).catch(reject);
+    } else if (hostType === 'Excel' && typeof Excel !== 'undefined') {
+      Excel.run(async (ctx) => {
+        const range = ctx.workbook.getSelectedRange();
+        range.values = [[text]];
+        await ctx.sync();
+        resolve();
+      }).catch(reject);
+    } else {
+      // Generic fallback (PowerPoint + others)
+      Office.context.document.setSelectedDataAsync(
+        text,
+        { coercionType: Office.CoercionType.Text },
+        (result) => {
+          if (result.status === Office.AsyncResultStatus.Succeeded) resolve();
+          else reject(result.error.message);
+        }
+      );
+    }
+  });
+}
+
+async function getFullDocumentText() {
+  if (hostType === 'Word' && typeof Word !== 'undefined') {
+    return new Promise((resolve) => {
+      Word.run(async (ctx) => {
+        const body = ctx.document.body;
+        body.load('text');
+        await ctx.sync();
+        resolve(body.text.slice(0, 3000));
+      });
+    });
+  }
+  if (hostType === 'Excel' && typeof Excel !== 'undefined') {
+    return new Promise((resolve) => {
+      Excel.run(async (ctx) => {
+        const sheet = ctx.workbook.worksheets.getActiveWorksheet();
+        const range = sheet.getUsedRange(true);
+        range.load('values');
+        await ctx.sync();
+        const rows = (range.values || []).slice(0, 40);
+        resolve(rows.map(r => r.join('\t')).join('\n'));
+      });
+    });
+  }
+  // PowerPoint: no body text API — return empty
+  return '';
+}
+
+async function useSelection() {
+  try {
+    const sel = await getSelection();
+    if (!sel.trim()) {
+      setStatus('Nothing selected — select text first.', 'error');
+      return;
+    }
+    document.getElementById('sel-info').textContent = sel.slice(0, 60) + (sel.length > 60 ? '…' : '');
+    await send(`[Selected text from ${hostType}]:\n\n${sel}`);
+  } catch (e) {
+    setStatus(`Selection error: ${e}`, 'error');
+  }
+}
+
+async function insertLastResponse() {
+  if (!lastResponse) return;
+  try {
+    // Strip markdown code fences for Excel; keep as-is for Word/PPT
+    let text = lastResponse;
+    if (hostType === 'Excel') {
+      text = text.replace(/```[\w]*\n?([\s\S]*?)```/g, '$1').trim();
+    }
+    await insertText(text);
+    setStatus('Inserted into document ✓', 'ok');
+  } catch (e) {
+    setStatus(`Insert failed: ${e}`, 'error');
+  }
+}
+
+async function readDocument() {
+  try {
+    setStatus('Reading document…');
+    const text = await getFullDocumentText();
+    if (!text.trim()) {
+      setStatus('Document is empty or cannot be read.', 'error');
+      return;
+    }
+    document.getElementById('sel-info').textContent = `Document: ${text.length} chars`;
+    await send(`[Full ${hostType} document content (first 3000 chars)]:\n\n${text}\n\nSummarise or answer questions about this.`);
+  } catch (e) {
+    setStatus(`Read failed: ${e}`, 'error');
+  }
+}
+</script>
+</body>
+</html>

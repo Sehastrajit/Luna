@@ -56,6 +56,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // IP-based geolocation (works without OS/browser permissions)
   getLocation: () => ipcRenderer.invoke('location:get'),
 
+  // Env config read/write (for integration setup in the main UI)
+  getEnvConfig:  ()       => ipcRenderer.invoke('env:get'),
+  saveEnvConfig: config   => ipcRenderer.invoke('env:save', config),
+
   // API base URL — Electron loads index.html directly, so relative paths won't work
   apiBase:    'http://127.0.0.1:8899',
   isElectron: true,

@@ -72,6 +72,11 @@ app.include_router(observe_router)
 app.include_router(health_router)
 app.include_router(coding_router)
 
+# Serve Office Add-in static files at /addin/office/
+office_addin_dir = Path(__file__).parent.parent / "office-addin"
+if office_addin_dir.exists():
+    app.mount("/addin/office", StaticFiles(directory=str(office_addin_dir)), name="office-addin")
+
 # Serve React frontend (production build)
 frontend_dist = Path(settings.frontend_dist)
 if frontend_dist.exists():

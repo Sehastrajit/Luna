@@ -450,4 +450,6 @@ module.exports = {
   needsFirstRunConfig,
   openSettingsWindow,
   waitForSettingsClosed,
+  readEnv,
+  writeEnv,
 }

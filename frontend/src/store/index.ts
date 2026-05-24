@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { Message, Conversation, Fact, Task, CalendarEvent, PersonalityState, Activity, View } from '../types'
 
+function readStartupMode(): 'user' | 'dev' {
+  try { return (localStorage.getItem('luna_startup_mode') as 'user' | 'dev') || 'user' } catch { return 'user' }
+}
+
 interface AppState {
   // Navigation
   activeView: View
@@ -40,6 +44,15 @@ interface AppState {
   toggleViewMode: () => void
   enterLunaDashboard: () => void
   exitLunaDashboard: () => void
+
+  // Startup mode (persisted)
+  startupMode: 'user' | 'dev'
+  setStartupMode: (m: 'user' | 'dev') => void
+
+  // Settings overlay
+  settingsOpen: boolean
+  openSettings: () => void
+  closeSettings: () => void
 
   // Status
   ollamaOnline: boolean
@@ -109,8 +122,8 @@ export const useStore = create<AppState>((set) => ({
   setTasks: (tasks) => set({ tasks }),
   setEvents: (events) => set({ events }),
 
-  viewMode: 'user',
-  _priorViewMode: 'user',
+  viewMode: readStartupMode(),
+  _priorViewMode: readStartupMode(),
   toggleViewMode: () => set((s) => {
     if (s.viewMode === 'luna') return {}
     return { viewMode: s.viewMode === 'dev' ? 'user' : 'dev' }
@@ -120,6 +133,16 @@ export const useStore = create<AppState>((set) => ({
     viewMode: 'luna',
   })),
   exitLunaDashboard: () => set((s) => ({ viewMode: s._priorViewMode })),
+
+  startupMode: readStartupMode(),
+  setStartupMode: (m) => {
+    try { localStorage.setItem('luna_startup_mode', m) } catch {}
+    set({ startupMode: m, viewMode: m })
+  },
+
+  settingsOpen: false,
+  openSettings: () => set({ settingsOpen: true }),
+  closeSettings: () => set({ settingsOpen: false }),
 
   ollamaOnline: false,
   setOllamaOnline: (ollamaOnline) => set({ ollamaOnline }),

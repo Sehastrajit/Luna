@@ -65,6 +65,9 @@ export const api = {
   spotifyNext:    () => request<any>('/api/spotify/next',  { method: 'POST' }),
   spotifyPrev:    () => request<any>('/api/spotify/prev',  { method: 'POST' }),
 
+  // Health integrations
+  healthStatus: () => request<any>('/api/health/status'),
+
   // System
   launchApp: (name: string) =>
     request<any>('/api/system/launch', { method: 'POST', body: JSON.stringify({ name }) }),

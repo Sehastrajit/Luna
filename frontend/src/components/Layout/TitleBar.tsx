@@ -51,7 +51,7 @@ function TrafficLights({ maximized, fullscreen }: { maximized: boolean; fullscre
 export function TitleBar() {
   const [maximized, setMaximized]   = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
-  const { viewMode, toggleViewMode } = useStore()
+  const { viewMode, toggleViewMode, openSettings } = useStore()
 
   useEffect(() => {
     window.electronAPI?.isMaximized().then(setMaximized)
@@ -86,7 +86,7 @@ export function TitleBar() {
         <div className="w-px h-4 bg-luna-border mx-1" />
         <button
           onMouseDown={(event) => event.stopPropagation()}
-          onClick={() => window.electronAPI?.openSettings?.()}
+          onClick={() => openSettings()}
           className="h-full w-10 flex items-center justify-center text-luna-dim hover:bg-white/10 hover:text-luna-text transition-colors"
           title="Settings"
         >
@@ -120,7 +120,7 @@ export function TitleBar() {
         <div className="w-px h-4 bg-luna-border" />
         <button
           onMouseDown={(event) => event.stopPropagation()}
-          onClick={() => window.electronAPI?.openSettings?.()}
+          onClick={() => openSettings()}
           className="h-full w-10 flex items-center justify-center text-luna-dim hover:bg-white/10 hover:text-luna-text transition-colors"
           title="Settings"
         >

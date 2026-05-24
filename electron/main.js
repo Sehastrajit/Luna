@@ -14,6 +14,8 @@ const {
   needsFirstRunConfig,
   openSettingsWindow,
   waitForSettingsClosed,
+  readEnv,
+  writeEnv,
 } = require('./settings')
 let autoUpdater = null
 try {
@@ -425,6 +427,14 @@ function registerIPC() {
   ipcMain.handle('clipboard:write', (_, text) => { clipboard.writeText(String(text)) })
   ipcMain.handle('settings:open', () => {
     openSettingsWindow({ BrowserWindow, ipcMain, app, root: ROOT, isDev, parent: mainWindow, mode: 'settings' })
+  })
+  ipcMain.handle('env:get', () => {
+    try { return { ok: true, config: readEnv(ENV_FILE) } }
+    catch (e) { return { ok: false, error: String(e) } }
+  })
+  ipcMain.handle('env:save', (_, config) => {
+    try { writeEnv(ENV_FILE, config || {}); return { ok: true } }
+    catch (e) { return { ok: false, error: String(e) } }
   })
   ipcMain.handle('update:check', () => checkForUpdates())
   ipcMain.handle('update:install', () => installDownloadedUpdate())
