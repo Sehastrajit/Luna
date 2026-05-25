@@ -49,6 +49,12 @@ interface AppState {
   startupMode: 'user' | 'dev'
   setStartupMode: (m: 'user' | 'dev') => void
 
+  // Feature flags (persisted)
+  layoutModeEnabled: boolean
+  devModeEnabled: boolean
+  setLayoutModeEnabled: (v: boolean) => void
+  setDevModeEnabled: (v: boolean) => void
+
   // Settings overlay
   settingsOpen: boolean
   openSettings: () => void
@@ -148,6 +154,11 @@ export const useStore = create<AppState>((set) => ({
     try { localStorage.setItem('luna_startup_mode', m) } catch {}
     set({ startupMode: m, viewMode: m })
   },
+
+  layoutModeEnabled: (() => { try { return localStorage.getItem('luna_layout_mode') === 'true' } catch { return false } })(),
+  devModeEnabled:    (() => { try { return localStorage.getItem('luna_dev_mode')    === 'true' } catch { return false } })(),
+  setLayoutModeEnabled: (v) => { try { localStorage.setItem('luna_layout_mode', String(v)) } catch {}; set({ layoutModeEnabled: v }) },
+  setDevModeEnabled:    (v) => { try { localStorage.setItem('luna_dev_mode',    String(v)) } catch {}; set({ devModeEnabled: v }) },
 
   settingsOpen: false,
   openSettings: () => set({ settingsOpen: true }),

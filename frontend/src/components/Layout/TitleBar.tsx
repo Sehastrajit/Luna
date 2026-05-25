@@ -1,9 +1,41 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '../../store'
 import { VoiceOrb } from '../Voice/VoiceOrb'
-import { SpeakerPicker } from './SpeakerPicker'
-import { LunaDashboardToggle } from '../Luna/LunaDashboardToggle'
-import { Minus, Square, X, Maximize2, Minimize2, Settings } from 'lucide-react'
+import { Minus, Square, X, Maximize2, Minimize2, Settings, Mic, LayoutDashboard, Orbit } from 'lucide-react'
+
+const MODE_CYCLE: Array<'user' | 'dev' | 'luna'> = ['user', 'dev', 'luna']
+const MODE_META = {
+  user:  { label: 'Voice',   Icon: Mic },
+  dev:   { label: 'Classic', Icon: LayoutDashboard },
+  luna:  { label: 'Luna',    Icon: Orbit },
+}
+
+function ModeCycleButton() {
+  const { viewMode, layoutModeEnabled, enterLunaDashboard, exitLunaDashboard, toggleViewMode } = useStore()
+  if (!layoutModeEnabled) return null
+
+  const cycle = () => {
+    const idx  = MODE_CYCLE.indexOf(viewMode as any)
+    const next = MODE_CYCLE[(idx + 1) % MODE_CYCLE.length]
+    if (next === 'luna') enterLunaDashboard()
+    else if (viewMode === 'luna') { exitLunaDashboard() }
+    else toggleViewMode()
+  }
+
+  const { label, Icon } = MODE_META[viewMode as keyof typeof MODE_META] ?? MODE_META.user
+  return (
+    <button
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={cycle}
+      title="Switch mode"
+      className="flex items-center gap-1.5 px-2.5 h-6 rounded-full border text-[10px] font-medium transition-all select-none
+        border-luna-border bg-luna-card text-luna-dim hover:border-luna-primary/50 hover:text-luna-text"
+    >
+      <Icon size={10} />
+      <span>{label}</span>
+    </button>
+  )
+}
 
 function TrafficLights({ maximized, fullscreen }: { maximized: boolean; fullscreen: boolean }) {
   const stopDrag = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -51,7 +83,7 @@ function TrafficLights({ maximized, fullscreen }: { maximized: boolean; fullscre
 export function TitleBar() {
   const [maximized, setMaximized]   = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
-  const { viewMode, toggleViewMode, openSettings } = useStore()
+  const { viewMode, toggleViewMode, devModeEnabled, openSettings } = useStore()
 
   useEffect(() => {
     window.electronAPI?.isMaximized().then(setMaximized)
@@ -62,6 +94,8 @@ export function TitleBar() {
     window.addEventListener('keydown', onKey)
     return () => { cleanMax?.(); cleanFull?.(); window.removeEventListener('keydown', onKey) }
   }, [])
+
+  const orbToggle = devModeEnabled ? toggleViewMode : undefined
 
   // ── User mode: bare strip — orb on left, traffic lights on right ──────────
   if (viewMode === 'user') {
@@ -74,32 +108,30 @@ export function TitleBar() {
           className="flex items-center gap-3 px-4 h-full"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          <VoiceOrb size={28} onToggle={toggleViewMode} />
+          <VoiceOrb size={28} onToggle={orbToggle} />
           <span className="text-[10px] font-mono tracking-[0.3em] text-luna-dim uppercase">
             Luna
           </span>
         </div>
-        <div className="flex items-center h-full" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
-        <LunaDashboardToggle />
-        <div className="w-px h-4 bg-luna-border mx-1" />
-        <SpeakerPicker />
-        <div className="w-px h-4 bg-luna-border mx-1" />
-        <button
-          onMouseDown={(event) => event.stopPropagation()}
-          onClick={() => openSettings()}
-          className="h-full w-10 flex items-center justify-center text-luna-dim hover:bg-white/10 hover:text-luna-text transition-colors"
-          title="Settings"
-        >
-          <Settings size={14} strokeWidth={2} />
-        </button>
-        <div className="w-px h-4 bg-luna-border mx-1" />
-        <TrafficLights maximized={maximized} fullscreen={fullscreen} />
+        <div className="flex items-center gap-2 px-2 h-full" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
+          <ModeCycleButton />
+          <div className="w-px h-4 bg-luna-border" />
+          <button
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={() => openSettings()}
+            className="h-full w-10 flex items-center justify-center text-luna-dim hover:bg-white/10 hover:text-luna-text transition-colors"
+            title="Settings"
+          >
+            <Settings size={14} strokeWidth={2} />
+          </button>
+          <div className="w-px h-4 bg-luna-border" />
+          <TrafficLights maximized={maximized} fullscreen={fullscreen} />
         </div>
       </div>
     )
   }
 
-  // ── Dev mode: full title bar ──────────────────────────────────────────────
+  // ── Dev / Luna mode: full title bar ──────────────────────────────────────
   return (
     <div
       className="relative z-40 h-10 flex items-center justify-between bg-luna-surface border-b border-luna-border shrink-0 select-none"
@@ -109,14 +141,12 @@ export function TitleBar() {
         Luna
       </span>
       <div
-        className="flex items-center gap-3 h-full"
+        className="flex items-center gap-2 px-2 h-full"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
-        <VoiceOrb size={36} onToggle={toggleViewMode} />
+        <ModeCycleButton />
         <div className="w-px h-4 bg-luna-border" />
-        <LunaDashboardToggle />
-        <div className="w-px h-4 bg-luna-border" />
-        <SpeakerPicker />
+        <VoiceOrb size={36} onToggle={orbToggle} />
         <div className="w-px h-4 bg-luna-border" />
         <button
           onMouseDown={(event) => event.stopPropagation()}

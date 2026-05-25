@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Mic, LayoutDashboard, Puzzle, CheckCircle, AlertCircle, RefreshCw, Save, ChevronDown } from 'lucide-react'
+import { X, LayoutDashboard, Puzzle, CheckCircle, AlertCircle, RefreshCw, Save, ChevronDown, Eye, Download, Volume2, Keyboard, Mic, Camera } from 'lucide-react'
 import { siAnthropic, siMistralai, siNvidia, siOllama } from 'simple-icons'
 import { useStore } from '../../store'
-import { api } from '../../api/client'
+import { api, streamMoondreamInstall } from '../../api/client'
 import { IntegrationStore, INTEGRATIONS } from './IntegrationStore'
+import { getSelectedCameraDeviceId, setCameraDevice } from '../../services/cameraStream'
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-type Tab = 'general' | 'integrations' | 'models' | 'providers'
+type Tab = 'general' | 'controls' | 'integrations' | 'models' | 'providers'
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'general',      label: 'General',      icon: <LayoutDashboard size={14} /> },
+  { id: 'controls',     label: 'Controls',     icon: <Keyboard size={14} /> },
   { id: 'integrations', label: 'Integrations', icon: <Puzzle size={14} /> },
   { id: 'models',       label: 'Models',       icon: <span className="text-[13px]">⚡</span> },
   { id: 'providers',    label: 'Providers',    icon: <CheckCircle size={14} /> },
@@ -137,8 +139,8 @@ function OllamaModelPicker({ value, onChange }: { value: string; onChange: (v: s
 function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className={`relative w-10 h-5 rounded-full transition-colors ${on ? 'bg-luna-primary/70' : 'bg-luna-border'}`}>
-      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-5' : 'translate-x-0.5'}`} />
+      className={`relative w-10 h-5 rounded-full overflow-hidden transition-colors shrink-0 ${on ? 'bg-luna-primary/70' : 'bg-luna-border'}`}>
+      <span className={`absolute top-[2px] w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${on ? 'left-[22px]' : 'left-[2px]'}`} />
     </button>
   )
 }
@@ -146,66 +148,24 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
 // ── Tab contents ──────────────────────────────────────────────────────────────
 
 function GeneralTab() {
-  const { viewMode, toggleViewMode, startupMode, setStartupMode } = useStore()
+  const { layoutModeEnabled, setLayoutModeEnabled, devModeEnabled, setDevModeEnabled } = useStore()
   return (
-    <div className="max-w-xl space-y-10">
-      <section className="space-y-4">
+    <div className="max-w-xl space-y-3">
+      <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-luna-card border border-luna-border">
         <div>
-          <h3 className="text-luna-text font-semibold text-sm">Default Mode</h3>
-          <p className="text-luna-dim text-xs mt-0.5">Choose which interface launches when you open Luna.</p>
+          <p className="text-sm text-luna-text">Layout mode</p>
+          <p className="text-[11px] text-luna-dim">Shows a mode switcher in the title bar (Jarvis → Classic → Luna)</p>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <button onClick={() => setStartupMode('user')}
-            className={`flex flex-col items-center gap-4 p-6 rounded-2xl border-2 transition-all ${
-              startupMode === 'user'
-                ? 'border-luna-primary/70 bg-luna-primary/10 text-luna-accent'
-                : 'border-luna-border bg-luna-card text-luna-dim hover:border-luna-primary/30 hover:text-luna-text'
-            }`}>
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${startupMode === 'user' ? 'bg-luna-primary/20' : 'bg-luna-surface'}`}>
-              <Mic size={24} />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-sm">Jarvis Mode</p>
-              <p className="text-[11px] opacity-70 mt-1 leading-relaxed">Voice-only — just the orb and mic. Clean, minimal, always listening.</p>
-            </div>
-            {startupMode === 'user' && <div className="w-2 h-2 rounded-full bg-luna-accent" />}
-          </button>
+        <Toggle on={layoutModeEnabled} onClick={() => setLayoutModeEnabled(!layoutModeEnabled)} />
+      </div>
 
-          <button onClick={() => setStartupMode('dev')}
-            className={`flex flex-col items-center gap-4 p-6 rounded-2xl border-2 transition-all ${
-              startupMode === 'dev'
-                ? 'border-luna-primary/70 bg-luna-primary/10 text-luna-accent'
-                : 'border-luna-border bg-luna-card text-luna-dim hover:border-luna-primary/30 hover:text-luna-text'
-            }`}>
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${startupMode === 'dev' ? 'bg-luna-primary/20' : 'bg-luna-surface'}`}>
-              <LayoutDashboard size={24} />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-sm">Classic Mode</p>
-              <p className="text-[11px] opacity-70 mt-1 leading-relaxed">Full sidebar with chat, memory, calendar, activities and all panels.</p>
-            </div>
-            {startupMode === 'dev' && <div className="w-2 h-2 rounded-full bg-luna-accent" />}
-          </button>
-        </div>
-        <p className="text-[11px] text-luna-dim">Takes effect on next launch. Toggle the orb in the title bar to switch during this session.</p>
-      </section>
-
-      <section className="space-y-4">
+      <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-luna-card border border-luna-border">
         <div>
-          <h3 className="text-luna-text font-semibold text-sm">This Session</h3>
-          <p className="text-luna-dim text-xs mt-0.5">Switch mode without restarting.</p>
+          <p className="text-sm text-luna-text">Dev mode</p>
+          <p className="text-[11px] text-luna-dim">Enables the orb button in the title bar to switch modes</p>
         </div>
-        <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-luna-card border border-luna-border">
-          <div className="flex items-center gap-3">
-            <Mic size={15} className="text-luna-dim" />
-            <div>
-              <p className="text-sm text-luna-text">Jarvis mode</p>
-              <p className="text-[11px] text-luna-dim">Currently {viewMode === 'user' ? 'active' : 'off'}</p>
-            </div>
-          </div>
-          <Toggle on={viewMode === 'user'} onClick={() => { if (viewMode !== 'luna') toggleViewMode() }} />
-        </div>
-      </section>
+        <Toggle on={devModeEnabled} onClick={() => setDevModeEnabled(!devModeEnabled)} />
+      </div>
     </div>
   )
 }
@@ -233,6 +193,81 @@ function IntegrationsTab() {
   )
 }
 
+function MoondreamSection() {
+  const [status, setStatus] = useState<{ moondream_installed: boolean; ollama_available: boolean } | null>(null)
+  const [installing, setInstalling] = useState(false)
+  const [lines, setLines]   = useState<string[]>([])
+  const [done, setDone]     = useState(false)
+  const [installErr, setInstallErr] = useState('')
+  const logRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { api.getVisionStatus().then(setStatus).catch(() => {}) }, [done])
+
+  useEffect(() => {
+    if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight
+  }, [lines])
+
+  const install = async () => {
+    setInstalling(true); setLines([]); setDone(false); setInstallErr('')
+    try {
+      for await (const chunk of streamMoondreamInstall()) {
+        if (chunk.error) { setInstallErr(chunk.error); break }
+        if (chunk.line)  setLines(prev => [...prev.slice(-60), chunk.line!])
+        if (chunk.done)  { setDone(true); break }
+      }
+    } catch (e: any) {
+      setInstallErr(String(e?.message ?? e))
+    } finally {
+      setInstalling(false)
+    }
+  }
+
+  const installed   = status?.moondream_installed
+  const ollamaReady = status?.ollama_available
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Eye size={14} className="text-luna-dim" />
+        <h3 className="text-luna-text font-semibold text-sm">Vision Model</h3>
+      </div>
+      <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-luna-card border border-luna-border">
+        <div className="flex items-center gap-3">
+          <span className={`w-2 h-2 rounded-full ${installed ? 'bg-green-400' : 'bg-luna-dim'}`} />
+          <div>
+            <p className="text-sm text-luna-text">moondream</p>
+            <p className="text-[11px] text-luna-dim">
+              {!ollamaReady ? 'Ollama not reachable' : installed ? 'Ready — Luna can see your screen' : 'Not installed — vision features inactive'}
+            </p>
+          </div>
+        </div>
+        {!installed && ollamaReady && (
+          <button
+            onClick={install}
+            disabled={installing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-luna-primary/20 border border-luna-primary/40 text-luna-accent text-xs font-medium hover:bg-luna-primary/30 transition-colors disabled:opacity-50"
+          >
+            <Download size={11} />
+            {installing ? 'Installing…' : 'Install'}
+          </button>
+        )}
+      </div>
+
+      {(installing || lines.length > 0) && (
+        <div
+          ref={logRef}
+          className="rounded-lg bg-black/40 border border-luna-border p-3 h-28 overflow-y-auto font-mono text-[10px] text-luna-dim space-y-0.5"
+        >
+          {lines.map((l, i) => <p key={i}>{l}</p>)}
+          {installing && <p className="text-luna-primary animate-pulse">▌</p>}
+        </div>
+      )}
+      {done && !installErr && <p className="text-green-400 text-xs flex items-center gap-1.5"><CheckCircle size={12} />moondream installed — vision is now active</p>}
+      {installErr && <p className="text-red-400 text-xs flex items-center gap-1.5"><AlertCircle size={12} />{installErr}</p>}
+    </section>
+  )
+}
+
 function ModelsTab() {
   const [data, setData]     = useState<CodingSettings | null>(null)
   const [form, setForm]     = useState<Partial<CodingSettings>>({})
@@ -240,9 +275,12 @@ function ModelsTab() {
   const [saved, setSaved]   = useState(false)
   const [err, setErr]       = useState('')
 
-  useEffect(() => {
-    api.getCodingSettings().then(s => { setData(s); setForm(s) }).catch(() => setErr('Failed to load'))
-  }, [])
+  const load = () => {
+    setErr('')
+    api.getCodingSettings().then(s => { setData(s); setForm(s) }).catch(() => setErr('Failed to load — is the backend running?'))
+  }
+
+  useEffect(() => { load() }, [])
 
   const set = (k: string, v: unknown) => setForm(f => ({ ...f, [k]: v }))
 
@@ -253,7 +291,12 @@ function ModelsTab() {
     finally { setSaving(false) }
   }
 
-  if (!data) return <p className="text-luna-dim text-sm">{err || 'Loading…'}</p>
+  if (!data) return (
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-luna-dim text-sm">{err || 'Loading…'}</p>
+      {err && <button onClick={load} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-luna-card border border-luna-border text-luna-dim text-xs hover:text-luna-text transition-colors"><RefreshCw size={11} />Retry</button>}
+    </div>
+  )
 
   const chatProv     = (form.llm_provider    ?? data.llm_provider    ?? 'ollama') as string
   const codingRaw    = (form.coding_provider ?? data.coding_provider ?? '') as string
@@ -263,6 +306,8 @@ function ModelsTab() {
 
   return (
     <div className="max-w-xl space-y-6">
+      <MoondreamSection />
+
       <section className="space-y-4">
         <h3 className="text-luna-text font-semibold text-sm">Chat Model</h3>
         <div className="space-y-1.5">
@@ -397,15 +442,16 @@ const PROVIDER_ICONS: Record<string, React.ComponentType> = {
 }
 
 // env var names + extra fields per provider
+// Keys MUST match the lowercase keys used in .env and returned by getEnvConfig
 const PROVIDER_FIELDS: Record<string, { envKey?: string; envKeyLabel?: string; urlKey?: string; urlLabel?: string; urlPlaceholder?: string; modelPlaceholder?: string }> = {
-  ollama:             { urlKey: 'OLLAMA_BASE_URL', urlLabel: 'Base URL', urlPlaceholder: 'http://localhost:11434', modelPlaceholder: 'e.g. qwen2.5:7b' },
-  anthropic:          { envKey: 'ANTHROPIC_API_KEY', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. claude-3-5-sonnet-20241022' },
-  groq:               { envKey: 'GROQ_API_KEY', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. llama-3.3-70b-versatile' },
-  google:             { envKey: 'GOOGLE_API_KEY', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. gemini-2.0-flash-exp' },
-  'openai-compatible':{ envKey: 'OPENAI_API_KEY', envKeyLabel: 'API Key', urlKey: 'OPENAI_BASE_URL', urlLabel: 'Base URL (optional)', urlPlaceholder: 'https://api.openai.com/v1', modelPlaceholder: 'e.g. gpt-4o' },
-  mistral:            { envKey: 'MISTRAL_API_KEY', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. mistral-large-latest' },
-  cohere:             { envKey: 'COHERE_API_KEY', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. command-r-plus' },
-  'nvidia-nim':       { envKey: 'NVIDIA_NIM_API_KEY', envKeyLabel: 'API Key', urlKey: 'NVIDIA_NIM_BASE_URL', urlLabel: 'Base URL (optional)', urlPlaceholder: 'https://integrate.api.nvidia.com/v1', modelPlaceholder: 'e.g. meta/llama-3.1-70b-instruct' },
+  ollama:             { urlKey: 'ollama_base_url', urlLabel: 'Base URL', urlPlaceholder: 'http://localhost:11434', modelPlaceholder: 'e.g. qwen2.5:7b' },
+  anthropic:          { envKey: 'anthropic_api_key', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. claude-3-5-sonnet-20241022' },
+  groq:               { envKey: 'groq_api_key', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. llama-3.3-70b-versatile' },
+  google:             { envKey: 'google_api_key', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. gemini-2.0-flash-exp' },
+  'openai-compatible':{ envKey: 'openai_api_key', envKeyLabel: 'API Key', urlKey: 'openai_base_url', urlLabel: 'Base URL (optional)', urlPlaceholder: 'https://api.openai.com/v1', modelPlaceholder: 'e.g. gpt-4o' },
+  mistral:            { envKey: 'mistral_api_key', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. mistral-large-latest' },
+  cohere:             { envKey: 'cohere_api_key', envKeyLabel: 'API Key', modelPlaceholder: 'e.g. command-r-plus' },
+  'nvidia-nim':       { envKey: 'nvidia_nim_api_key', envKeyLabel: 'API Key', urlKey: 'nvidia_nim_base_url', urlLabel: 'Base URL (optional)', urlPlaceholder: 'https://integrate.api.nvidia.com/v1', modelPlaceholder: 'e.g. meta/llama-3.1-70b-instruct' },
 }
 
 function ProviderCard({ provKey, info, envCfg, settings, onSaved }: {
@@ -543,19 +589,27 @@ function ProvidersTab() {
   const [envCfg, setEnvCfg] = useState<Record<string, string>>({})
   const [err,    setErr]    = useState('')
 
-  useEffect(() => {
-    api.getCodingSettings().then(setData).catch(() => setErr('Failed to load'))
+  const load = () => {
+    setErr('')
+    api.getCodingSettings().then(setData).catch(() => setErr('Failed to load — is the backend running?'))
     window.electronAPI?.getEnvConfig?.().then(res => {
       if (res?.ok && res.config) setEnvCfg(res.config)
     })
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
 
   const handleSaved = (envPatch: Record<string, string>, settingsPatch: Record<string, unknown>) => {
     setEnvCfg(prev => ({ ...prev, ...envPatch }))
     setData(prev => prev ? { ...prev, ...settingsPatch } as CodingSettings : prev)
   }
 
-  if (!data) return <p className="text-luna-dim text-sm">{err || 'Loading…'}</p>
+  if (!data) return (
+    <div className="flex flex-col items-start gap-3">
+      <p className="text-luna-dim text-sm">{err || 'Loading…'}</p>
+      {err && <button onClick={load} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-luna-card border border-luna-border text-luna-dim text-xs hover:text-luna-text transition-colors"><RefreshCw size={11} />Retry</button>}
+    </div>
+  )
 
   return (
     <div className="max-w-xl space-y-4">
@@ -572,6 +626,136 @@ function ProvidersTab() {
           />
         ))}
       </div>
+    </div>
+  )
+}
+
+// ── Controls tab ─────────────────────────────────────────────────────────────
+
+function DeviceSelect({ value, onChange, options, disabled }: {
+  value: string; onChange: (v: string) => void
+  options: { id: string; name: string }[]; disabled?: boolean
+}) {
+  return (
+    <select
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      disabled={disabled || options.length === 0}
+      className="w-full bg-luna-card border border-luna-border rounded-lg px-3 py-2 text-sm text-luna-text
+        focus:outline-none focus:border-luna-primary/60 disabled:opacity-40 disabled:cursor-not-allowed
+        appearance-none cursor-pointer"
+      style={{ backgroundImage: 'none' }}
+    >
+      {options.length === 0
+        ? <option value="">No devices found</option>
+        : options.map(o => <option key={o.id} value={o.id}>{o.name}</option>)
+      }
+    </select>
+  )
+}
+
+function ControlsTab() {
+  const base = window.electronAPI?.apiBase ?? ''
+
+  const [outDevices, setOutDevices] = useState<{ id: string; name: string }[]>([])
+  const [outCurrent, setOutCurrent] = useState('')
+  const [outBusy, setOutBusy]       = useState(false)
+
+  const [inDevices, setInDevices]   = useState<{ id: string; name: string }[]>([])
+  const [inCurrent, setInCurrent]   = useState('')
+  const [inBusy, setInBusy]         = useState(false)
+
+  const [camDevices, setCamDevices] = useState<{ id: string; name: string }[]>([])
+  const [camCurrent, setCamCurrent] = useState(getSelectedCameraDeviceId() ?? '')
+
+  useEffect(() => {
+    fetch(`${base}/api/system/audio-devices`).then(r => r.json())
+      .then(d => { setOutDevices(d.devices ?? []); setOutCurrent(d.current ?? '') }).catch(() => {})
+    fetch(`${base}/api/system/audio-input-devices`).then(r => r.json())
+      .then(d => { setInDevices(d.devices ?? []); setInCurrent(d.current ?? '') }).catch(() => {})
+    navigator.mediaDevices.enumerateDevices().then(devs => {
+      const cams = devs.filter(d => d.kind === 'videoinput').map(d => ({ id: d.deviceId, name: d.label || `Camera ${d.deviceId.slice(0, 6)}` }))
+      setCamDevices(cams)
+      if (!getSelectedCameraDeviceId() && cams.length > 0) setCamCurrent(cams[0].id)
+    }).catch(() => {})
+  }, [base])
+
+  const switchOutput = async (id: string) => {
+    setOutCurrent(id); setOutBusy(true)
+    try {
+      await fetch(`${base}/api/system/audio-device`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_id: id }) })
+    } catch {}
+    setOutBusy(false)
+  }
+
+  const switchInput = async (id: string) => {
+    setInCurrent(id); setInBusy(true)
+    try {
+      await fetch(`${base}/api/system/audio-input-device`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ device_id: id }) })
+    } catch {}
+    setInBusy(false)
+  }
+
+  const switchCamera = (id: string) => {
+    setCamCurrent(id)
+    setCameraDevice(id || null)
+  }
+
+  const SHORTCUTS = [
+    { keys: ['Ctrl', 'Alt', 'L'], desc: 'Show / focus Luna' },
+    { keys: ['F11'],              desc: 'Toggle fullscreen' },
+    { keys: ['Esc'],              desc: 'Close settings / overlays' },
+  ]
+
+  return (
+    <div className="max-w-xl space-y-8">
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Volume2 size={14} className="text-luna-dim" />
+          <h3 className="text-luna-text font-semibold text-sm">Audio Output</h3>
+          {outBusy && <span className="text-[10px] text-luna-dim animate-pulse">switching…</span>}
+        </div>
+        <DeviceSelect value={outCurrent} onChange={switchOutput} options={outDevices} disabled={outBusy} />
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Mic size={14} className="text-luna-dim" />
+          <h3 className="text-luna-text font-semibold text-sm">Microphone</h3>
+          {inBusy && <span className="text-[10px] text-luna-dim animate-pulse">switching…</span>}
+        </div>
+        <DeviceSelect value={inCurrent} onChange={switchInput} options={inDevices} disabled={inBusy} />
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Camera size={14} className="text-luna-dim" />
+          <h3 className="text-luna-text font-semibold text-sm">Camera</h3>
+        </div>
+        <DeviceSelect value={camCurrent} onChange={switchCamera} options={camDevices} />
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Keyboard size={14} className="text-luna-dim" />
+          <h3 className="text-luna-text font-semibold text-sm">Keyboard Shortcuts</h3>
+        </div>
+        <div className="space-y-1.5">
+          {SHORTCUTS.map(s => (
+            <div key={s.desc} className="flex items-center justify-between px-4 py-3 rounded-xl bg-luna-card border border-luna-border">
+              <span className="text-sm text-luna-dim">{s.desc}</span>
+              <div className="flex items-center gap-1">
+                {s.keys.map((k, i) => (
+                  <span key={i} className="flex items-center gap-1">
+                    <kbd className="px-1.5 py-0.5 rounded bg-luna-surface border border-luna-border text-[10px] font-mono text-luna-text">{k}</kbd>
+                    {i < s.keys.length - 1 && <span className="text-luna-dim text-[10px]">+</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
@@ -646,6 +830,7 @@ export function SettingsOverlay() {
                   className="p-8"
                 >
                   {tab === 'general'      && <GeneralTab />}
+                  {tab === 'controls'     && <ControlsTab />}
                   {tab === 'integrations' && <IntegrationsTab />}
                   {tab === 'models'       && <ModelsTab />}
                   {tab === 'providers'    && <ProvidersTab />}

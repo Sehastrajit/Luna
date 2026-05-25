@@ -398,6 +398,10 @@ function checkForUpdates() {
   if (isDev || !autoUpdater) {
     return Promise.resolve({ ok: false, reason: 'updates unavailable in development' })
   }
+  const updateYml = path.join(process.resourcesPath, 'app-update.yml')
+  if (!fs.existsSync(updateYml)) {
+    return Promise.resolve({ ok: false, reason: 'no update config (portable build)' })
+  }
   return autoUpdater.checkForUpdatesAndNotify()
     .then(() => ({ ok: true }))
     .catch(error => ({ ok: false, error: String(error?.message || error) }))

@@ -66,6 +66,45 @@ async def set_audio_device(request: Request):
     return {"ok": ok}
 
 
+@router.get("/audio-input-devices")
+def get_audio_input_devices():
+    try:
+        import sounddevice as sd
+        devs = sd.query_devices()
+        inputs = [
+            {"id": str(i), "name": d["name"]}
+            for i, d in enumerate(devs)
+            if d["max_input_channels"] > 0
+        ]
+        try:
+            default = sd.query_devices(kind="input")
+            current = str(next(
+                (str(i) for i, d in enumerate(devs) if d["name"] == default["name"]), ""
+            ))
+        except Exception:
+            current = ""
+        return {"devices": inputs, "current": current}
+    except Exception as e:
+        return {"devices": [], "current": None, "error": str(e)}
+
+
+@router.post("/audio-input-device")
+async def set_audio_input_device(request: Request):
+    try:
+        import sounddevice as sd
+        body = await request.json()
+        idx = int(body.get("device_id", -1))
+        if idx < 0:
+            return {"ok": False, "error": "invalid device_id"}
+        devs = sd.query_devices()
+        if idx >= len(devs):
+            return {"ok": False, "error": "device not found"}
+        sd.default.device = (idx, sd.default.device[1] if isinstance(sd.default.device, (list, tuple)) else sd.default.device)
+        return {"ok": True, "name": devs[idx]["name"]}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+
 _SCENE_SYSTEM = (
     "You are a 3D scene designer. Output ONLY valid JSON — no markdown, no explanation, no code fences."
 )

@@ -237,9 +237,17 @@ function needsFirstRunConfig(file) {
   return !env.luna_variant || !env.llm_provider
 }
 
+// Inline logo — no file read needed; crescent uses clip-path so url() refs work in data: URLs
+const LOGO_SVG = `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M21 8C10.5 8 2 16.5 2 27C2 37.5 10.5 46 21 46C27.2 46 32.7 43.1 36.3 38.6C33.5 39.7 30.3 40.1 27 39.3C17.1 36.8 11.2 26.6 13.8 16.7C15.7 9.7 18.3 8 21 8Z" fill="#8b5cf6"/>
+  <ellipse cx="26" cy="22" rx="21" ry="8" stroke="#a78bfa" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="3 4" opacity="0.45" transform="rotate(-28 26 22)"/>
+  <circle cx="40" cy="9" r="1.8" fill="#ddd6fe" opacity="0.85"/>
+  <circle cx="7" cy="8" r="1.1" fill="#c4b5fd" opacity="0.65"/>
+  <circle cx="43" cy="34" r="1.1" fill="#c4b5fd" opacity="0.5"/>
+</svg>`
+
 function html(mode) {
   const firstRun = mode === 'first-run'
-  const logoSvg = fs.readFileSync(path.join(__dirname, 'assets', 'logo.svg'), 'utf8')
   return `<!doctype html>
 <html>
 <head>
@@ -275,7 +283,7 @@ function html(mode) {
 <body class="${firstRun ? 'first-run' : 'settings'}">
   <div class="shell">
     <aside>
-      ${logoSvg}
+      ${LOGO_SVG}
       <div class="brand">L.U.N.A.</div>
       <p>${firstRun ? 'Choose Personal or Business and set the basics. You can add keys later inside Luna.' : 'Update desktop runtime settings and credentials.'}</p>
       <div class="pill">
