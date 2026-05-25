@@ -72,6 +72,11 @@ interface AppState {
   enterAwayMode: () => void
   exitAwayMode: () => void
 
+  // Face tracking
+  faceTrackingEnabled: boolean
+  enableFaceTracking: () => void
+  disableFaceTracking: () => void
+
   // Dynamic explanation widget
   dynamicWidget: { kind: string; title: string; body: string } | null
   openDynamicWidget: (w: { kind: string; title: string; body: string }) => void
@@ -81,6 +86,10 @@ interface AppState {
   proactiveMessages: string[]
   addProactiveMessage: (m: string) => void
   clearProactive: () => void
+
+  // Proactive pulse (orb reacts when Luna initiates)
+  proactivePulse: boolean
+  setProactivePulse: (v: boolean) => void
 
   // Confirmation UX (#10)
   pendingConfirmation: { confirm_id: string; message: string; tool: string; args: Record<string, unknown> } | null
@@ -159,6 +168,10 @@ export const useStore = create<AppState>((set) => ({
   enterAwayMode: () => set({ awayMode: true }),
   exitAwayMode: () => set({ awayMode: false }),
 
+  faceTrackingEnabled: false,
+  enableFaceTracking: () => set({ faceTrackingEnabled: true }),
+  disableFaceTracking: () => set({ faceTrackingEnabled: false }),
+
   dynamicWidget: null,
   openDynamicWidget: (dynamicWidget) => set({ dynamicWidget }),
   closeDynamicWidget: () => set({ dynamicWidget: null }),
@@ -166,6 +179,9 @@ export const useStore = create<AppState>((set) => ({
   proactiveMessages: [],
   addProactiveMessage: (m) => set((s) => ({ proactiveMessages: [...s.proactiveMessages, m] })),
   clearProactive: () => set({ proactiveMessages: [] }),
+
+  proactivePulse: false,
+  setProactivePulse: (proactivePulse) => set({ proactivePulse }),
 
   pendingConfirmation: null,
   setPendingConfirmation: (c) => set({ pendingConfirmation: c }),

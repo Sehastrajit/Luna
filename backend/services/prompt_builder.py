@@ -14,9 +14,10 @@ from backend.services.tool_registry import get_tools_for_prompt
 
 
 def get_live_data_section() -> str:
-    """Compact live data snapshot (weather + markets) for system prompt injection."""
-    from backend.services.dashboard import markets, weather
+    """Compact live data snapshot (weather, markets, top news) for system prompt injection."""
+    from backend.services.dashboard import markets, weather, news as _news_mod
     lines = []
+
     wx = weather.get_cached_weather()
     if wx:
         lines.append(
@@ -25,7 +26,8 @@ def get_live_data_section() -> str:
             f"wind {wx.get('wind_mph', '?')} mph  [{wx.get('city', 'configured location')}]"
         )
     else:
-        lines.append("Weather: not yet fetched — if asked, use web_search tool. Do NOT open a browser URL for weather.")
+        lines.append("Weather: not yet fetched — if asked, use web_search tool.")
+
     stocks_cache = markets.get_cached_stocks()
     if stocks_cache:
         parts = []
@@ -34,7 +36,14 @@ def get_live_data_section() -> str:
             parts.append(f"{s['symbol']} ${s['price']:,.2f} {s['pct']:+.2f}%{tag}")
         lines.append("Market (live): " + "  |  ".join(parts))
     else:
-        lines.append("Market: not yet fetched — if asked, use web_search tool. Do NOT open a browser URL for market data.")
+        lines.append("Market: not yet fetched — if asked, use web_search tool.")
+
+    news_cache = getattr(_news_mod, "_news_cache", [])
+    if news_cache:
+        headlines = [item.get("title", "") for item in news_cache[:6] if item.get("title")]
+        if headlines:
+            lines.append("Top news (live): " + " | ".join(headlines))
+
     return "\n".join(lines)
 
 

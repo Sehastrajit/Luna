@@ -138,8 +138,8 @@ async def analyze_frame(image_b64: str) -> VisualContext:
             return _cached or VisualContext()
     except Exception as e:
         if "404" in str(e):
-            _retry_after = time.time() + 300  # 5-min backoff — run: ollama pull moondream
-            _safe_log("[vision] moondream not found — run: ollama pull moondream  (suppressing for 5 min)")
+            _retry_after = time.time() + 30  # 30s backoff after model-not-found
+            _safe_log("[vision] moondream not found — run: ollama pull moondream  (retrying in 30s)")
         else:
             _safe_log(f"[vision] moondream failed: {e}")
         return _cached or VisualContext()
@@ -162,6 +162,13 @@ def get_visual_context() -> Optional[VisualContext]:
     if _cached and not _cached.is_stale():
         return _cached
     return None
+
+
+def reset_retry() -> None:
+    """Clear the model-not-found backoff so the next frame triggers immediately."""
+    global _retry_after
+    _retry_after = 0.0
+    _safe_log("[vision] retry backoff cleared")
 
 
 def get_observation_log() -> list[dict]:

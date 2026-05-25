@@ -198,6 +198,70 @@ function LunaModelWidget({ title, items }: { title: string; items: string[] }) {
   )
 }
 
+// ── Email widget ──────────────────────────────────────────────────────────────
+function formatEmailDate(dateStr: string): string {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - d.getTime()
+    const diffDays = Math.floor(diffMs / 86400000)
+    if (diffDays === 0) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    if (diffDays < 7) return d.toLocaleDateString([], { weekday: 'short' })
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  } catch {
+    return dateStr.slice(5, 16)
+  }
+}
+
+function EmailsWidget({ body }: { body: string }) {
+  const [expanded, setExpanded] = useState<number | null>(null)
+  let emails: { from: string; subject: string; date: string; snippet: string }[] = []
+  try { emails = JSON.parse(body) } catch { emails = [] }
+
+  return (
+    <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+      {emails.length === 0 && (
+        <div className="text-xs text-luna-dim text-center py-8 font-mono tracking-widest">NO EMAILS</div>
+      )}
+      {emails.map((email, i) => {
+        const initial = email.from?.match(/[A-Za-z]/)?.[0]?.toUpperCase() ?? '?'
+        const senderName = email.from?.replace(/<[^>]+>/, '').trim() || email.from || 'Unknown'
+        const open = expanded === i
+        return (
+          <button
+            key={i}
+            onClick={() => setExpanded(open ? null : i)}
+            className={`w-full text-left border transition-all duration-200 ${open ? 'border-luna-primary/50 bg-luna-primary/8' : 'border-luna-border bg-luna-card hover:border-luna-primary/30'}`}
+          >
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              <div className="w-7 h-7 rounded-full bg-luna-primary/15 border border-luna-primary/25 flex items-center justify-center text-[11px] font-mono font-bold text-luna-accent shrink-0">
+                {initial}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-[11px] font-medium truncate ${open ? 'text-luna-accent' : 'text-luna-muted'}`}>
+                    {senderName}
+                  </span>
+                  <span className="text-[10px] font-mono text-luna-dim shrink-0">{formatEmailDate(email.date)}</span>
+                </div>
+                <div className={`text-xs truncate mt-0.5 ${open ? 'text-luna-text font-medium' : 'text-luna-dim'}`}>
+                  {email.subject}
+                </div>
+              </div>
+            </div>
+            {open && email.snippet && (
+              <div className="px-3 pb-3 pt-0 border-t border-luna-primary/15">
+                <p className="text-[11px] text-luna-muted leading-relaxed pl-10">{email.snippet}</p>
+              </div>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Classic widget types ───────────────────────────────────────────────────────
 function ChecklistWidget({ items }: { items: string[] }) {
   const [checked, setChecked] = useState<Record<number, boolean>>({})
@@ -294,11 +358,12 @@ export function DynamicWidgetOverlay() {
   const items = rows(widget.body)
   const kind  = widget.kind.toLowerCase()
   const is3D  = kind === 'model3d'
+  const isWide = kind === 'model3d' || kind === 'emails'
 
   return (
     <div className="fixed inset-0 z-[200] pointer-events-none flex items-center justify-center p-6" style={{ background: 'rgba(2,2,12,0.55)', backdropFilter: 'blur(2px)' }}>
       <div
-        className={`pointer-events-auto bg-luna-surface/95 border border-luna-primary/35 shadow-luna-lg backdrop-blur-xl overflow-hidden ${is3D ? 'w-full max-w-2xl' : 'w-full max-w-xl'}`}
+        className={`pointer-events-auto bg-luna-surface/95 border border-luna-primary/35 shadow-luna-lg backdrop-blur-xl overflow-hidden ${isWide ? 'w-full max-w-2xl' : 'w-full max-w-xl'}`}
         style={{ borderRadius: 8 }}
       >
         {/* header */}
@@ -315,6 +380,10 @@ export function DynamicWidgetOverlay() {
         {/* body */}
         {is3D ? (
           <LunaModelWidget title={widget.title} items={items} />
+        ) : kind === 'emails' ? (
+          <div className="p-3">
+            <EmailsWidget body={widget.body} />
+          </div>
         ) : (
           <div className="p-4">
             {kind === 'checklist' ? <ChecklistWidget items={items} />

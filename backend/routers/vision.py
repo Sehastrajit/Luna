@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from backend.services.vision import analyze_frame, get_visual_context
+from backend.services.vision import analyze_frame, get_visual_context, reset_retry
 
 router = APIRouter(prefix="/api/vision", tags=["vision"])
 
@@ -19,6 +19,12 @@ async def receive_frame(payload: FramePayload):
         "history": ctx.history,
         "captured_at": ctx.captured_at,
     }
+
+
+@router.post("/reset")
+def reset_vision():
+    reset_retry()
+    return {"ok": True}
 
 
 @router.get("/context")

@@ -1,0 +1,16 @@
+/* Prevent the grid container from animating its height — this is what makes
+   widgets appear to "expand" when a dragged item changes the grid's total height. */
+.react-grid-layout {
+  transition: none !important;
+}
+
+/* Only animate position (left/top), never size (width/height).
+   Width/height should snap instantly to avoid the expand-on-drop illusion. */
+.react-grid-item {
+  transition-property: left, top !important;
+}
+
+.react-grid-item.react-draggable-dragging,
+.react-grid-item.resizing {
+  transition: none !important;
+}

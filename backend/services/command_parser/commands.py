@@ -62,6 +62,9 @@ def parse_commands(response: str, user_message: str = "") -> list[dict]:
     for match in re.finditer(r"\[LAUNCH:([^\]]+)\]", response):
         commands.append({"type": "launch", "app": match.group(1).strip()})
 
+    for match in re.finditer(r"\[FACE:(on|off)\]", response, re.IGNORECASE):
+        commands.append({"type": "face", "action": match.group(1).lower()})
+
     for match in re.finditer(r"\[WIDGET:([^|\]]+)\|([^|\]]+)\|([^\]]+)\]", response):
         commands.append({
             "type": "widget",

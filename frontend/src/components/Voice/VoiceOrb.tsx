@@ -91,6 +91,11 @@ export function VoiceOrb({ size = 36, showLabel = false, onToggle }: VoiceOrbPro
           })
           return
         }
+        if (d.type === 'face') {
+          if (d.action === 'on') useStore.getState().enableFaceTracking()
+          else useStore.getState().disableFaceTracking()
+          return
+        }
         if (d.state) {
           setVoiceState(d.state as VoiceState)
         }

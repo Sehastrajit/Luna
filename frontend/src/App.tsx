@@ -21,6 +21,7 @@ import { LunaDashboardView } from './components/Luna/LunaDashboardView'
 import { DynamicWidgetOverlay } from './components/Dynamic/DynamicWidgetOverlay'
 import { AgentView } from './components/Agent/AgentView'
 import { SettingsOverlay } from './components/Settings/SettingsOverlay'
+import { useProactiveStream } from './hooks/useProactiveStream'
 
 function StartupSplash({ show }: { show: boolean }) {
   return (
@@ -60,6 +61,7 @@ function StartupSplash({ show }: { show: boolean }) {
 export default function App() {
   const { activeView, setOllamaOnline, setPersonality, addMessage, viewMode } = useStore()
   useCamera()
+  useProactiveStream()
   const [showSplash, setShowSplash] = useState(true)
 
   useEffect(() => {
@@ -123,8 +125,8 @@ export default function App() {
       <>
         <div className="flex flex-col h-full bg-luna-bg overflow-hidden">
           <TitleBar />
-          <div className="flex flex-1 items-center justify-center overflow-y-auto">
-            <div className="flex flex-col items-center" style={{ gap: 64, paddingBlock: 24 }}>
+          <div className="flex flex-1 items-center justify-center">
+            <div className="flex flex-col items-center" style={{ gap: 40 }}>
               <VoiceOrb size={200} showLabel />
               <PhoneMic />
               <SpotifyPlayer />

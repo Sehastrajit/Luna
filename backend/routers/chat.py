@@ -55,6 +55,16 @@ router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 _active_plans: dict[int, TaskPlan] = {}
 
+_FACE_ON_RE  = re.compile(r'face\s*(mode|tracking|detection|cam(?:era)?)?\s*(on|enable|start|activate|open)\b', re.IGNORECASE)
+_FACE_OFF_RE = re.compile(r'face\s*(mode|tracking|detection|cam(?:era)?)?\s*(off|disable|stop|deactivate|close)\b', re.IGNORECASE)
+
+_GMAIL_INTENT_RE = re.compile(
+    r"\bany\s+mail\b"
+    r"|\b(check|show|get|list|read|do i have|what('s| are| is))\b.{0,40}\b(email[s]?|mail[s]?|inbox|gmail)\b"
+    r"|\b(email[s]?|mail[s]?|inbox|gmail)\b.{0,20}\b(today|unread|new|recent|latest)\b",
+    re.IGNORECASE,
+)
+
 _CHAT_LOG = Path("data/chat.log")
 _CHAT_LOG.parent.mkdir(parents=True, exist_ok=True)
 
@@ -153,7 +163,10 @@ async def chat_stream(
     from backend.services.spotify import spotify_service
     spotify_track        = None if (cli or _is_business) else spotify_service.get_current()
     direct_spotify_cmd   = None if _is_business else parse_user_spotify_request(req.message, spotify_track)
-    direct_research_query = extract_direct_research_query(req.message)
+    direct_face_on        = bool(_FACE_ON_RE.search(req.message))
+    direct_face_off       = bool(_FACE_OFF_RE.search(req.message)) and not direct_face_on
+    direct_gmail_request  = bool(_GMAIL_INTENT_RE.search(req.message))
+    direct_research_query = None if direct_gmail_request else extract_direct_research_query(req.message)
     direct_dataset_query  = extract_direct_dataset_query(req.message)
 
     user_name = settings.user_name
@@ -204,6 +217,7 @@ async def chat_stream(
         nonlocal full_response_parts, _tool_succeeded, _task_completed
         _voice_streamed = False
         _had_tool_call = False
+        _gmail_widget_cmd: dict | None = None
         conv_id_header = json.dumps({"conversation_id": conv.id, "type": "meta"})
         yield f"data: {conv_id_header}\n\n"
 
@@ -255,6 +269,42 @@ async def chat_stream(
             success, launch_message = launch_app(direct_launch_app)
             full_response = f"Opening {direct_launch_app}." if success else launch_message
             _tool_succeeded = success
+            full_response_parts = [full_response]
+
+        elif direct_face_on:
+            full_response = "[FACE:on] Face tracking activated."
+            full_response_parts = [full_response]
+
+        elif direct_face_off:
+            full_response = "[FACE:off] Face tracking off."
+            full_response_parts = [full_response]
+
+        elif direct_gmail_request:
+            _had_tool_call = True
+            _q = "is:unread" if re.search(r"\bunread\b", req.message, re.IGNORECASE) else ""
+            _gmail_tc = {"tool": "google_workspace", "args": {"service": "gmail", "action": "search_messages", "args": {"q": _q, "maxResults": 5}}, "speak": ""}
+            result = await execute_tool_call(_gmail_tc, db, conv.id)
+            _tool_succeeded = "fail" not in result and "error" not in result
+            try:
+                _res = json.loads(result)
+                _msgs = _res.get("data", {}).get("messages", [])
+                if _msgs:
+                    _gmail_widget_cmd = {
+                        "type": "widget",
+                        "kind": "emails",
+                        "title": "Your Emails",
+                        "body": json.dumps([{
+                            "from": m.get("from", ""),
+                            "subject": m.get("subject", "(no subject)"),
+                            "date": m.get("date", ""),
+                            "snippet": m.get("snippet", ""),
+                        } for m in _msgs]),
+                    }
+                    full_response = f"Here {'are' if len(_msgs) != 1 else 'is'} {len(_msgs)} email{'s' if len(_msgs) != 1 else ''} — opening in the panel."
+                else:
+                    full_response = "No emails found in your inbox."
+            except Exception:
+                full_response = "Couldn't fetch your emails right now."
             full_response_parts = [full_response]
 
         elif direct_research_query:
@@ -418,6 +468,27 @@ async def chat_stream(
                     if tool_name in _info_tools:
                         verified = await verify_tool_result(tool_name, args, result, req.message)
                         full_response = verified or strip_tool_call_json(full_response)
+                    elif tool_name == "google_workspace" and args.get("service") == "gmail":
+                        try:
+                            _res = json.loads(result)
+                            _msgs = _res.get("data", {}).get("messages", [])
+                            if _msgs:
+                                _gmail_widget_cmd = {
+                                    "type": "widget",
+                                    "kind": "emails",
+                                    "title": "Your Emails",
+                                    "body": json.dumps([{
+                                        "from": m.get("from", ""),
+                                        "subject": m.get("subject", "(no subject)"),
+                                        "date": m.get("date", ""),
+                                        "snippet": m.get("snippet", ""),
+                                    } for m in _msgs]),
+                                }
+                                full_response = f"Here {'are' if len(_msgs) != 1 else 'is'} {len(_msgs)} email{'s' if len(_msgs) != 1 else ''} — opening in the panel."
+                            else:
+                                full_response = "No emails found."
+                        except Exception:
+                            full_response = strip_tool_call_json(full_response) or result[:300]
                     elif speak:
                         full_response = speak
                     else:
@@ -434,7 +505,7 @@ async def chat_stream(
                     yield f"data: {json.dumps({'type': 'plan_progress', 'step': plan.current, 'total': plan.total})}\n\n"
 
         # ── Stream visible parts ──────────────────────────────────────────────
-        STRIP_RE = r"\s*\[(?:LAUNCH|TASK|EVENT|SPOTIFY|BROWSE|MAP|WIDGET|WEB_SEARCH|WEB_RESEARCH|WEB_FETCH):[^\]]+\]"
+        STRIP_RE = r"\s*\[(?:LAUNCH|TASK|EVENT|SPOTIFY|BROWSE|MAP|WIDGET|FACE|WEB_SEARCH|WEB_RESEARCH|WEB_FETCH):[^\]]+\]"
         _cli_text = re.sub(STRIP_RE, "", full_response).strip()
         _cli_text = re.sub(r"<think>.*?</think>", "", _cli_text, flags=re.DOTALL).strip()
         if _cli_text:
@@ -468,6 +539,8 @@ async def chat_stream(
         db.commit()
 
         commands = parse_commands(full_response, user_message=req.message)
+        if _gmail_widget_cmd and not any(c.get("kind") == "emails" for c in commands):
+            commands.append(_gmail_widget_cmd)
         if commands:
             yield f"data: {json.dumps({'type': 'commands', 'commands': commands})}\n\n"
             execute_commands(commands, db, conv.id)

@@ -490,6 +490,10 @@ class VoiceService:
                                     from backend.services.away_state import set_away
                                     set_away(True)
                                 self._fire_ui_event({"type": "away", "action": action})
+                            elif cmd.get("type") == "face":
+                                self._fire_ui_event({"type": "face", "action": cmd.get("action", "on")})
+                            elif cmd.get("type") == "widget":
+                                self._fire_ui_event({"type": "widget", "kind": cmd.get("kind", "summary"), "title": cmd.get("title", "Visual"), "body": cmd.get("body", "")})
                         continue
                     if data.get("type") == "message_part":
                         parts.append(data.get("content", ""))
@@ -555,6 +559,8 @@ class VoiceService:
                                             from backend.services.away_state import set_away
                                             set_away(True)
                                         self._fire_ui_event({"type": "away", "action": action})
+                                    elif cmd.get("type") == "face":
+                                        self._fire_ui_event({"type": "face", "action": cmd.get("action", "on")})
                                     elif cmd.get("type") == "widget":
                                         self._fire_ui_event({
                                             "type": "widget",

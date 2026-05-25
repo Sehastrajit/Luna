@@ -6,6 +6,216 @@ from sqlalchemy.orm import Session
 from backend.models.database import SessionLocal, CalendarEvent, Task, ProactiveLog, Message
 from backend.services.scheduler.notifications import send_windows_notification, proactive_queue
 
+_VISION_CHECKIN_SYSTEM = (
+    "You are Luna, a quiet and attentive AI companion. "
+    "You have a live picture of what this person is doing and what is happening in their world. "
+    "You initiate conversation naturally — brief, warm, grounded in what you actually observe. "
+    "You are not a data dashboard. You speak like a present, perceptive person would — "
+    "when there's something genuinely worth saying. One clear observation is enough."
+)
+
+_VISION_CHECKIN_PROMPT = """\
+━━ WHAT YOU SEE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RIGHT NOW
+{visual}
+
+OVER THE SESSION
+{history}
+
+CONTEXT
+Time: {time_str}, {day_name} — quiet {quiet_min}
+
+RECENT CONVERSATION (what they've been working on / thinking about)
+{convo}
+
+OPEN TASKS
+{tasks}
+
+TODAY'S SCHEDULE
+{events}
+
+LIVE DATA (use ONLY if it relates to what they're doing or discussed)
+Weather: {weather}
+Market:
+{market}
+Top headlines:
+{news}
+
+━━ DECIDE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are a quiet, attentive presence — speak when you have something real to say.
+
+ONE clear reason is enough to speak. You do not need multiple signals.
+
+SPEAK when any of these are true:
+  → They've been at it for a while — acknowledge what they're working on naturally
+  → There's recent conversation you can follow up on or continue
+  → You see something visually that's worth a brief comment (focus, fatigue, activity)
+  → A market move, headline, or event touches something they care about or mentioned
+  → It's been a long quiet stretch and a light check-in fits
+
+DO NOT report raw data unprompted. Lead with them, not the data.
+If you use live data, make it specific to their situation — not a broadcast.
+
+Default toward speaking if you have a reasonable observation. SILENT is for when you genuinely have nothing.
+
+Reply with SILENT or 1 message (≤ 18 words, conversational, no prefix, no quotes)."""
+
+
+def vision_aware_checkin():
+    """
+    Every few minutes, pull full live context (vision, weather, market, news,
+    calendar, conversation) and let the LLM decide whether the specific moment
+    warrants Luna initiating. Pushes immediately to the SSE bus.
+    """
+    db: Session = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        local_now = datetime.now()
+
+        # Silence window: 1 am – 7 am LOCAL time
+        if 1 <= local_now.hour < 7:
+            return
+
+        # Don't interrupt active conversation (user spoke in last 5 min)
+        last_user = (
+            db.query(Message)
+            .filter(Message.role == "user")
+            .order_by(Message.created_at.desc())
+            .first()
+        )
+        if last_user:
+            quiet_min = (now - last_user.created_at.replace(tzinfo=None)).total_seconds() / 60
+            if quiet_min < 5:
+                return
+        else:
+            quiet_min = 9999
+
+        # Throttle: at most once every 15 minutes
+        last_proactive = (
+            db.query(ProactiveLog)
+            .filter(ProactiveLog.reason == "vision_aware_checkin")
+            .order_by(ProactiveLog.sent_at.desc())
+            .first()
+        )
+        if last_proactive:
+            since_min = (now - last_proactive.sent_at.replace(tzinfo=None)).total_seconds() / 60
+            if since_min < 15:
+                return
+
+        # ── Vision ────────────────────────────────────────────────────────────
+        from backend.services.vision import get_visual_context
+        vis = get_visual_context()
+        visual_raw  = vis.raw     if vis and vis.raw     else "No camera data available."
+        visual_hist = vis.history if vis and vis.history else "No session trend yet."
+
+        # ── Weather ───────────────────────────────────────────────────────────
+        from backend.services.dashboard import weather as _weather, markets as _markets
+        from backend.services.dashboard import news as _news_mod
+        wx = _weather.get_cached_weather()
+        if wx:
+            weather_str = (
+                f"{wx.get('temp_f', '?')}°F, {wx.get('condition', '?')}, "
+                f"humidity {wx.get('humidity', '?')}%, wind {wx.get('wind_mph', '?')} mph "
+                f"({wx.get('city', 'local')})"
+            )
+        else:
+            weather_str = "Not available."
+
+        # ── Market ────────────────────────────────────────────────────────────
+        stocks = _markets.get_cached_stocks()
+        if stocks:
+            market_lines = []
+            for s in stocks:
+                stale = " (prev close)" if s.get("stale") else ""
+                market_lines.append(f"  {s['symbol']} ${s['price']:,.2f} {s['pct']:+.2f}%{stale}")
+            market_str = "\n".join(market_lines)
+        else:
+            market_str = "Not available."
+
+        # ── News (top 5 headlines) ────────────────────────────────────────────
+        news_cache = getattr(_news_mod, "_news_cache", [])
+        if news_cache:
+            news_str = "\n".join(
+                f"  • {item.get('title', '')}"
+                for item in news_cache[:5]
+                if item.get("title")
+            )
+        else:
+            news_str = "Not available."
+
+        # ── Conversation ──────────────────────────────────────────────────────
+        recent_msgs = (
+            db.query(Message)
+            .order_by(Message.created_at.desc())
+            .limit(6)
+            .all()
+        )
+        convo_snippet = "\n".join(
+            f"  {'User' if m.role == 'user' else 'Luna'}: {m.content[:120]}"
+            for m in reversed(recent_msgs)
+        ) or "  None."
+
+        # ── Calendar + Tasks ──────────────────────────────────────────────────
+        today_end = now.replace(hour=23, minute=59)
+        events = db.query(CalendarEvent).filter(
+            CalendarEvent.start_datetime >= now,
+            CalendarEvent.start_datetime <= today_end,
+        ).limit(3).all()
+        events_str = ", ".join(e.title for e in events) or "None"
+
+        open_tasks = db.query(Task).filter(Task.completed == False).limit(4).all()
+        tasks_str = ", ".join(t.title for t in open_tasks) or "None"
+
+        quiet_label = f"{int(quiet_min)} min" if quiet_min < 9999 else "a long time"
+
+        prompt = _VISION_CHECKIN_PROMPT.format(
+            time_str=local_now.strftime("%I:%M %p"),
+            day_name=local_now.strftime("%A"),
+            visual=visual_raw,
+            history=visual_hist,
+            weather=weather_str,
+            market=market_str,
+            news=news_str,
+            quiet_min=quiet_label,
+            convo=convo_snippet,
+            events=events_str,
+            tasks=tasks_str,
+        )
+
+        try:
+            loop = asyncio.new_event_loop()
+            from backend.services.llm import ollama as _ollama
+            reply = loop.run_until_complete(
+                _ollama.complete(prompt, system=_VISION_CHECKIN_SYSTEM, temperature=0.72)
+            )
+            loop.close()
+            reply = reply.strip().strip('"').strip("'")
+        except Exception as e:
+            print(f"[vision_checkin] LLM call failed: {e}")
+            return
+
+        if not reply or reply.upper() == "SILENT" or len(reply) < 4:
+            print("[vision_checkin] SILENT — nothing worth saying right now.")
+            return
+
+        # Push to real-time SSE bus (appears immediately on dashboard)
+        from backend.services.proactive_bus import push as _bus_push
+        _bus_push(reply)
+
+        # Also enqueue for next chat pickup
+        proactive_queue.append(reply)
+
+        db.add(ProactiveLog(message=reply, reason="vision_aware_checkin"))
+        db.commit()
+        print(f"[vision_checkin] -> {reply}", flush=True)
+
+    except Exception as e:
+        print(f"[vision_checkin] failed: {e}")
+    finally:
+        db.close()
+
 
 def check_upcoming_events():
     """Check for events starting within the next hour and notify."""

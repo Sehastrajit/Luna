@@ -132,12 +132,13 @@ async def _request(
     params: dict[str, Any] | None = None,
     json_body: Any = None,
 ) -> Any:
+    clean_params = {k: v for k, v in params.items() if v is not None} if params else None
     async with httpx.AsyncClient(timeout=20) as client:
         response = await client.request(
             method.upper(),
             url,
             headers=await _headers(provider, token),
-            params=params or None,
+            params=clean_params or None,
             json=json_body,
         )
     if response.status_code == 204:

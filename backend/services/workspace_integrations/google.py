@@ -1,6 +1,7 @@
 """Google Workspace integration."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from backend.config import settings
@@ -42,10 +43,35 @@ async def google_workspace(
     if service == "gmail":
         user = args.get("user_id", "me")
         if action == "search_messages":
-            data = await _request("GET", f"{base}/users/{user}/messages", "google", token, {
-                "q": args.get("query", ""),
-                "maxResults": int(args.get("limit", 10)),
+            q = args.get("q") or args.get("query", "")
+            max_results = int(args.get("maxResults") or args.get("limit") or 10)
+            list_data = await _request("GET", f"{base}/users/{user}/messages", "google", token, {
+                "q": q,
+                "maxResults": max_results,
             })
+            messages = list_data.get("messages", [])
+            if messages:
+                async def _fetch_meta(msg_id: str) -> dict:
+                    try:
+                        md = await _request(
+                            "GET", f"{base}/users/{user}/messages/{msg_id}", "google", token,
+                            {"format": "metadata", "metadataHeaders": ["Subject", "From", "Date"]},
+                        )
+                        hdrs = {h["name"]: h["value"] for h in md.get("payload", {}).get("headers", [])}
+                        return {
+                            "id": msg_id,
+                            "snippet": md.get("snippet", ""),
+                            "subject": hdrs.get("Subject", "(no subject)"),
+                            "from": hdrs.get("From", ""),
+                            "date": hdrs.get("Date", ""),
+                            "labels": md.get("labelIds", []),
+                        }
+                    except Exception:
+                        return {"id": msg_id}
+                enriched = await asyncio.gather(*[_fetch_meta(m["id"]) for m in messages[:5]])
+                data = {**list_data, "messages": list(enriched)}
+            else:
+                data = list_data
         elif action == "get_message":
             data = await _request("GET", f"{base}/users/{user}/messages/{args['message_id']}", "google", token, {
                 "format": args.get("format", "metadata"),
@@ -59,9 +85,9 @@ async def google_workspace(
         calendar_id = args.get("calendar_id", "primary")
         if action == "list_events":
             data = await _request("GET", f"{base}/calendars/{calendar_id}/events", "google", token, {
-                "timeMin": args.get("time_min"),
-                "timeMax": args.get("time_max"),
-                "maxResults": int(args.get("limit", 10)),
+                "timeMin": args.get("timeMin") or args.get("time_min"),
+                "timeMax": args.get("timeMax") or args.get("time_max"),
+                "maxResults": int(args.get("maxResults") or args.get("limit") or 10),
                 "singleEvents": True,
                 "orderBy": "startTime",
             })
@@ -80,8 +106,8 @@ async def google_workspace(
     elif service == "drive":
         if action == "search_files":
             data = await _request("GET", f"{base}/files", "google", token, {
-                "q": args.get("query", "trashed=false"),
-                "pageSize": int(args.get("limit", 10)),
+                "q": args.get("q") or args.get("query", "trashed=false"),
+                "pageSize": int(args.get("pageSize") or args.get("maxResults") or args.get("limit") or 10),
                 "fields": "files(id,name,mimeType,webViewLink,modifiedTime,size)",
             })
         elif action == "get_file":
@@ -128,7 +154,7 @@ async def google_workspace(
     elif service == "tasks":
         tasklist = args.get("tasklist", "@default")
         if action == "list_tasks":
-            data = await _request("GET", f"{base}/lists/{tasklist}/tasks", "google", token, {"maxResults": int(args.get("limit", 20))})
+            data = await _request("GET", f"{base}/lists/{tasklist}/tasks", "google", token, {"maxResults": int(args.get("maxResults") or args.get("limit") or 20)})
         elif action == "create_task":
             data = await _request("POST", f"{base}/lists/{tasklist}/tasks", "google", token, json_body={
                 "title": args["title"],
